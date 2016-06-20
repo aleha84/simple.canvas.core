@@ -1,0 +1,39 @@
+* {
+    -webkit-touch-callout:none;
+    -webkit-user-select:none;
+    -moz-user-select:none;
+    -ms-user-select:none;
+    user-select:none;
+}
+
+html, body {
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+}
+
+.fulscreenbutton
+{
+	width: 80px;
+	height: 80px;
+	position: absolute;
+	bottom: 10px;
+	right: 10px;
+	background-image: url(../images/fullscreen.png);
+	background-size: cover;
+	cursor: pointer;
+}
+
+.fulscreenbutton.exit
+{
+	background-image: url(../images/fullscreen_exit.png);	
+}
+
+.debugger
+{
+	position: absolute;
+	top:10px;
+	left: 10px;
+	color: red;
+	font-size: 12px;
+}
