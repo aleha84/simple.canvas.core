@@ -13,9 +13,9 @@ SCG.frameCounter = {
 		SCG.context.save();     
 		SCG.context.fillStyle = "red";
 		SCG.context.font = "48px serif";
-  		SCG.context.fillText(this.prevRate, SCG.battlefield.width-60, 40);
+  		SCG.context.fillText(this.prevRate, SCG.viewfield.width-60, 40);
   		SCG.context.font = "24px serif";
-  		SCG.context.fillText(this.visibleCount, SCG.battlefield.width-60, 80);
+  		SCG.context.fillText(this.visibleCount, SCG.viewfield.width-60, 80);
   		if(SCG.gameLogics.messageToShow != '')
   		{
   			SCG.context.fillStyle = "black";

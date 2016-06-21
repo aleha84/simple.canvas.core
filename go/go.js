@@ -136,7 +136,7 @@ SCG.GO.GO.prototype = {
 		}
 
 		// if outside - then remove
-		if(this.position.x < 0 || this.position.y < 0 || this.position.x > SCG.battlefield.default.width || this.position.y > SCG.battlefield.default.height)
+		if(this.position.x < 0 || this.position.y < 0 || this.position.x > SCG.viewfield.default.width || this.position.y > SCG.viewfield.default.height)
 		{
 			this.setDead();
 			return false;

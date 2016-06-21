@@ -2,10 +2,10 @@ SCG.start = function(){
 	if(!SCG.canvas)
 	{
 		var c = $('<canvas />',{
-			width: SCG.battlefield.width,
-			height: SCG.battlefield.height
+			width: SCG.viewfield.width,
+			height: SCG.viewfield.height
 		});
-		c.attr({'width':SCG.battlefield.width,'height':SCG.battlefield.height,id:SCG.canvasId});
+		c.attr({'width':SCG.viewfield.width,'height':SCG.viewfield.height,id:SCG.canvasId});
 		$(document.body).append(c);
 		SCG.canvas = c.get(0);
 		SCG.context = SCG.canvas.getContext('2d');

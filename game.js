@@ -1,6 +1,6 @@
 var SCG = {};
 
-SCG.battlefield = {
+SCG.viewfield = {
 	default: {
 		width: 500,
 		height: 300
@@ -39,29 +39,8 @@ SCG.gameLogics = {
 	}
 }
 
-
-
-
-
 SCG.go = [];
 
-SCG.debugger = 
-{
-	el: $('.debugger'),
-	initialized : false,
-	init: function() { 
-		this.el = $('.debugger'),
-		this.initialized = true;
-	},
-	clear : function() { this.setValue('') },
-	setValue : function(value) { 
-		if(!this.initialized)
-		{
-			this.init();	
-		}
-		this.el.html(value); 
-	}
-}
 
 SCG.gameControls = {
 	scale:
@@ -214,21 +193,21 @@ SCG.gameControls = {
 		}
 
 		var width =  window.innerWidth;
-		if(width < SCG.battlefield.default.width)
+		if(width < SCG.viewfield.default.width)
 		{
-			SCG.gameLogics.messageToShow = String.format('width lesser than {3} (width: {0}, iH: {1}, iW: {2})',width, window.innerHeight, window.innerWidth, SCG.battlefield.default.width);
+			SCG.gameLogics.messageToShow = String.format('width lesser than {3} (width: {0}, iH: {1}, iW: {2})',width, window.innerHeight, window.innerWidth, SCG.viewfield.default.width);
 			SCG.gameLogics.wrongDeviceOrientation = true;
 			return;
 		}
 		// var proportions = SCG.gameLogics.isMobile ?  (window.innerHeight / window.innerWidth) : (window.innerWidth / window.innerHeight);
-		// SCG.gameControls.scale.times = (width / SCG.battlefield.default.width) / proportions;
+		// SCG.gameControls.scale.times = (width / SCG.viewfield.default.width) / proportions;
 
 		var _width = $(window).width();
 		var _height = $(window).height();
-		var ratioX = _width /SCG.battlefield.default.width;
-		var ratioY = _height / SCG.battlefield.default.height;
+		var ratioX = _width /SCG.viewfield.default.width;
+		var ratioY = _height / SCG.viewfield.default.height;
 
-		SCG.gameControls.scale.times = Math.min(ratioX, ratioY); //_width > _height ? _height / SCG.battlefield.default.height : _width /SCG.battlefield.default.width;
+		SCG.gameControls.scale.times = Math.min(ratioX, ratioY); //_width > _height ? _height / SCG.viewfield.default.height : _width /SCG.viewfield.default.width;
 
 		if(SCG.gameControls.scale.times < 1)
 		{
@@ -237,30 +216,30 @@ SCG.gameControls = {
 			return;
 		}
 
-		//var oldSize = new Vector2(SCG.battlefield.width, SCG.battlefield.height);
+		//var oldSize = new Vector2(SCG.viewfield.width, SCG.viewfield.height);
 
-		SCG.battlefield.width = SCG.battlefield.default.width * SCG.gameControls.scale.times;
-		SCG.battlefield.height = SCG.battlefield.default.height * SCG.gameControls.scale.times;
+		SCG.viewfield.width = SCG.viewfield.default.width * SCG.gameControls.scale.times;
+		SCG.viewfield.height = SCG.viewfield.default.height * SCG.gameControls.scale.times;
 
-		//var sizeChanges = new Vector2(SCG.battlefield.width / oldSize.x, SCG.battlefield.height / oldSize.y);
+		//var sizeChanges = new Vector2(SCG.viewfield.width / oldSize.x, SCG.viewfield.height / oldSize.y);
 
 		var mTop = 0;
 		var mLeft = 0;
-		if(SCG.battlefield.width < _width)
+		if(SCG.viewfield.width < _width)
 		{
-			mLeft = Math.round((_width - SCG.battlefield.width)/2);
+			mLeft = Math.round((_width - SCG.viewfield.width)/2);
 		}
-		else if(SCG.battlefield.height < _height)
+		else if(SCG.viewfield.height < _height)
 		{
-			mTop = Math.round((_height - SCG.battlefield.height)/2);
+			mTop = Math.round((_height - SCG.viewfield.height)/2);
 		}
 
-		$(SCG.canvas).attr({'width':SCG.battlefield.width,'height':SCG.battlefield.height})
-		$(SCG.canvas).css({'width':SCG.battlefield.width,'height':SCG.battlefield.height});
+		$(SCG.canvas).attr({'width':SCG.viewfield.width,'height':SCG.viewfield.height})
+		$(SCG.canvas).css({'width':SCG.viewfield.width,'height':SCG.viewfield.height});
 		$(SCG.canvas).css({'margin-top': mTop });
 		$(SCG.canvas).css({'margin-left': mLeft });
-		SCG.canvas.width = SCG.battlefield.width;
-		SCG.canvas.height = SCG.battlefield.height;
+		SCG.canvas.width = SCG.viewfield.width;
+		SCG.canvas.height = SCG.viewfield.height;
 		SCG.canvas.margins = {
 			top : mTop,
 			left: mLeft

@@ -45,36 +45,40 @@ Vector2.prototype = {
 		return Math.sqrt(Math.pow(this.x,2) + Math.pow(this.y,2));
 	},
 
-	add : function(summand, outer){
-		if(outer === undefined)
+	add : function(summand, inner){
+		if(inner === undefined)
 		{
-			outer = false;
+			inner = false;
 		}
 		if(summand instanceof Vector2){
-			if(outer){
+			if(!inner){
 				return new Vector2(this.x + summand.x,this.y + summand.y);
 			}
 			else{
 				this.x +=summand.x;
 				this.y +=summand.y;	
+
+				return this;
 			}
 			
 		}
 	},
 
-	substract : function(subtrahend,outer)
+	substract : function(subtrahend,inner)
 	{
-		if(outer === undefined)
+		if(inner === undefined)
 		{
-			outer = false;
+			inner = false;
 		}
 		if(subtrahend instanceof Vector2){
-			if(outer){
+			if(!inner){
 				return new Vector2(this.x - subtrahend.x,this.y - subtrahend.y);
 			}
 			else{
 				this.x -=subtrahend.x;
 				this.y -=subtrahend.y;	
+
+				return this;
 			}			
 		}
 		return new Vector2;
@@ -109,23 +113,25 @@ Vector2.prototype = {
 		return this.x*to.x + this.y*to.y;
 	},
 
-	rotate: function(angle, inRad, isSelf){
+	rotate: function(angle, inRad, inner){
 		if(inRad === undefined)
 		{
 			inRad = false;
 		}
-		if(isSelf === undefined)
+		if(inner === undefined)
 		{
-			isSelf = false;
+			inner = false;
 		}
 
 		var result = new Vector2(this.x*Math.cos(inRad?angle:angle*Math.PI/180) - this.y* Math.sin(inRad?angle:angle*Math.PI/180),
 						   this.x*Math.sin(inRad?angle:angle*Math.PI/180) + this.y* Math.cos(inRad?angle:angle*Math.PI/180) );
 
-		if(isSelf)
+		if(inner)
 		{
 			this.x = result.x;
 			this.y = result.y;
+
+			return this;
 		}
 		else{
 			return result;

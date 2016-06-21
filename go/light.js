@@ -99,7 +99,7 @@ SCG.GO.Light.prototype.internalUpdate = function(now){
 		// {
 		// 	this.setDead();
 		// 	var testLight =  new SCG.GO.Light({
-		// 		position: new Vector2(getRandom(12,SCG.battlefield.default.width-12),getRandom(12, SCG.battlefield.default.height)),
+		// 		position: new Vector2(getRandom(12,SCG.viewfield.default.width-12),getRandom(12, SCG.viewfield.default.height)),
 		// 		radius: getRandom(50,100),
 		// 	});
 		// 	SCG.go.push(testLight);	
