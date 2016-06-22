@@ -181,7 +181,7 @@ Vector2.average = function(vectors){
 	var result = new Vector2;
 
 	for(var i = 0; i < vectors.length; i++){
-		result.add(vectors[i]);
+		result.add(vectors[i], true);
 	}
 
 	return result.division(vectors.length);

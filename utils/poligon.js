@@ -64,7 +64,7 @@ function Poligon(init)
 	this.update = function(shift, angle){
 		for (var i = this.vertices.length - 1; i >= 0; i--) {
 			this.vertices[i].rotate(angle,true,true);
-			this.vertices[i].add(shift);
+			this.vertices[i].add(shift, true);
 		};
 	}
 

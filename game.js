@@ -160,7 +160,7 @@ SCG.gameControls = {
 		var eventPos = pointerEventToXY(event);
 		var offset = $(SCG.canvas).offset();
 		SCG.gameControls.mousestate.position = new Vector2(eventPos.x - SCG.canvas.margins.left,eventPos.y - SCG.canvas.margins.top);
-		SCG.gameControls.mousestate.delta = SCG.gameControls.mousestate.position.substract(oldPosition,true);
+		SCG.gameControls.mousestate.delta = SCG.gameControls.mousestate.position.substract(oldPosition);
 
 		SCG.debugger.setValue(SCG.gameControls.mousestate.toString());
 		//console.log(SCG.gameControls.mousestate.position);
