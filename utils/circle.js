@@ -31,15 +31,15 @@ function Circle (center, radius) {
 			prop.fillStyle = color;
 			prop.strokeStyle = color;
 		}
-		SCG2.context.beginPath();
-		SCG2.context.arc(this.center.x, this.center.y, this.radius, 0, 2 * Math.PI, false);
+		SCG.context.beginPath();
+		SCG.context.arc(this.center.x, this.center.y, this.radius, 0, 2 * Math.PI, false);
 		if(prop.fill){
-			SCG2.context.fillStyle = prop.fillStyle;
-			SCG2.context.fill();	
+			SCG.context.fillStyle = prop.fillStyle;
+			SCG.context.fill();	
 		}
-		SCG2.context.lineWidth = prop.lineWidth;
-		SCG2.context.strokeStyle = prop.strokeStyle;
-		SCG2.context.stroke();
+		SCG.context.lineWidth = prop.lineWidth;
+		SCG.context.strokeStyle = prop.strokeStyle;
+		SCG.context.stroke();
 	}
 
 	this.clone = function(){

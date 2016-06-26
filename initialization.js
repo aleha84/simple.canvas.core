@@ -36,6 +36,11 @@ SCG.initializer = function(callback) {
 		}
 		SCG.images[src].src = SCG.src[src];
     }
+
+    if(numImages == 0)
+    {
+    	callback();
+    }
 }
 
 SCG.customInitialization = function(){

@@ -27,6 +27,16 @@ SCG.start = function(){
 
 		SCG.customInitialization();
 
+		if(SCG.space == undefined)
+		{
+			SCG.space = {
+				width: SCG.viewfield.default.width,
+				height: SCG.viewfield.default.height
+			}
+		}
+
+		SCG.viewfield.current = new Box(new Vector2,new Vector2(SCG.viewfield.width,SCG.viewfield.height));		
+
 		SCG.animate();
 	});
 }

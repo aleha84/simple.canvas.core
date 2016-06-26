@@ -1,5 +1,7 @@
 var SCG = {};
 
+SCG.space = undefined;
+
 SCG.viewfield = {
 	default: {
 		width: 500,
@@ -7,6 +9,7 @@ SCG.viewfield = {
 	},
 	width: 500,
 	height: 300,
+	current: undefined
 };
 
 SCG.canvas = undefined;
@@ -46,6 +49,84 @@ SCG.gameControls = {
 	scale:
 	{
 		times: 1
+	},
+	selectedGOs : [],
+	camera: {
+		mode: 'free',
+		shiftSpeed: 5,
+		centeredOn: undefined,
+		shifts: {
+			left: false,
+			right: false,
+			up: false,
+			down: false
+		},
+		free: function(){
+			SCG.gameControls.camera.mode = 'free';
+			this.centeredOn = undefined;
+		},
+		center: function(){
+			if(SCG.gameControls.selectedGOs.length == 1){
+				SCG.gameControls.camera.mode = 'centered';
+				this.centeredOn = SCG.gameControls.selectedGOs[0];
+			}
+			else{
+				SCG.gameControls.camera.mode = 'free';
+				this.centeredOn = undefined;
+			}
+		},
+		reset: function(){
+			this.shifts.left = false;
+			this.shifts.right = false;
+			this.shifts.up = false;
+			this.shifts.down = false;
+		},
+		update: function(now){
+			if(this.mode === 'free'){
+				var direction = undefined;
+				if(this.shifts.left)
+				{
+					direction = Vector2.left();
+				}
+				if(this.shifts.right)
+				{
+					direction = Vector2.right();
+				}
+				if(this.shifts.up)
+				{
+					if(direction!= undefined)
+					{
+						direction.add(Vector2.up());
+					}
+					else
+					{
+						direction = Vector2.up();	
+					}
+				}
+				if(this.shifts.down)
+				{
+					if(direction!= undefined)
+					{
+						direction.add(Vector2.down());
+					}
+					else
+					{
+						direction = Vector2.down();	
+					}
+				}
+				if(direction!== undefined){
+					var delta = direction.mul(this.shiftSpeed);
+					var bfTL = SCG.viewfield.current.topLeft.clone();
+					bfTL.add(delta);
+					SCG.viewfield.current.update(bfTL);		
+				}
+			}
+			else if(this.mode === 'centered' && this.centeredOn!== undefined){
+				var newBftl = this.centeredOn.position.substract(new Vector2(SCG.viewfield.width/2,SCG.viewfield.height/2),true);
+				SCG.viewfield.current.update(newBftl);
+			}
+			
+		}
 	},
 	mousestate : {
 		position: new Vector2,
@@ -167,6 +248,9 @@ SCG.gameControls = {
 	},
 	orientationChangeEventInit: function() {
 		var that = this;
+
+		SCG.gameControls.permanentEventInit();
+
 		$(window).on('orientationchange resize', function(e){
 			that.graphInit();
 		});
@@ -310,5 +394,3 @@ SCG.gameControls = {
 		}
 	}
 };
-
-SCG.gameControls.permanentEventInit();

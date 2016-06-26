@@ -69,22 +69,22 @@ function Poligon(init)
 	}
 
 	this.render = function(){
-		SCG2.context.beginPath();	
-		SCG2.context.moveTo(this.vertices[0].x, this.vertices[0].y);
+		SCG.context.beginPath();	
+		SCG.context.moveTo(this.vertices[0].x, this.vertices[0].y);
 		for(var i = 1; i< this.vertices.length; i++)
 		{
-			SCG2.context.lineTo(this.vertices[i].x, this.vertices[i].y);
+			SCG.context.lineTo(this.vertices[i].x, this.vertices[i].y);
 		}
 
 		
-		SCG2.context.lineWidth = this.renderOptions.lineWidth;
-		SCG2.context.strokeStyle = this.renderOptions.strokeStyle;
-		SCG2.context.closePath();
+		SCG.context.lineWidth = this.renderOptions.lineWidth;
+		SCG.context.strokeStyle = this.renderOptions.strokeStyle;
+		SCG.context.closePath();
 		if(this.renderOptions.fill){
-			SCG2.context.fillStyle = this.renderOptions.fillStyle;
-			SCG2.context.fill();	
+			SCG.context.fillStyle = this.renderOptions.fillStyle;
+			SCG.context.fill();	
 		}
-		SCG2.context.stroke();
+		SCG.context.stroke();
 	}
 
 	this.isPointInside = function(point){

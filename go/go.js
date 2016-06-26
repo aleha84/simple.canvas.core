@@ -66,7 +66,7 @@ SCG.GO.GO = function(prop){
 
 	if(prop.size == undefined || prop.size.equal(new Vector2))
 	{
-		throw 'SCG2.GO.GO -> size is undefined';
+		throw 'SCG.GO.GO -> size is undefined';
 	}
 
 	if(prop!=undefined)
@@ -107,7 +107,7 @@ SCG.GO.GO.prototype = {
 	},
 
 	render: function(){ 
-		if(!this.alive){
+		if(!this.alive || !this.renderPosition){
 			return false;
 		}
 
@@ -196,13 +196,19 @@ SCG.GO.GO.prototype = {
 			}
 		}
 		
-		//this.renderRadius = this.radius * SCG.gameControls.scale.times;
-		this.renderSize = this.size.mul(SCG.gameControls.scale.times);
-		this.renderPosition = new Vector2(this.position.x * SCG.gameControls.scale.times, this.position.y * SCG.gameControls.scale.times);
 
-		this.box = new Box(new Vector2(this.position.x - this.size.x/2,this.position.y - this.size.y/2), this.size);
+		this.renderSize = this.size.mul(SCG.gameControls.scale.times);
+
+		this.box = new Box(new Vector2(this.position.x - this.size.x/2,this.position.y - this.size.y/2), this.size); //absolute positioning box
+
+		this.renderPosition = undefined;
+		if(SCG.viewfield.current.isIntersectsWithBox(this.box))
+		{
+			this.renderPosition = new Vector2(this.position.x * SCG.gameControls.scale.times, this.position.y * SCG.gameControls.scale.times).add(SCG.viewfield.current.topLeft.mul(-1));
+		}
+
 		//this.boundingBox = new Box(new Vector2(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2), this.renderSize);
-		this.mouseOver = this.box.isPointInside(SCG.gameControls.mousestate.position.division(SCG.gameControls.scale.times));
+		//this.mouseOver = this.box.isPointInside(SCG.gameControls.mousestate.position.division(SCG.gameControls.scale.times));
 
 		if(this.isAnimated)
 		{
