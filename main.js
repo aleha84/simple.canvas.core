@@ -66,7 +66,7 @@ SCG.draw = function(){
 	}
 	
 
-	var i = SCG.go.length;
+	var i = SCG.scenes.activeScene.go.length;
 	while (i--) {
 		SCG.scenes.activeScene.go[i].update(now);
 		SCG.scenes.activeScene.go[i].render();

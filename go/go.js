@@ -40,14 +40,15 @@ SCG.GO.GO = function(prop){
 		currentDestination : new Vector2,
 		currentFrame: 0,
 		loop : false,
-		animationTimer : {
-			lastTimeWork: new Date,
-			delta : 0,
-			currentDelay: this.animation.frameChangeDelay,
-			originDelay: this.animation.frameChangeDelay,
-			doWorkInternal : this.animation.frameChange,
-			context: this
-		},
+		animationTimer : undefined,
+		//  {
+		// 	lastTimeWork: new Date,
+		// 	delta : 0,
+		// 	currentDelay: this.animation.frameChangeDelay,
+		// 	originDelay: this.animation.frameChangeDelay,
+		// 	doWorkInternal : this.animation.frameChange,
+		// 	context: this
+		// },
 		frameChange : function(){
 			this.animation.currentFrame++;
 			if(this.animation.currentFrame > this.animation.totalFrameCount){
@@ -64,6 +65,17 @@ SCG.GO.GO = function(prop){
 			this.animation.currentDestination = new Vector2(ccol - 1, crow - 1);
 		}
 	};
+
+	if(this.isAnimated){
+		this.animation.animationTimer = {
+			lastTimeWork: new Date,
+			delta : 0,
+			currentDelay: this.animation.frameChangeDelay,
+			originDelay: this.animation.frameChangeDelay,
+			doWorkInternal : this.animation.frameChange,
+			context: this
+		};
+	}
 
 	if(prop == undefined)
 	{
