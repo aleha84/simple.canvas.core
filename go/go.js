@@ -5,6 +5,7 @@ SCG.GO.GO = function(prop){
 	this.position = new Vector2;
 	this.renderPosition = new Vector2;
 	this.alive = true;
+	this.type = 'unidentifiedType';
 	this.id = '';
 	this.size = new Vector2;
 	this.renderSize = new Vector2;
@@ -64,6 +65,11 @@ SCG.GO.GO = function(prop){
 		}
 	};
 
+	if(prop == undefined)
+	{
+		throw 'SCG.GO.GO -> props are undefined';
+	}
+
 	if(prop.size == undefined || prop.size.equal(new Vector2))
 	{
 		throw 'SCG.GO.GO -> size is undefined';
@@ -88,7 +94,16 @@ SCG.GO.GO = function(prop){
 
 	this.health = this.maxHealth;
 	this.creationTime = new Date;
+
+	if(SCG.GO.GO.counter[this.type] == undefined)
+	{
+		SCG.GO.GO.counter[this.type] = 0;	
+	}
+
+	this.id = this.type + (++SCG.GO.GO.counter[this.type]);
 }
+
+SCG.GO.GO.counter = {};
 
 SCG.GO.GO.prototype = {
 	constructor: SCG.GO.GO,

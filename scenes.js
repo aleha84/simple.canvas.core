@@ -19,5 +19,9 @@ SCG.scenes = {
 			go: []
 		};
 
+		if(scene.initializer != undefined && isFunction(scene.initializer)){
+			SCG.customInitializaers.push(scene.initializer);
+		}
+
 	}
 }

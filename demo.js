@@ -6,6 +6,9 @@ $(document).ready(function () {
 			SCG.context.rect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
 			SCG.context.fillStyle = 'yellow';
 			SCG.context.fill();
+		},
+		initializer: function(){
+			SCG.GO.register("demoObject", { type: 'demoObject'});
 		}
 	}	
 
