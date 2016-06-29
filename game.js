@@ -156,11 +156,15 @@ SCG.gameControls = {
 				this.click.prevStateDown = false;
 				this.click.isClick = true;
 
-				if(!isEmpty(this.click.handlers)){
-					for(var handlerId in this.click.handlers) {
-						if(this.click.handlers.hasOwnProperty(handlerId) && typeof this.click.handlers[handlerId] === 'function'){
-							this.click.handlers[handlerId]();
-						}
+				for(var i = 0; i < this.eventHandlers.click.length;i++){
+					var ch = this.eventHandlers.click[i];
+					if(ch.renderBox!=undefined 
+						&& ch.renderBox.isPointInside(SCG.gameControls.mousestate.position) 
+						&& ch.handlers != undefined 
+						&& ch.handlers.click != undefined 
+						&& ch.handlers.click)
+					{
+						ch.clickHandler();
 					}
 				}
 			}
@@ -169,10 +173,12 @@ SCG.gameControls = {
 				this.click.isClick = false;
 			}
 		},
+		eventHandlers: {
+			click: []
+		},
 		click: {
 			prevStateDown: false,
 			isClick : false,
-			handlers: {}
 		}
 	},
 	keyboardstate: {
@@ -211,6 +217,9 @@ SCG.gameControls = {
 		SCG.gameControls.mousestate.reset();
 	},
 	mouseUp: function(event){
+		var that = this;
+		that.getEventAbsolutePosition(event);
+
 		if(event.type == 'touchstart')
 		{
 			if(event.originalEvent.changedTouches != undefined && event.originalEvent.changedTouches.length == 1)
@@ -237,15 +246,40 @@ SCG.gameControls = {
 		event.preventDefault();
 	},
 	mouseMove: function(event){
+		var that = this;
 		var oldPosition = SCG.gameControls.mousestate.position.clone();
-		var eventPos = pointerEventToXY(event);
-		var offset = $(SCG.canvas).offset();
-		SCG.gameControls.mousestate.position = new Vector2(eventPos.x - SCG.canvas.margins.left,eventPos.y - SCG.canvas.margins.top);
+		that.getEventAbsolutePosition(event);
+		// var eventPos = pointerEventToXY(event);
+		// var offset = $(SCG.canvas).offset();
+		// SCG.gameControls.mousestate.position = new Vector2(eventPos.x - SCG.canvas.margins.left,eventPos.y - SCG.canvas.margins.top);
 		SCG.gameControls.mousestate.delta = SCG.gameControls.mousestate.position.substract(oldPosition);
 
 		SCG.debugger.setValue(SCG.gameControls.mousestate.toString());
 		//console.log(SCG.gameControls.mousestate.position);
 	},
+	getEventAbsolutePosition: function(event){
+		var eventPos = pointerEventToXY(event);
+		var offset = $(SCG.canvas).offset();
+		SCG.gameControls.mousestate.position = new Vector2(eventPos.x - SCG.canvas.margins.left,eventPos.y - SCG.canvas.margins.top);
+	},
+	// click: function(event){
+	// 	var that = this;
+	// 	var eventPos = pointerEventToXY(event);
+	// 	var offset = $(SCG.canvas).offset();
+	// 	var clickPosition = new Vector2(eventPos.x - SCG.canvas.margins.left,eventPos.y - SCG.canvas.margins.top);
+	// 	for(var i = 0; i < SCG.gameControls.eventHandlers.click.length;i++){
+	// 		var ch = SCG.gameControls.eventHandlers.click[i];
+	// 		if(ch.renderBox!=undefined 
+	// 			&& ch.renderBox.isPointInside(clickPosition) 
+	// 			&& ch.handlers != undefined 
+	// 			&& ch.handlers.click != undefined 
+	// 			&& ch.handlers.click)
+	// 		{
+	// 			ch.clickHandler();
+	// 		}
+	// 	}
+
+	// },
 	orientationChangeEventInit: function() {
 		var that = this;
 
@@ -361,6 +395,11 @@ SCG.gameControls = {
 			e.preventDefault();
 			return false;
 		});
+
+		// $(document).on('click',SCG.canvasIdSelector, function(e){
+		// 	absorbTouchEvent(e);
+		// 	that.click(e);
+		// });
 	},
 	permanentKeyDown : function (event)
 	{

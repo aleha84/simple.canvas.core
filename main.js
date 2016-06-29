@@ -59,7 +59,7 @@ SCG.draw = function(){
 
 	SCG.gameLogics.doPauseWork(now);
 
-	//SCG.gameControls.mousestate.doClickCheck();
+	SCG.gameControls.mousestate.doClickCheck();
 
 	if(SCG.scenes.activeScene.preMainWork && isFunction(SCG.scenes.activeScene.preMainWork)){
 		SCG.scenes.activeScene.preMainWork();	

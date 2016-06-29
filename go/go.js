@@ -4,6 +4,7 @@ SCG.GO.GO = function(prop){
 	this.defaultInitProperties = {};
 	this.position = new Vector2;
 	this.renderPosition = new Vector2;
+	this.renderBox = undefined;
 	this.alive = true;
 	this.type = 'unidentifiedType';
 	this.id = '';
@@ -28,6 +29,8 @@ SCG.GO.GO = function(prop){
 	this.maxHealth = 1;
 	this.isDrawingHealthBar = false;
 	this.isCustomRender = false;
+
+	this.handlers = {};
 
 	this.isAnimated = false;
 	this.animation = {
@@ -126,6 +129,9 @@ SCG.GO.GO.prototype = {
 	setDead : function() {
 		this.beforeDead();
 		
+		var index = SCG.gameControls.mousestate.eventHandlers.click.indexOf(this);
+		SCG.gameControls.mousestate.eventHandlers.click.splice(index, 1);
+
 		this.alive = false;
 	},
 
@@ -232,6 +238,7 @@ SCG.GO.GO.prototype = {
 		if(SCG.viewfield.current.isIntersectsWithBox(this.box))
 		{
 			this.renderPosition = new Vector2(this.position.x * SCG.gameControls.scale.times, this.position.y * SCG.gameControls.scale.times).add(SCG.viewfield.current.topLeft.mul(-1));
+			this.renderBox = new Box(new Vector2(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2), this.renderSize);
 		}
 
 		//this.boundingBox = new Box(new Vector2(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2), this.renderSize);
@@ -279,8 +286,6 @@ SCG.GO.GO.prototype = {
 		// 	return;
 		// }
 
-		this.boundingBox = new Box(new Vector2(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2), this.renderSize);
-
 		if(this.selectBoxColor === undefined)
 		{
 			this.selectBoxColor = {max:255, min: 100, current: 255, direction:1, step: 1, colorPattern: 'rgb({0},0,0)'};
@@ -291,11 +296,13 @@ SCG.GO.GO.prototype = {
 		}
 		
 
-		this.boundingBox.render({fill:false,strokeStyle: String.format(this.selectBoxColor.colorPattern,this.selectBoxColor.current), lineWidth: 2});
+		this.renderBox.render({fill:false,strokeStyle: String.format(this.selectBoxColor.colorPattern,this.selectBoxColor.current), lineWidth: 2});
 		if(this.selectBoxColor.current >= this.selectBoxColor.max || this.selectBoxColor.current <= this.selectBoxColor.min)
 		{
 			this.selectBoxColor.direction *=-1;
 		}
 		this.selectBoxColor.current+=(this.selectBoxColor.step*this.selectBoxColor.direction);
 	},
+
+	clickHandler: function(){}
 }

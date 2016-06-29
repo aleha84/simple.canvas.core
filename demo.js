@@ -17,6 +17,12 @@ $(document).ready(function () {
 					SCG.context.rect(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2, this.renderSize.x, this.renderSize.y);
 					SCG.context.fillStyle = 'gray';
 					SCG.context.fill()
+				},
+				clickHandler: function(){
+						alert(this.id);
+				},
+				handlers: {
+					click: true
 				}
 			}
 		],

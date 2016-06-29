@@ -7,6 +7,15 @@ SCG.scenes = {
 		}
 
 		this.activeScene = this.scenes[sceneName];
+
+		// reset go event handlers
+		SCG.gameControls.mousestate.eventHandlers.click = [];
+		for(var i = 0, len = this.activeScene.go.length; i < len;i++){
+			var sg = this.activeScene.go[i];
+			if(sg.handlers.click){
+				SCG.gameControls.mousestate.eventHandlers.click.push(sg);
+			}
+		}
 	},
 	registerScene: function(scene) {
 		if(scene.name === undefined){
@@ -24,12 +33,6 @@ SCG.scenes = {
 
 				SCG.GO.register(type, scene.gameObjectsBaseProperties[i]);
 			}
-		}
-
-		if(scene.initializer != undefined && isFunction(scene.initializer)){
-			scene.initializer();
-
-			//SCG.customInitializaers.push(scene.initializer);
 		}
 
 		this.scenes[scene.name] = {
