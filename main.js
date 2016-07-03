@@ -1,4 +1,18 @@
 SCG.start = function(){
+
+	if(!SCG.canvasBg){
+		var c = $('<canvas />',{
+			width: SCG.viewfield.width,
+			height: SCG.viewfield.height
+		});
+		c.attr({'width':SCG.viewfield.width,'height':SCG.viewfield.height,id:SCG.canvasBgId});
+		c.css({'z-index': 0 });
+		c.css({'position': 'absolute' });
+		$(document.body).append(c);
+		SCG.canvasBg = c.get(0);
+		SCG.contextBg = SCG.canvasBg.getContext('2d');	
+	}
+
 	if(!SCG.canvas)
 	{
 		var c = $('<canvas />',{
@@ -6,6 +20,8 @@ SCG.start = function(){
 			height: SCG.viewfield.height
 		});
 		c.attr({'width':SCG.viewfield.width,'height':SCG.viewfield.height,id:SCG.canvasId});
+		c.css({'z-index': 1 });
+		c.css({'position': 'absolute' });
 		$(document.body).append(c);
 		SCG.canvas = c.get(0);
 		SCG.context = SCG.canvas.getContext('2d');
@@ -65,7 +81,6 @@ SCG.draw = function(){
 		SCG.scenes.activeScene.preMainWork();	
 	}
 	
-
 	var i = SCG.scenes.activeScene.go.length;
 	while (i--) {
 		SCG.scenes.activeScene.go[i].update(now);

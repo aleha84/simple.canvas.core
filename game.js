@@ -15,7 +15,14 @@ SCG.viewfield = {
 SCG.canvas = undefined;
 SCG.canvasId = "mainCanvas";
 SCG.canvasIdSelector = "#"+SCG.canvasId;
+
+SCG.canvasBg = undefined;
+SCG.canvasBgId = "backgroundCanvas";
+SCG.canvasBgIdSelector = "#"+SCG.canvasBgId;
+
 SCG.context = undefined;
+SCG.contextBg = undefined;
+
 SCG.gameLogics = {
 	isPaused: false,
 	isPausedStep: false,
@@ -157,6 +164,7 @@ SCG.gameControls = {
 				{
 					//to do add and check z-index
 					ch.clickHandler();
+					break;
 				}
 			}
 		},
@@ -317,16 +325,24 @@ SCG.gameControls = {
 			mTop = Math.round((_height - SCG.viewfield.height)/2);
 		}
 
-		$(SCG.canvas).attr({'width':SCG.viewfield.width,'height':SCG.viewfield.height})
-		$(SCG.canvas).css({'width':SCG.viewfield.width,'height':SCG.viewfield.height});
-		$(SCG.canvas).css({'margin-top': mTop });
-		$(SCG.canvas).css({'margin-left': mLeft });
-		SCG.canvas.width = SCG.viewfield.width;
-		SCG.canvas.height = SCG.viewfield.height;
-		SCG.canvas.margins = {
+		this.setCanvasProperties(SCG.canvas, mTop, mLeft);
+		this.setCanvasProperties(SCG.canvasBg, mTop, mLeft);
+
+		if(SCG.scenes.activeScene.backgroundRender != undefined && isFunction(SCG.scenes.activeScene.backgroundRender)){
+			SCG.scenes.activeScene.backgroundRender();
+		}
+	},
+	setCanvasProperties: function(canvas, mTop, mLeft){
+		$(canvas).attr({'width':SCG.viewfield.width,'height':SCG.viewfield.height})
+		$(canvas).css({'width':SCG.viewfield.width,'height':SCG.viewfield.height});
+		$(canvas).css({'margin-top': mTop });
+		$(canvas).css({'margin-left': mLeft });
+		canvas.width = SCG.viewfield.width;
+		canvas.height = SCG.viewfield.height;
+		canvas.margins = {
 			top : mTop,
 			left: mLeft
-		};
+		}
 	},
 	permanentEventInit : function (){
 		var that = this;

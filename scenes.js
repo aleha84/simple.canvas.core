@@ -16,6 +16,15 @@ SCG.scenes = {
 				SCG.gameControls.mousestate.eventHandlers.click.push(sg);
 			}
 		}
+
+		//clean background
+		if(SCG.contextBg){
+			SCG.contextBg.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
+
+			if(this.activeScene.backgroundRender != undefined && isFunction(this.activeScene.backgroundRender)){
+				this.activeScene.backgroundRender();
+			}	
+		}
 	},
 	registerScene: function(scene) {
 		if(scene.name === undefined){
@@ -38,7 +47,8 @@ SCG.scenes = {
 		this.scenes[scene.name] = {
 			preMainWork : (scene.preMainWork !== undefined && isFunction(scene.preMainWork)) ? scene.preMainWork.bind(this) : undefined,
 			afterMainWork : (scene.afterMainWork !== undefined && isFunction(scene.afterMainWork)) ? scene.afterMainWork.bind(this) : undefined,
-			go: scene.gameObjectGenerator != undefined && isFunction(scene.gameObjectGenerator) ? scene.gameObjectGenerator() : []
+			go: scene.gameObjectGenerator != undefined && isFunction(scene.gameObjectGenerator) ? scene.gameObjectGenerator() : [],
+			backgroundRender: scene.backgroundRender != undefined && isFunction(scene.backgroundRender) ? scene.backgroundRender : undefined
 		};
 
 		

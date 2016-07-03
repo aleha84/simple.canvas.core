@@ -1,11 +1,14 @@
 $(document).ready(function () {
 	var scene1 = {
 		name: "demo1",
+		backgroundRender: function(){
+			SCG.contextBg.beginPath();
+			SCG.contextBg.rect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
+			SCG.contextBg.fillStyle = 'yellow';
+			SCG.contextBg.fill();
+		},
 		preMainWork: function() {
-			SCG.context.beginPath();
-			SCG.context.rect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
-			SCG.context.fillStyle = 'yellow';
-			SCG.context.fill();
+			SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
 		},
 		gameObjectsBaseProperties: [
 			{ 
