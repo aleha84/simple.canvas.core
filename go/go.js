@@ -107,6 +107,10 @@ SCG.GO.GO = function(prop){
 		this.animation.currentFrame = 0;
 	}
 
+	if(this.initializer != undefined && isFunction(this.initializer)){
+		this.initializer(this);
+	}
+
 	this.health = this.maxHealth;
 	this.creationTime = new Date;
 
