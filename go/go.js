@@ -74,7 +74,7 @@ SCG.GO.GO = function(prop){
 				}
 			}
 			var crow = this.animation.framesRowsCount - parseInt((this.animation.totalFrameCount - this.animation.currentFrame) / this.animation.framesInRow);
-			var ccol = this.animation.framesInRow + parseInt((this.animation.currentFrame - (this.animation.framesInRow * crow)));
+			var ccol = this.animation.currentFrame - ((crow - 1) *this.animation.framesInRow);  //this.animation.framesInRow + parseInt((this.animation.currentFrame - (this.animation.framesInRow * crow)));
 			this.animation.currentDestination = new Vector2(ccol - 1, crow - 1);
 		}
 	};
@@ -116,6 +116,10 @@ SCG.GO.GO = function(prop){
 
 	if(this.initializer != undefined && isFunction(this.initializer)){
 		this.initializer(this);
+	}
+
+	if(this.img == undefined && this.imgPropertyName != undefined){ 
+		this.img = SCG.images[this.imgPropertyName];
 	}
 
 	this.health = this.maxHealth;

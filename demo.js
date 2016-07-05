@@ -2,6 +2,7 @@ $(document).ready(function () {
 
 	SCG.src = {
 		flower_sheet: 'content/images/flower_sheet.png',
+		butterfly_sheet: 'content/images/butterfly_sheet.png'
 	}
 
 	var scene1 = {
@@ -17,21 +18,19 @@ $(document).ready(function () {
 		},
 		gameObjectsBaseProperties: [
 			{ 
-				type: 'demoObject',
-				size: new Vector2(10,10),
-				isCustomRender: true,
-				customRender: function() {
-					SCG.context.beginPath();
-					SCG.context.rect(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2, this.renderSize.x, this.renderSize.y);
-					SCG.context.fillStyle = 'gray';
-					SCG.context.fill()
+				type: 'butterfly',
+				size: new Vector2(20,20),
+				imgPropertyName: 'butterfly_sheet',
+				isAnimated: true,
+				animation: {
+					totalFrameCount: 34,
+					framesInRow: 12,
+					framesRowsCount: 3,
+					frameChangeDelay: 50,
+					destinationFrameSize: new Vector2(35,32),
+					sourceFrameSize: new Vector2(70,65),
+					loop: true,
 				},
-				clickHandler: function(){
-					alert(this.id);
-				},
-				handlers: {
-					click: true
-				}
 			},
 			{
 				type:'flower',
@@ -82,8 +81,6 @@ $(document).ready(function () {
 						doWorkInternal : that.openCloseSwitch,
 						context: that
 					}
-
-					that.img = SCG.images[that.imgPropertyName];
 				}
 			}
 		],
@@ -93,10 +90,9 @@ $(document).ready(function () {
 				position: new Vector2(150, 150)
 			}));
 
-			// gos.push(SCG.GO.create("demoObject", {
-			// 	position: new Vector2(300, 200),
-			// 	size: new Vector2(20,20)
-			// }));
+			gos.push(SCG.GO.create("butterfly", {
+				position: new Vector2(200, 200)
+			}));
 
 			return gos;
 		}
