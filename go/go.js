@@ -73,8 +73,8 @@ SCG.GO.GO = function(prop){
 					return;
 				}
 			}
-			var crow = this.animation.framesRowsCount - parseInt((this.animation.totalFrameCount - this.animation.currentFrame) / this.animation.framesInRow);
-			var ccol = this.animation.currentFrame - ((crow - 1) *this.animation.framesInRow);  //this.animation.framesInRow + parseInt((this.animation.currentFrame - (this.animation.framesInRow * crow)));
+			var crow = Math.ceil(this.animation.currentFrame/this.animation.framesInRow);
+			var ccol = this.animation.framesInRow - ((crow*this.animation.framesInRow) - this.animation.currentFrame);
 			this.animation.currentDestination = new Vector2(ccol - 1, crow - 1);
 		}
 	};
