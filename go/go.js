@@ -44,17 +44,15 @@ SCG.GO.GO = function(prop){
 		currentDestination : new Vector2,
 		currentFrame: 0,
 		reverse: false,
+		paused: false,
 		loop : false,
 		animationTimer : undefined,
-		//  {
-		// 	lastTimeWork: new Date,
-		// 	delta : 0,
-		// 	currentDelay: this.animation.frameChangeDelay,
-		// 	originDelay: this.animation.frameChangeDelay,
-		// 	doWorkInternal : this.animation.frameChange,
-		// 	context: this
-		// },
+		animationEndCallback: function(){},
 		frameChange : function(){
+			if(this.animation.paused){
+				return;
+			}
+
 			if(this.animation.reverse){
 				this.animation.currentFrame--;	
 			}
@@ -70,7 +68,8 @@ SCG.GO.GO = function(prop){
 					this.animation.currentFrame = this.animation.reverse? this.animation.totalFrameCount :  1;
 				}
 				else{
-					this.setDead();
+					this.animation.animationEndCallback.call(this);
+					//this.setDead();
 					return;
 				}
 			}

@@ -48,8 +48,11 @@ $(document).ready(function () {
 					frameChangeDelay: 50,
 					destinationFrameSize: new Vector2(50,37),
 					sourceFrameSize: new Vector2(50,37),
-					loop: true,
-					reverse: false
+					loop: false,
+					reverse: false,
+					animationEndCallback: function() {
+						this.animation.paused = true;
+					}
 				},
 				customRender: function() {
 					SCG.context.beginPath();
@@ -59,6 +62,9 @@ $(document).ready(function () {
 				},
 				openCloseSwitch: function(){
 					this.isOpened = !this.isOpened;
+
+					this.animation.paused = false;
+					this.animation.reverse = this.isOpened;
 				},
 				internalPreUpdate: function(now) {
 					doWorkByTimer(this.openCloseTimer, now);
