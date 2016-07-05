@@ -17,6 +17,7 @@ SCG.GO.GO = function(prop){
 	//this.radius = 10;
 	this.renderRadius = 10;
 	this.img = undefined;
+	this.imgPropertyName = undefined;
 	this.selected = false;
 	this.playerControllable =false;
 	this.destination = undefined;
@@ -42,6 +43,7 @@ SCG.GO.GO = function(prop){
 		sourceFrameSize: new Vector2,
 		currentDestination : new Vector2,
 		currentFrame: 0,
+		reverse: false,
 		loop : false,
 		animationTimer : undefined,
 		//  {
@@ -53,10 +55,19 @@ SCG.GO.GO = function(prop){
 		// 	context: this
 		// },
 		frameChange : function(){
-			this.animation.currentFrame++;
-			if(this.animation.currentFrame > this.animation.totalFrameCount){
+			if(this.animation.reverse){
+				this.animation.currentFrame--;	
+			}
+			else
+			{
+				this.animation.currentFrame++;
+			}
+
+			if((!this.animation.reverse && this.animation.currentFrame > this.animation.totalFrameCount)
+				|| (this.animation.reverse && this.animation.currentFrame < 1)
+				){
 				if(this.animation.loop){
-					this.animation.currentFrame = 1;
+					this.animation.currentFrame = this.animation.reverse? this.animation.totalFrameCount :  1;
 				}
 				else{
 					this.setDead();
@@ -68,17 +79,6 @@ SCG.GO.GO = function(prop){
 			this.animation.currentDestination = new Vector2(ccol - 1, crow - 1);
 		}
 	};
-
-	if(this.isAnimated){
-		this.animation.animationTimer = {
-			lastTimeWork: new Date,
-			delta : 0,
-			currentDelay: this.animation.frameChangeDelay,
-			originDelay: this.animation.frameChangeDelay,
-			doWorkInternal : this.animation.frameChange,
-			context: this
-		};
-	}
 
 	if(prop == undefined)
 	{
@@ -92,7 +92,7 @@ SCG.GO.GO = function(prop){
 
 	if(prop!=undefined)
 	{
-		$.extend(this,prop);
+		$.extend(true, this, prop);
 	}
 	if(this.direction!=undefined)
 	{
@@ -105,6 +105,14 @@ SCG.GO.GO = function(prop){
 	if(this.isAnimated){
 		this.size = this.animation.destinationFrameSize.clone();
 		this.animation.currentFrame = 0;
+		this.animation.animationTimer = {
+			lastTimeWork: new Date,
+			delta : 0,
+			currentDelay: this.animation.frameChangeDelay,
+			originDelay: this.animation.frameChangeDelay,
+			doWorkInternal : this.animation.frameChange,
+			context: this
+		};
 	}
 
 	if(this.initializer != undefined && isFunction(this.initializer)){
@@ -155,6 +163,14 @@ SCG.GO.GO.prototype = {
 			this.customRender();
 		}
 		else{
+			if(this.img == undefined && this.imgPropertyName != undefined){ //first run workaround
+				this.img = SCG.images[this.imgPropertyName];
+				if(this.img == undefined){
+					throw 'Cant achieve image named: ' + this.imgPropertyName;
+				}
+			}
+
+
 			if(this.img != undefined)
 			{
 				if(this.isAnimated)

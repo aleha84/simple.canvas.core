@@ -1,4 +1,9 @@
 $(document).ready(function () {
+
+	SCG.src = {
+		flower_sheet: 'content/images/flower_sheet.png',
+	}
+
 	var scene1 = {
 		name: "demo1",
 		backgroundRender: function(){
@@ -32,8 +37,20 @@ $(document).ready(function () {
 				type:'flower',
 				size: new Vector2(20,20),
 				isOpened: false,
-				isCustomRender: true,
+				isCustomRender: false,
 				defaultDelay: 3000,
+				isAnimated: true,
+				imgPropertyName: 'flower_sheet',
+				animation: {
+					totalFrameCount: 17,
+					framesInRow: 17,
+					framesRowsCount: 1,
+					frameChangeDelay: 50,
+					destinationFrameSize: new Vector2(50,37),
+					sourceFrameSize: new Vector2(50,37),
+					loop: true,
+					reverse: false
+				},
 				customRender: function() {
 					SCG.context.beginPath();
 					SCG.context.rect(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2, this.renderSize.x, this.renderSize.y);
@@ -59,6 +76,8 @@ $(document).ready(function () {
 						doWorkInternal : that.openCloseSwitch,
 						context: that
 					}
+
+					that.img = SCG.images[that.imgPropertyName];
 				}
 			}
 		],
