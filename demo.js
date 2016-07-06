@@ -2,24 +2,51 @@ $(document).ready(function () {
 
 	SCG.src = {
 		flower_sheet: 'content/images/flower_sheet.png',
-		butterfly_sheet: 'content/images/butterfly_sheet.png'
+		butterfly_sheet: 'content/images/butterfly_sheet.png',
+		grassBackground: 'content/images/grassBackground.png'
 	}
 
 	var scene1 = {
 		name: "demo1",
+		start: function(){
+			this.go = [];
+			var unit = SCG.GO.create("butterfly", {
+				position: new Vector2(200, 200)
+			});
+
+			this.go.push(unit);
+
+			this.go.push(SCG.GO.create("flower", {
+				position: new Vector2(150, 150)
+			}));
+
+			this.game.playerUnit = unit;
+		},
 		backgroundRender: function(){
-			SCG.contextBg.beginPath();
-			SCG.contextBg.rect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
-			SCG.contextBg.fillStyle = 'yellow';
-			SCG.contextBg.fill();
+			if(SCG.images['grassBackground'] == undefined){
+				return;
+			}
+
+			SCG.contextBg.drawImage(SCG.images['grassBackground'] , 
+				0, 
+				0, 
+				SCG.viewfield.width, 
+				SCG.viewfield.height)
 		},
 		preMainWork: function() {
 			SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
+		},
+		game: {
+			playerUnit: undefined,
+			clickHandler: function(clickPosition){
+				this.playerUnit.setDestination(clickPosition);//.substract(this.playerUnit.size.division(2)));
+			},
 		},
 		gameObjectsBaseProperties: [
 			{ 
 				type: 'butterfly',
 				size: new Vector2(20,20),
+				speed: 2,
 				imgPropertyName: 'butterfly_sheet',
 				isAnimated: true,
 				animation: {
@@ -27,10 +54,10 @@ $(document).ready(function () {
 					framesInRow: 12,
 					framesRowsCount: 3,
 					frameChangeDelay: 50,
-					destinationFrameSize: new Vector2(35,32),
+					destinationFrameSize: new Vector2(70,65),
 					sourceFrameSize: new Vector2(70,65),
 					loop: true,
-				},
+				}
 			},
 			{
 				type:'flower',
@@ -86,13 +113,13 @@ $(document).ready(function () {
 		],
 		gameObjectGenerator: function () {
 			var gos = [];
-			gos.push(SCG.GO.create("flower", {
-				position: new Vector2(150, 150)
-			}));
+			// gos.push(SCG.GO.create("flower", {
+			// 	position: new Vector2(150, 150)
+			// }));
 
-			gos.push(SCG.GO.create("butterfly", {
-				position: new Vector2(200, 200)
-			}));
+			// gos.push(SCG.GO.create("butterfly", {
+			// 	position: new Vector2(200, 200)
+			// }));
 
 			return gos;
 		}

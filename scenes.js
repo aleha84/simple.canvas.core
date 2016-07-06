@@ -25,6 +25,10 @@ SCG.scenes = {
 				this.activeScene.backgroundRender();
 			}	
 		}
+
+		if(this.activeScene.start != undefined && isFunction(this.activeScene.start)){
+			this.activeScene.start();
+		}
 	},
 	registerScene: function(scene) {
 		if(scene.name === undefined){
@@ -45,10 +49,12 @@ SCG.scenes = {
 		}
 
 		this.scenes[scene.name] = {
+			start : (scene.start !== undefined && isFunction(scene.start)) ? scene.start : undefined,
 			preMainWork : (scene.preMainWork !== undefined && isFunction(scene.preMainWork)) ? scene.preMainWork.bind(this) : undefined,
 			afterMainWork : (scene.afterMainWork !== undefined && isFunction(scene.afterMainWork)) ? scene.afterMainWork.bind(this) : undefined,
 			go: scene.gameObjectGenerator != undefined && isFunction(scene.gameObjectGenerator) ? scene.gameObjectGenerator() : [],
-			backgroundRender: scene.backgroundRender != undefined && isFunction(scene.backgroundRender) ? scene.backgroundRender : undefined
+			backgroundRender: scene.backgroundRender != undefined && isFunction(scene.backgroundRender) ? scene.backgroundRender : undefined,
+			game: $.extend(true, {}, scene.game)
 		};
 
 		

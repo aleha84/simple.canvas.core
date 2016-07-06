@@ -167,6 +167,11 @@ SCG.gameControls = {
 					break;
 				}
 			}
+
+			if(SCG.scenes.activeScene.game.clickHandler != undefined && isFunction(SCG.scenes.activeScene.game.clickHandler))
+			{
+				SCG.scenes.activeScene.game.clickHandler(SCG.gameControls.mousestate.position.division(SCG.gameControls.scale.times));
+			}
 		},
 		eventHandlers: {
 			click: []
