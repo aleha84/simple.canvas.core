@@ -26,6 +26,9 @@ SCG.scenes = {
 			}	
 		}
 
+		// AI creation
+		SCG.AI.initialize();
+
 		if(this.activeScene.start != undefined && isFunction(this.activeScene.start)){
 			this.activeScene.start();
 		}

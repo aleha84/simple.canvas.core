@@ -1,5 +1,7 @@
 var SCG = {};
 
+SCG.AI = {};
+
 SCG.space = undefined;
 
 SCG.viewfield = {

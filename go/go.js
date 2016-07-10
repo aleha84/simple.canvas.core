@@ -114,6 +114,15 @@ SCG.GO.GO = function(prop){
 		};
 	}
 
+	if(SCG.GO.GO.counter[this.type] == undefined)
+	{
+		SCG.GO.GO.counter[this.type] = 0;	
+	}
+	this.id = this.type + (++SCG.GO.GO.counter[this.type]);
+
+	this.health = this.maxHealth;
+	this.creationTime = new Date;
+
 	if(this.initializer != undefined && isFunction(this.initializer)){
 		this.initializer(this);
 	}
@@ -122,15 +131,7 @@ SCG.GO.GO = function(prop){
 		this.img = SCG.images[this.imgPropertyName];
 	}
 
-	this.health = this.maxHealth;
-	this.creationTime = new Date;
-
-	if(SCG.GO.GO.counter[this.type] == undefined)
-	{
-		SCG.GO.GO.counter[this.type] = 0;	
-	}
-
-	this.id = this.type + (++SCG.GO.GO.counter[this.type]);
+	SCG.AI.sendEvent({ type: 'created', message: {goType: this.type, id: this.id, position: this.position.clone() }});
 }
 
 SCG.GO.GO.counter = {};

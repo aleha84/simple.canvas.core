@@ -8,17 +8,15 @@ $(document).ready(function () {
 
 	var scene1 = {
 		name: "demo1",
-		start: function(){
+		start: function(){ // called each time as scene selected
+			this.game.AI.initialize();
+
 			this.go = [];
 			var unit = SCG.GO.create("butterfly", {
 				position: new Vector2(200, 200)
 			});
 
 			this.go.push(unit);
-
-			this.go.push(SCG.GO.create("flower", {
-				position: new Vector2(150, 150)
-			}));
 
 			this.game.playerUnit = unit;
 		},
@@ -38,9 +36,73 @@ $(document).ready(function () {
 		},
 		game: {
 			playerUnit: undefined,
-			clickHandler: function(clickPosition){
-				this.playerUnit.setDestination(clickPosition);//.substract(this.playerUnit.size.division(2)));
+			clickHandler: function(clickPosition){ // custom global click handler
+				this.playerUnit.setDestination(clickPosition);
 			},
+			AI: { // should be here if AI is needed
+				initialize: function(){ // just helper to init environment
+					SCG.AI.initializeEnvironment({
+						space: {
+							width: SCG.space.width,
+							height: SCG.space.height
+						},
+						flowers: {
+							items: [],
+							maxCount: 5
+						}
+					});
+				},
+				messagesProcesser: function(wm){ // proccess messages from AI
+					if(wm == undefined){
+						return;
+					}
+
+					if(wm.command){
+						switch(wm.command){
+							case 'log':
+								console.log(wm);
+								break;
+							case 'create':
+								if(wm.message.goType == 'flower'){
+									SCG.scenes.activeScene.go.push(SCG.GO.create("flower", {
+										position: new Vector2(getRandomInt(15, SCG.space.width-15), getRandomInt(15, SCG.space.height-15))
+									}));
+								}
+								break;
+							default:
+								break;
+						}	
+					}
+				},
+				queueProcesser: function queueProcesser(){ // queue processer (on AI side)
+					while(queue.length){
+						var task = queue.pop();
+						switch(task.type){
+							case 'start':
+								self.createFlower = function(){
+									self.postMessage({command: 'create', message: { goType: 'flower' } });				
+								};
+								self.checkFlowers = function(){
+									if(self.environment.flowers.items.length < self.environment.flowers.maxCount){
+										self.createFlower();
+									}
+								};
+
+								self.checkFlowers();
+								break;
+							case 'created':
+								if(task.message.goType == 'flower'){
+									self.environment.flowers.items.push({id: task.message.id, position: task.message.position });
+									self.checkFlowers();
+								}
+								break;
+							default:
+								break;
+						}
+					}
+					
+				}
+			}
 		},
 		gameObjectsBaseProperties: [
 			{ 
@@ -124,6 +186,13 @@ $(document).ready(function () {
 			return gos;
 		}
 	}	
+
+
+	//globals init
+	SCG.space = {
+		width: SCG.viewfield.default.width,
+		height: SCG.viewfield.default.height
+	}
 
 	SCG.scenes.registerScene(scene1);
 
