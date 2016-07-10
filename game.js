@@ -1,4 +1,4 @@
-var SCG = {};
+var SCG = {test: 'test'};
 
 SCG.AI = {};
 

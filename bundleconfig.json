@@ -1,0 +1,23 @@
+[
+  {
+    "outputFileName": "build/core.min.js",
+    "inputFiles": [
+      "utils/box.js",
+      "utils/extenders.js",
+      "utils/circle.js",
+      "utils/line.js",
+      "utils/poligon.js",
+      "utils/utils.js",
+      "utils/vector2.js",
+      "game.js",
+      "debugger.js",
+      "go/go.js",
+      "go/goFactory.js",
+      "frameCounter.js",
+      "initialization.js",
+      "scenes.js",
+      "AI.js",
+      "main.js"
+    ]
+  }
+]
