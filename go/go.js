@@ -131,7 +131,10 @@ SCG.GO.GO = function(prop){
 		this.img = SCG.images[this.imgPropertyName];
 	}
 
-	SCG.AI.sendEvent({ type: 'created', message: {goType: this.type, id: this.id, position: this.position.clone() }});
+	if(SCG.AI.worker){
+		SCG.AI.sendEvent({ type: 'created', message: {goType: this.type, id: this.id, position: this.position.clone() }});	
+	}
+	
 }
 
 SCG.GO.GO.counter = {};
@@ -145,8 +148,14 @@ SCG.GO.GO.prototype = {
 	setDead : function() {
 		this.beforeDead();
 		
+		//remove from event handlers
 		var index = SCG.gameControls.mousestate.eventHandlers.click.indexOf(this);
 		SCG.gameControls.mousestate.eventHandlers.click.splice(index, 1);
+
+		//send to ai msg
+		if(SCG.AI.worker){
+			SCG.AI.sendEvent({ type: 'removed', message: {goType: this.type, id: this.id }});	
+		}
 
 		this.alive = false;
 	},
@@ -285,7 +294,7 @@ SCG.GO.GO.prototype = {
 
 	},
 
-	internalUpdate: function(){
+	internalUpdate: function(now){
 
 	},
 
