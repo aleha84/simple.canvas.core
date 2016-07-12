@@ -91,7 +91,7 @@ SCG.GO.GO = function(prop){
 
 	if(prop!=undefined)
 	{
-		$.extend(true, this, prop);
+		extend(true, this, prop);
 	}
 	if(this.direction!=undefined)
 	{

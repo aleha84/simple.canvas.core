@@ -23,7 +23,7 @@ function Circle (center, radius) {
 			prop.fill = options;
 		}
 		else{
-			$.extend(prop, options);
+			extend(prop, options);
 		}
 
 		if(color!==undefined && isString(color))

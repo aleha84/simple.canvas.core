@@ -57,7 +57,7 @@ SCG.scenes = {
 			afterMainWork : (scene.afterMainWork !== undefined && isFunction(scene.afterMainWork)) ? scene.afterMainWork.bind(this) : undefined,
 			go: scene.gameObjectGenerator != undefined && isFunction(scene.gameObjectGenerator) ? scene.gameObjectGenerator() : [],
 			backgroundRender: scene.backgroundRender != undefined && isFunction(scene.backgroundRender) ? scene.backgroundRender : undefined,
-			game: $.extend(true, {}, scene.game)
+			game: extend(true, {}, scene.game)
 		};
 
 		

@@ -44,7 +44,7 @@ function Box(topLeft,size){
 			prop.fill = options;
 		}
 		else{
-			$.extend(prop, options);
+			extend(prop, options);
 		}
 		SCG.context.beginPath();	
 		SCG.context.rect(this.topLeft.x, this.topLeft.y, this.size.x, this.size.y);

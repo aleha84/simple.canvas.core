@@ -4,7 +4,7 @@ function Line(prop)
 	this.end = new Vector2;
 	this.color = '#ffffff';
 	this.width = 1;
-	$.extend(this,prop);
+	extend(this,prop);
 	// if(prop.begin!=undefined)
 	// {
 	// 	this.begin = prop.start;
