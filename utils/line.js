@@ -28,7 +28,7 @@ function Line(prop)
 	}
 
 	this.update = function  (prop) {
-		$.extend(this,prop);
+		extend(this,prop);
 	}
 
 	this.calculateBoundingSphere = function(){

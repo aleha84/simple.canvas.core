@@ -417,3 +417,35 @@ var getProto = Object.getPrototypeOf || function( obj ) {
       return obj.__proto__;
 };
 
+function getDOMByClassName(className){
+  var result = undefined;
+  var elements = document.getElementsByClassName(className);
+  if(elements.length > 0){
+    result = elements[0];
+  }
+  return result;
+}
+
+function appendDomElement(parent, type, properties)
+{
+  if(!(parent instanceof HTMLElement) && !(parent instanceof HTMLDocument) && !(parent instanceof HTMLBodyElement)){
+    throw 'Cant append new element to non html Node'
+  }
+
+  if(type != undefined && typeof type != 'string' ){
+   throw 'Type must be a string';
+  }
+
+  var element = document.createElement(type);
+
+  for (var property in properties) {
+    if (properties.hasOwnProperty(property)) {
+        element.setAttribute(property, properties[property]);
+    }
+  }
+  
+  parent.appendChild(element);
+
+  return element;
+}
+

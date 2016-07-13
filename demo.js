@@ -1,4 +1,4 @@
-$(document).ready(function () {
+document.addEventListener("DOMContentLoaded", function() {
 
 	SCG.src = {
 		flower_sheet: 'content/images/flower_sheet.png',

@@ -1,11 +1,11 @@
 SCG.debugger = 
 {
-	el: $('.debugger'),
+	el:  getDOMByClassName('.debugger'),
 	initialized : false,
 	init: function() { 
-		this.el = $('.debugger');
-		if(this.el.length == 0){
-			$(document.body).append($('<div />', { class: 'debugger'}));
+		this.el = getDOMByClassName('.debugger');
+		if(this.el == undefined){
+			this.el = appendDomElement(document.body, 'div', { class: 'debugger'});
 		}
 		this.initialized = true;
 	},
@@ -15,6 +15,7 @@ SCG.debugger =
 		{
 			this.init();	
 		}
-		this.el.html(value); 
+		//this.el.html(value); 
+		this.el.innerHTML = value;
 	}
 }
