@@ -1,40 +1,53 @@
 SCG.start = function(){
 
 	if(!SCG.canvasBg){
-		var c = $('<canvas />',{
-			width: SCG.viewfield.width,
-			height: SCG.viewfield.height
-		});
-		c.attr({'width':SCG.viewfield.width,'height':SCG.viewfield.height,id:SCG.canvasBgId});
-		c.css({'z-index': 0 });
-		c.css({'position': 'absolute' });
-		$(document.body).append(c);
-		SCG.canvasBg = c.get(0);
-		SCG.contextBg = SCG.canvasBg.getContext('2d');	
+
+		SCG.canvasBg = appendDomElement(
+			document.body, 
+			'canvas',
+			{ 
+				width : SCG.viewfield.width,
+				height: SCG.viewfield.height,
+				id: SCG.canvasBgId,
+				css: {
+					'z-index': 0,
+					'position': 'absolute'
+				}
+			}
+		);
+
+		SCG.contextBg = SCG.canvasBg.getContext('2d');
 	}
 
 	if(!SCG.canvas)
 	{
-		var c = $('<canvas />',{
-			width: SCG.viewfield.width,
-			height: SCG.viewfield.height
-		});
-		c.attr({'width':SCG.viewfield.width,'height':SCG.viewfield.height,id:SCG.canvasId});
-		c.css({'z-index': 1 });
-		c.css({'position': 'absolute' });
-		$(document.body).append(c);
-		SCG.canvas = c.get(0);
+		SCG.canvas = appendDomElement(
+			document.body, 
+			'canvas',
+			{ 
+				width : SCG.viewfield.width,
+				height: SCG.viewfield.height,
+				id: SCG.canvasId,
+				css: {
+					'z-index': 1,
+					'position': 'absolute'
+				}
+			}
+		);
+
 		SCG.context = SCG.canvas.getContext('2d');
 
-		// var fulsscreenToggleButton = $('<div />',
+		// appendDomElement(
+		// 	document.body,
+		// 	'div',
 		// 	{
 		// 		class: 'button fulscreenbutton',
 		// 		on: {
-		// 			click: function(){ screenfull.toggle(document.documentElement); $(this).toggleClass('exit'); }
+		// 			click: function(){ screenfull.toggle(document.documentElement); this.classList.toggle('exit'); }
 		// 		}
-		// 	});
+		// 	}
+		// );
 
-		// $(document.body).append(fulsscreenToggleButton);
 		//SCG.debugger.setValue('App started');
 	}
 

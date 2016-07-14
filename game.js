@@ -257,7 +257,6 @@ SCG.gameControls = {
 	},
 	getEventAbsolutePosition: function(event){
 		var eventPos = pointerEventToXY(event);
-		var offset = $(SCG.canvas).offset();
 		SCG.gameControls.mousestate.position = new Vector2(eventPos.x - SCG.canvas.margins.left,eventPos.y - SCG.canvas.margins.top);
 	},
 	orientationChangeEventInit: function() {
@@ -265,7 +264,7 @@ SCG.gameControls = {
 
 		SCG.gameControls.permanentEventInit();
 
-		$(window).on('orientationchange resize', function(e){
+		addListenerMulti(window, 'orientationchange resize', function(e){
 			that.graphInit();
 		});
 
@@ -274,7 +273,8 @@ SCG.gameControls = {
 		if(SCG.gameLogics.isMobile)
 		{
 			setTimeout( function(){ window.scrollTo(0, 1); }, 100 );
-			$(document).on('fullscreenchange webkitfullscreenchange mozfullscreenchange MSFullscreenChange', function(e){
+
+			addListenerMulti(document, 'fullscreenchange webkitfullscreenchange mozfullscreenchange MSFullscreenChange', function(e){
 				that.graphInit();
 			});
 		}
@@ -300,8 +300,8 @@ SCG.gameControls = {
 		// var proportions = SCG.gameLogics.isMobile ?  (window.innerHeight / window.innerWidth) : (window.innerWidth / window.innerHeight);
 		// SCG.gameControls.scale.times = (width / SCG.viewfield.default.width) / proportions;
 
-		var _width = $(window).width();
-		var _height = $(window).height();
+		var _width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+		var _height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 		var ratioX = _width /SCG.viewfield.default.width;
 		var ratioY = _height / SCG.viewfield.default.height;
 
@@ -340,10 +340,20 @@ SCG.gameControls = {
 		}
 	},
 	setCanvasProperties: function(canvas, mTop, mLeft){
-		$(canvas).attr({'width':SCG.viewfield.width,'height':SCG.viewfield.height})
-		$(canvas).css({'width':SCG.viewfield.width,'height':SCG.viewfield.height});
-		$(canvas).css({'margin-top': mTop });
-		$(canvas).css({'margin-left': mLeft });
+		setAttributes(
+			canvas, 
+			{
+				width: SCG.viewfield.width,
+				height: SCG.viewfield.height,
+				css: {
+					width:SCG.viewfield.width+'px',
+					height:SCG.viewfield.height+'px',
+					'margin-top': mTop+'px',
+					'margin-left': mLeft+'px'
+				}
+			}
+		);
+
 		canvas.width = SCG.viewfield.width;
 		canvas.height = SCG.viewfield.height;
 		canvas.margins = {
@@ -353,13 +363,16 @@ SCG.gameControls = {
 	},
 	permanentEventInit : function (){
 		var that = this;
-		$(document).on('keydown',function(e){
+
+		document.addEventListener("keydown", function(e){
 			that.permanentKeyDown(e);
-		});
-		$(document).on('keyup',function(e){
+		}, false);
+
+		document.addEventListener("keyup", function(e){
 			that.permanentKeyUp(e);
-		});
-		$(document).on('mousedown touchstart', SCG.canvasIdSelector,function(e){
+		}, false);
+
+		addListenerMulti(SCG.canvas, 'mousedown touchstar', function(e){
 			absorbTouchEvent(e);
 			if(e.type == 'touchstart')
 			{
@@ -367,27 +380,31 @@ SCG.gameControls = {
 			}
 			that.mouseDown(e);
 		});
-		$(document).on('mouseup touchend', SCG.canvasIdSelector, function(e){
+
+		addListenerMulti(SCG.canvas, 'mouseup touchend', function(e){
 			absorbTouchEvent(e);
 			that.mouseUp(e);
 		});
-		$(document).on('mouseout touchleave', SCG.canvasIdSelector, function(e){
+
+		addListenerMulti(SCG.canvas, 'mouseout touchleave', function(e){
 			absorbTouchEvent(e);
 			that.mouseOut(e);
 		});
-		$(document).on('mousemove touchmove', SCG.canvasIdSelector, function(e){
-			absorbTouchEvent(e); 
+
+		addListenerMulti(SCG.canvas, 'mousemove touchmove', function(e){
+			absorbTouchEvent(e);
 			that.mouseMove(e);
 		});
-		$(document).on('contextmenu',SCG.canvasIdSelector, function(e){
+
+		SCG.canvas.addEventListener("contextmenu", function(e){
 			e.preventDefault();
 			return false;
-		});
+		}, false);
 
-		// $(document).on('click',SCG.canvasIdSelector, function(e){
+		// SCG.canvas.addEventListener("click", function(e){
 		// 	absorbTouchEvent(e);
 		// 	that.click(e);
-		// });
+		// }, false);
 	},
 	permanentKeyDown : function (event)
 	{

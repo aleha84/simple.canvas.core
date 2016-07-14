@@ -438,14 +438,41 @@ function appendDomElement(parent, type, properties)
 
   var element = document.createElement(type);
 
-  for (var property in properties) {
-    if (properties.hasOwnProperty(property)) {
-        element.setAttribute(property, properties[property]);
-    }
-  }
+  setAttributes(element, properties);
   
   parent.appendChild(element);
 
   return element;
+}
+
+function setAttributes(element, properties) {
+  for (var property in properties) {
+    if (properties.hasOwnProperty(property)) {
+      if(property == 'on'){
+        var handlers = properties[property];
+        for (var handler in handlers) {
+          if (handlers.hasOwnProperty(handler)) {
+            element.addEventListener(handler, handlers[handler], false);
+          }
+        }
+      }
+      else if(property == 'css')
+      {
+        var styles = properties[property];
+        for (var style in styles) {
+          if (styles.hasOwnProperty(style)) {
+            element.style[style] = styles[style];
+          }
+        }
+      }
+      else{
+        element.setAttribute(property, properties[property]);
+      }
+    }
+  }
+}
+
+function addListenerMulti(el, s, fn) {
+  s.split(' ').forEach(function(e) {el.addEventListener(e, fn, false)});
 }
 
