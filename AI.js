@@ -6,12 +6,13 @@ SCG.AI.initialize = function(){
 		URL.revokeObjectURL(SCG.AI.blobURL);
 	}
 
-	if(SCG.scenes.activeScene.game && SCG.scenes.activeScene.game.AI){
+	var as = SCG.scenes.activeScene.game;
+	if(as && as.AI){
 		SCG.AI.blobURL = URL.createObjectURL( new Blob([ '(',
-			"function(){var queue = [];\nconsole.log('worker start');\n" + 
+			"function(){var queue = [];\nconsole.log('worker start');\n" +
 
-				(SCG.scenes.activeScene.game.AI.queueProcesser != undefined && isFunction(SCG.scenes.activeScene.game.AI.queueProcesser) 
-				? SCG.scenes.activeScene.game.AI.queueProcesser.toString() 
+				(as.AI.queueProcesser != undefined && isFunction(as.AI.queueProcesser) 
+				? as.AI.queueProcesser.toString() 
 				: "function queueProcesser(){}")+
 
 				"\nfunction processMessageQueue(){\nif(queue.length > 0){\n"+
@@ -43,9 +44,9 @@ SCG.AI.initialize = function(){
 		SCG.AI.worker = new Worker(SCG.AI.blobURL); 
 	}
 
-	if(SCG.AI.worker && SCG.scenes.activeScene.game.AI.messagesProcesser != undefined && isFunction(SCG.scenes.activeScene.game.AI.messagesProcesser)){
+	if(SCG.AI.worker && as.AI.messagesProcesser != undefined && isFunction(as.AI.messagesProcesser)){
 		SCG.AI.worker.onmessage = function(e) {
-			SCG.scenes.activeScene.game.AI.messagesProcesser(e.data);
+			as.AI.messagesProcesser(e.data);
 		};
 	}
 }

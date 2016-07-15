@@ -19,12 +19,13 @@ function Line(prop)
 	// }
 
 	this.render = function  () {
-		SCG.context.beginPath();
-		SCG.context.moveTo(this.begin.x, this.begin.y);
-		SCG.context.lineTo(this.end.x, this.end.y);
-		SCG.context.lineWidth = this.width;
-		SCG.context.strokeStyle = this.color;
-		SCG.context.stroke();
+		var ctx = SCG.context;
+		ctx.beginPath();
+		ctx.moveTo(this.begin.x, this.begin.y);
+		ctx.lineTo(this.end.x, this.end.y);
+		ctx.lineWidth = this.width;
+		ctx.strokeStyle = this.color;
+		ctx.stroke();
 	}
 
 	this.update = function  (prop) {
