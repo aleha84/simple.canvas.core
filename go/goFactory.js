@@ -12,7 +12,7 @@ SCG.GO.create = function(name, specificProperties){
 
 	var baseProperties = SCG.GO.goBaseProperties[name];
 	if(baseProperties == undefined){
-		throw "SCG.GO.create -> can't find base properties ba provided name";	
+		throw "SCG.GO.create -> can't find base properties ba provided name " + name;	
 	}
 	
 	return new SCG.GO.GO(extend({}, baseProperties, specificProperties));

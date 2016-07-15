@@ -16,14 +16,16 @@ SCG.viewfield = {
 
 SCG.canvas = undefined;
 SCG.canvasId = "mainCanvas";
-SCG.canvasIdSelector = "#"+SCG.canvasId;
 
 SCG.canvasBg = undefined;
 SCG.canvasBgId = "backgroundCanvas";
-SCG.canvasBgIdSelector = "#"+SCG.canvasBgId;
+
+SCG.canvasUI = undefined;
+SCG.canvasUIId = "uiCanvas";
 
 SCG.context = undefined;
 SCG.contextBg = undefined;
+SCG.contextUI = undefined;
 
 SCG.gameLogics = {
 	isPaused: false,
@@ -162,10 +164,13 @@ SCG.gameControls = {
 					&& ch.renderBox.isPointInside(SCG.gameControls.mousestate.position) 
 					&& ch.handlers != undefined 
 					&& ch.handlers.click != undefined 
-					&& ch.handlers.click)
+					&& isFunction(ch.handlers.click))
 				{
 					//to do add and check z-index
-					ch.clickHandler();
+					var clickResult = ch.handlers.click.call(ch);
+					if(clickResult && clickResult.preventBubbling){
+						return;
+					}
 					break;
 				}
 			}
@@ -257,7 +262,7 @@ SCG.gameControls = {
 	},
 	getEventAbsolutePosition: function(event){
 		var eventPos = pointerEventToXY(event);
-		SCG.gameControls.mousestate.position = new Vector2(eventPos.x - SCG.canvas.margins.left,eventPos.y - SCG.canvas.margins.top);
+		SCG.gameControls.mousestate.position = new Vector2(eventPos.x - SCG.canvasUI.margins.left,eventPos.y - SCG.canvasUI.margins.top);
 	},
 	orientationChangeEventInit: function() {
 		var that = this;
@@ -334,10 +339,13 @@ SCG.gameControls = {
 
 		this.setCanvasProperties(SCG.canvas, mTop, mLeft);
 		this.setCanvasProperties(SCG.canvasBg, mTop, mLeft);
+		this.setCanvasProperties(SCG.canvasUI, mTop, mLeft);
 
 		if(SCG.scenes.activeScene.backgroundRender != undefined && isFunction(SCG.scenes.activeScene.backgroundRender)){
 			SCG.scenes.activeScene.backgroundRender();
 		}
+
+		SCG.UI.invalidate();
 	},
 	setCanvasProperties: function(canvas, mTop, mLeft){
 		setAttributes(
@@ -372,7 +380,7 @@ SCG.gameControls = {
 			that.permanentKeyUp(e);
 		}, false);
 
-		addListenerMulti(SCG.canvas, 'mousedown touchstar', function(e){
+		addListenerMulti(SCG.canvasUI, 'mousedown touchstar', function(e){
 			absorbTouchEvent(e);
 			if(e.type == 'touchstart')
 			{
@@ -381,27 +389,27 @@ SCG.gameControls = {
 			that.mouseDown(e);
 		});
 
-		addListenerMulti(SCG.canvas, 'mouseup touchend', function(e){
+		addListenerMulti(SCG.canvasUI, 'mouseup touchend', function(e){
 			absorbTouchEvent(e);
 			that.mouseUp(e);
 		});
 
-		addListenerMulti(SCG.canvas, 'mouseout touchleave', function(e){
+		addListenerMulti(SCG.canvasUI, 'mouseout touchleave', function(e){
 			absorbTouchEvent(e);
 			that.mouseOut(e);
 		});
 
-		addListenerMulti(SCG.canvas, 'mousemove touchmove', function(e){
+		addListenerMulti(SCG.canvasUI, 'mousemove touchmove', function(e){
 			absorbTouchEvent(e);
 			that.mouseMove(e);
 		});
 
-		SCG.canvas.addEventListener("contextmenu", function(e){
+		SCG.canvasUI.addEventListener("contextmenu", function(e){
 			e.preventDefault();
 			return false;
 		}, false);
 
-		// SCG.canvas.addEventListener("click", function(e){
+		// SCG.canvasUI.addEventListener("click", function(e){
 		// 	absorbTouchEvent(e);
 		// 	that.click(e);
 		// }, false);

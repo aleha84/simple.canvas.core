@@ -17,6 +17,7 @@
       "initialization.js",
       "scenes.js",
       "AI.js",
+      "UI.js",
       "main.js"
     ]
   }

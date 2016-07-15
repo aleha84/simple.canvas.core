@@ -123,6 +123,14 @@ SCG.GO.GO = function(prop){
 	this.health = this.maxHealth;
 	this.creationTime = new Date;
 
+	//register click for new objects
+	if(this.handlers.click && isFunction(this.handlers.click)){
+		var eh = SCG.gameControls.mousestate.eventHandlers;
+		if(eh.click.indexOf(this) == -1){
+			eh.click.push(this);
+		}
+	}
+
 	if(this.initializer != undefined && isFunction(this.initializer)){
 		this.initializer(this);
 	}
@@ -149,8 +157,12 @@ SCG.GO.GO.prototype = {
 		this.beforeDead();
 		
 		//remove from event handlers
-		var index = SCG.gameControls.mousestate.eventHandlers.click.indexOf(this);
-		SCG.gameControls.mousestate.eventHandlers.click.splice(index, 1);
+		var eh = SCG.gameControls.mousestate.eventHandlers;
+		var index = eh.click.indexOf(this);
+		if(index > -1){
+			eh.click.splice(index, 1);	
+		}
+		
 
 		//send to ai msg
 		if(SCG.AI.worker){

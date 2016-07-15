@@ -5,6 +5,10 @@ SCG.src = {
 SCG.images = {
 }
 
+SCG.globals = {
+  addDefaultUIButtons: true
+}
+
 SCG.customInitializaers = [];
 
 window.requestAnimFrame = (function(){

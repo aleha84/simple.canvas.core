@@ -216,13 +216,6 @@ document.addEventListener("DOMContentLoaded", function() {
 		],
 		gameObjectGenerator: function () {
 			var gos = [];
-			// gos.push(SCG.GO.create("flower", {
-			// 	position: new Vector2(150, 150)
-			// }));
-
-			// gos.push(SCG.GO.create("butterfly", {
-			// 	position: new Vector2(200, 200)
-			// }));
 
 			return gos;
 		}

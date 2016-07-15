@@ -51,11 +51,26 @@ SCG.start = function(){
 		//SCG.debugger.setValue('App started');
 	}
 
+	if(!SCG.canvasUI){
+
+		SCG.canvasUI = appendDomElement(
+			document.body, 
+			'canvas',
+			{ 
+				width : SCG.viewfield.width,
+				height: SCG.viewfield.height,
+				id: SCG.canvasUIId,
+				css: {
+					'z-index': 2,
+					'position': 'absolute'
+				}
+			}
+		);
+
+		SCG.contextUI = SCG.canvasUI.getContext('2d');
+	}
+
 	SCG.initializer(function(){
-		SCG.gameControls.orientationChangeEventInit();
-
-		SCG.customInitialization();
-
 		if(SCG.space == undefined)
 		{
 			SCG.space = {
@@ -65,6 +80,12 @@ SCG.start = function(){
 		}
 
 		SCG.viewfield.current = new Box(new Vector2,new Vector2(SCG.viewfield.width,SCG.viewfield.height));		
+
+		SCG.gameControls.orientationChangeEventInit();
+
+		SCG.customInitialization();
+
+		SCG.UI.invalidate();
 
 		SCG.animate();
 	});
@@ -90,21 +111,23 @@ SCG.draw = function(){
 
 	//SCG.gameControls.mousestate.doClickCheck();
 
-	if(SCG.scenes.activeScene.preMainWork && isFunction(SCG.scenes.activeScene.preMainWork)){
-		SCG.scenes.activeScene.preMainWork();	
+	var as = SCG.scenes.activeScene;
+
+	if(as.preMainWork && isFunction(as.preMainWork)){
+		as.preMainWork();	
 	}
 	
-	var i = SCG.scenes.activeScene.go.length;
+	var i = as.go.length;
 	while (i--) {
-		SCG.scenes.activeScene.go[i].update(now);
-		SCG.scenes.activeScene.go[i].render();
-		if(!SCG.scenes.activeScene.go[i].alive){
-			var deleted = SCG.scenes.activeScene.go.splice(i,1);
+		as.go[i].update(now);
+		as.go[i].render();
+		if(!as.go[i].alive){
+			var deleted = as.go.splice(i,1);
 		}
 	}
 
-	if(SCG.scenes.activeScene.afterMainWork && isFunction(SCG.scenes.activeScene.afterMainWork)){
-		SCG.scenes.activeScene.afterMainWork();	
+	if(as.afterMainWork && isFunction(as.afterMainWork)){
+		as.afterMainWork();	
 	}
 
 	if(SCG.gameLogics.isPausedStep)

@@ -13,7 +13,10 @@ SCG.scenes = {
 		for(var i = 0, len = this.activeScene.go.length; i < len;i++){
 			var sg = this.activeScene.go[i];
 			if(sg.handlers.click){
-				SCG.gameControls.mousestate.eventHandlers.click.push(sg);
+				var eh = SCG.gameControls.mousestate.eventHandlers;
+				if(eh.click.indexOf(sg) == -1){
+					eh.click.push(sg);
+				}
 			}
 		}
 
@@ -29,6 +32,16 @@ SCG.scenes = {
 		// AI creation
 		SCG.AI.initialize();
 
+		// reset ui
+		this.activeScene.ui = [];
+		if(SCG.globals.addDefaultUIButtons){
+			SCG.UI.addDefaultUIButtons();
+		}
+		if(SCG.contextUI)
+		{
+			SCG.UI.invalidate();
+		}
+
 		if(this.activeScene.start != undefined && isFunction(this.activeScene.start)){
 			this.activeScene.start();
 		}
@@ -38,16 +51,18 @@ SCG.scenes = {
 			throw "Can't register scene without name";
 		}
 
-		if(scene.gameObjectsBaseProperties != undefined && isArray(scene.gameObjectsBaseProperties))
+		var bp = scene.gameObjectsBaseProperties;
+
+		if(bp != undefined && isArray(bp))
 		{
-			for(var i = 0;i<scene.gameObjectsBaseProperties.length;i++){
-				var type = scene.gameObjectsBaseProperties[i].type;
+			for(var i = 0;i<bp.length;i++){
+				var type = bp[i].type;
 				if(SCG.GO.goBaseProperties[type] != undefined)
 				{
 					throw String.format("SCG.scenes.registerScene -> BaseProperty with type '{0} already registered'", type);
 				}
 
-				SCG.GO.register(type, scene.gameObjectsBaseProperties[i]);
+				SCG.GO.register(type, bp[i]);
 			}
 		}
 
@@ -57,7 +72,8 @@ SCG.scenes = {
 			afterMainWork : (scene.afterMainWork !== undefined && isFunction(scene.afterMainWork)) ? scene.afterMainWork.bind(this) : undefined,
 			go: scene.gameObjectGenerator != undefined && isFunction(scene.gameObjectGenerator) ? scene.gameObjectGenerator() : [],
 			backgroundRender: scene.backgroundRender != undefined && isFunction(scene.backgroundRender) ? scene.backgroundRender : undefined,
-			game: extend(true, {}, scene.game)
+			game: extend(true, {}, scene.game),
+			ui: []
 		};
 
 		
