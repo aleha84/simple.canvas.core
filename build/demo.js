@@ -1,4 +1,4 @@
-$(document).ready(function () {
+document.addEventListener("DOMContentLoaded", function() {
 
 	SCG.src = {
 		flower_sheet: 'content/images/flower_sheet.png',
@@ -64,8 +64,32 @@ $(document).ready(function () {
 								break;
 							case 'create':
 								if(wm.message.goType == 'flower'){
+									var isOk = false;
+									var tryCount = 0;
+									var maxTryCount = 10;
+									var position = new Vector2(getRandomInt(15, SCG.space.width-15), getRandomInt(15, SCG.space.height-15));
+									while(!isOk){
+										if(tryCount > maxTryCount){
+											break;
+										}
+
+										var toClose = false;
+										for(var i = 0, len = SCG.scenes.activeScene.go.length;i<len;i++){
+											var go = SCG.scenes.activeScene.go[i];
+											if(position.distance(go.position) < go.size.x){
+												tryCount++;
+												position = new Vector2(getRandomInt(15, SCG.space.width-15), getRandomInt(15, SCG.space.height-15));
+												toClose = true;
+												break;		
+											}
+										}
+
+										isOk = !toClose;
+									}
+									
+
 									SCG.scenes.activeScene.go.push(SCG.GO.create("flower", {
-										position: new Vector2(getRandomInt(15, SCG.space.width-15), getRandomInt(15, SCG.space.height-15))
+										position: position
 									}));
 								}
 								break;
@@ -96,6 +120,15 @@ $(document).ready(function () {
 									self.checkFlowers();
 								}
 								break;
+							case 'removed':
+								if(task.message.goType == 'flower'){
+									var index = self.environment.flowers.items.map(function(item) { return item.id ;}).indexOf(task.message.id);
+									if(index > -1){
+										self.environment.flowers.items.splice(index, 1);
+										self.checkFlowers();
+									}
+								}
+								break;
 							default:
 								break;
 						}
@@ -119,6 +152,14 @@ $(document).ready(function () {
 					destinationFrameSize: new Vector2(70,65),
 					sourceFrameSize: new Vector2(70,65),
 					loop: true,
+				},
+				internalUpdate: function(now){
+					for(var i = 0, len = SCG.scenes.activeScene.go.length;i<len;i++){
+						var goItem = SCG.scenes.activeScene.go[i];
+						if(goItem.type == 'flower' && goItem.renderBox != undefined && goItem.renderBox.isPointInside(this.renderPosition)){
+							goItem.setDead();
+						}
+					}
 				}
 			},
 			{
@@ -175,13 +216,6 @@ $(document).ready(function () {
 		],
 		gameObjectGenerator: function () {
 			var gos = [];
-			// gos.push(SCG.GO.create("flower", {
-			// 	position: new Vector2(150, 150)
-			// }));
-
-			// gos.push(SCG.GO.create("butterfly", {
-			// 	position: new Vector2(200, 200)
-			// }));
 
 			return gos;
 		}

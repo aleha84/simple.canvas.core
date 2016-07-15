@@ -2,6 +2,7 @@
   {
     "outputFileName": "build/core.min.js",
     "inputFiles": [
+      "lib/screenfull.js",
       "utils/box.js",
       "utils/extenders.js",
       "utils/circle.js",
