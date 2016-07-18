@@ -20,41 +20,42 @@ function Poligon(init)
 		this.renderOptions = {};
 	}
 
-	if(!this.renderOptions.fillStyle)
+	var ro = this.renderOptions;
+	if(!ro.fillStyle)
 	{
-		this.renderOptions.fillStyle = this.defaults.fillStyle;
+		ro.fillStyle = this.defaults.fillStyle;
 	}
 	else{
-		this.defaults.fillStyle = this.renderOptions.fillStyle;
+		this.defaults.fillStyle = ro.fillStyle;
 	}
-	if(!this.renderOptions.lineWidth)
+	if(!ro.lineWidth)
 	{
-		this.renderOptions.lineWidth = this.defaults.lineWidth;
+		ro.lineWidth = this.defaults.lineWidth;
 	}
 	else{
-		this.defaults.lineWidth = this.renderOptions.lineWidth;
+		this.defaults.lineWidth = ro.lineWidth;
 	}
-	if(!this.renderOptions.strokeStyle)
+	if(!ro.strokeStyle)
 	{
-		this.renderOptions.strokeStyle = this.defaults.strokeStyle;
+		ro.strokeStyle = this.defaults.strokeStyle;
 	}
 	else{
-		this.defaults.strokeStyle = this.renderOptions.strokeStyle;
+		this.defaults.strokeStyle = ro.strokeStyle;
 	}
 
-	if(!this.renderOptions.fill)
+	if(!ro.fill)
 	{
-		this.renderOptions.fill = this.defaults.fill;
+		ro.fill = this.defaults.fill;
 	}
 	else{
-		this.defaults.fill = this.renderOptions.fill;
+		this.defaults.fill = ro.fill;
 	}
 
 	this.resetToDefaults = function(){
-		this.renderOptions.fillStyle = this.defaults.fillStyle;
-		this.renderOptions.strokeStyle = this.defaults.strokeStyle;
-		this.renderOptions.lineWidth = this.defaults.lineWidth;
-		this.renderOptions.fill = this.defaults.fill;
+		ro.fillStyle = this.defaults.fillStyle;
+		ro.strokeStyle = this.defaults.strokeStyle;
+		ro.lineWidth = this.defaults.lineWidth;
+		ro.fill = this.defaults.fill;
 	}
 
 	this.clone = function(){
@@ -69,22 +70,23 @@ function Poligon(init)
 	}
 
 	this.render = function(){
-		SCG.context.beginPath();	
-		SCG.context.moveTo(this.vertices[0].x, this.vertices[0].y);
+		var ctx = SCG.context;
+		ctx.beginPath();	
+		ctx.moveTo(this.vertices[0].x, this.vertices[0].y);
 		for(var i = 1; i< this.vertices.length; i++)
 		{
-			SCG.context.lineTo(this.vertices[i].x, this.vertices[i].y);
+			ctx.lineTo(this.vertices[i].x, this.vertices[i].y);
 		}
 
 		
-		SCG.context.lineWidth = this.renderOptions.lineWidth;
-		SCG.context.strokeStyle = this.renderOptions.strokeStyle;
-		SCG.context.closePath();
+		ctx.lineWidth = this.renderOptions.lineWidth;
+		ctx.strokeStyle = this.renderOptions.strokeStyle;
+		ctx.closePath();
 		if(this.renderOptions.fill){
-			SCG.context.fillStyle = this.renderOptions.fillStyle;
-			SCG.context.fill();	
+			ctx.fillStyle = this.renderOptions.fillStyle;
+			ctx.fill();	
 		}
-		SCG.context.stroke();
+		ctx.stroke();
 	}
 
 	this.isPointInside = function(point){

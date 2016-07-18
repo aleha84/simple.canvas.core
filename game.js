@@ -50,6 +50,10 @@ SCG.gameLogics = {
 		else if(this.pauseDelta != 0){
 			this.pauseDelta = 0;
 		}
+	},
+	pauseToggle: function(){
+		SCG.gameLogics.isPaused = !SCG.gameLogics.isPaused;	
+		SCG.UI.invalidate();
 	}
 }
 
@@ -432,7 +436,7 @@ SCG.gameControls = {
 					SCG.gameLogics.isPausedStep = true;
 				}
 				else{
-					SCG.gameLogics.isPaused = !SCG.gameLogics.isPaused;	
+					SCG.gameLogics.pauseToggle();
 				}
 				break;
 			case 69:

@@ -6,6 +6,7 @@ SCG.GO.GO = function(prop){
 	this.renderPosition = new Vector2;
 	this.renderBox = undefined;
 	this.alive = true;
+	this.updateAlways = false;
 	this.type = 'unidentifiedType';
 	this.id = '';
 	this.size = new Vector2;
@@ -49,33 +50,34 @@ SCG.GO.GO = function(prop){
 		animationTimer : undefined,
 		animationEndCallback: function(){},
 		frameChange : function(){
-			if(this.animation.paused){
+			var ani = this.animation;
+			if(ani.paused){
 				return;
 			}
 
-			if(this.animation.reverse){
-				this.animation.currentFrame--;	
+			if(ani.reverse){
+				ani.currentFrame--;	
 			}
 			else
 			{
-				this.animation.currentFrame++;
+				ani.currentFrame++;
 			}
 
-			if((!this.animation.reverse && this.animation.currentFrame > this.animation.totalFrameCount)
-				|| (this.animation.reverse && this.animation.currentFrame < 1)
+			if((!ani.reverse && ani.currentFrame > ani.totalFrameCount)
+				|| (ani.reverse && ani.currentFrame < 1)
 				){
-				if(this.animation.loop){
-					this.animation.currentFrame = this.animation.reverse? this.animation.totalFrameCount :  1;
+				if(ani.loop){
+					ani.currentFrame = ani.reverse? ani.totalFrameCount :  1;
 				}
 				else{
-					this.animation.animationEndCallback.call(this);
+					ani.animationEndCallback.call(this);
 					//this.setDead();
 					return;
 				}
 			}
-			var crow = Math.ceil(this.animation.currentFrame/this.animation.framesInRow);
-			var ccol = this.animation.framesInRow - ((crow*this.animation.framesInRow) - this.animation.currentFrame);
-			this.animation.currentDestination = new Vector2(ccol - 1, crow - 1);
+			var crow = Math.ceil(ani.currentFrame/ani.framesInRow);
+			var ccol = ani.framesInRow - ((crow*ani.framesInRow) - ani.currentFrame);
+			ani.currentDestination = new Vector2(ccol - 1, crow - 1);
 		}
 	};
 
@@ -198,25 +200,28 @@ SCG.GO.GO.prototype = {
 
 			if(this.img != undefined)
 			{
+				var rp = this.renderPosition;
+				var rs = this.renderSize;
 				if(this.isAnimated)
 				{
+					var ani = this.animation;
 					SCG.context.drawImage(this.img,  
-						this.animation.currentDestination.x * this.animation.sourceFrameSize.x,
-						this.animation.currentDestination.y * this.animation.sourceFrameSize.y,
-						this.animation.sourceFrameSize.x,
-						this.animation.sourceFrameSize.y,
-						this.renderPosition.x - this.renderSize.x/2,
-						this.renderPosition.y - this.renderSize.y/2,
-						this.renderSize.x,
-						this.renderSize.y
+						ani.currentDestination.x * ani.sourceFrameSize.x,
+						ani.currentDestination.y * ani.sourceFrameSize.y,
+						ani.sourceFrameSize.x,
+						ani.sourceFrameSize.y,
+						rp.x - rs.x/2,
+						rp.y - rs.y/2,
+						rs.x,
+						rs.y
 					);
 				}
 				else{
 					SCG.context.drawImage(this.img, 
-						(this.renderPosition.x - this.renderSize.x/2), 
-						(this.renderPosition.y - this.renderSize.y/2), 
-						this.renderSize.x, 
-						this.renderSize.y);		
+						(rp.x - rs.x/2), 
+						(rp.y - rs.y/2), 
+						rs.x, 
+						rs.y);		
 				}
 			}	
 		}
@@ -237,8 +242,7 @@ SCG.GO.GO.prototype = {
 	},
 
 	update: function(now){ 
-		
-		if(!this.alive || SCG.gameLogics.isPaused || SCG.gameLogics.gameOver || SCG.gameLogics.wrongDeviceOrientation){
+		if(!this.updateAlways && (!this.alive || SCG.gameLogics.isPaused || SCG.gameLogics.gameOver || SCG.gameLogics.wrongDeviceOrientation)){
 			return false;
 		}
 
@@ -314,7 +318,8 @@ SCG.GO.GO.prototype = {
 	{
 		if(newDestination !== undefined && newDestination instanceof Vector2){
 			if(this.randomizeDestination){
-				newDestination.add(new Vector2(getRandom(-this.randomizeDestinationRadius, this.randomizeDestinationRadius), getRandom(-this.randomizeDestinationRadius, this.randomizeDestinationRadius)), true);
+				var rdr = this.randomizeDestinationRadius;
+				newDestination.add(new Vector2(getRandom(-rdr, rdr), getRandom(-rdr, rdr)), true);
 			}
 			this.destination = newDestination;
 			this.direction = this.position.direction(this.destination);
@@ -331,22 +336,23 @@ SCG.GO.GO.prototype = {
 		// 	return;
 		// }
 
-		if(this.selectBoxColor === undefined)
+		var sbc = this.selectBoxColor;
+		if(sbc === undefined)
 		{
-			this.selectBoxColor = {max:255, min: 100, current: 255, direction:1, step: 1, colorPattern: 'rgb({0},0,0)'};
+			sbc = {max:255, min: 100, current: 255, direction:1, step: 1, colorPattern: 'rgb({0},0,0)'};
 			if(this.playerControllable)
 			{
-				this.selectBoxColor.colorPattern = 'rgb(0,{0},0)'
+				sbc.colorPattern = 'rgb(0,{0},0)'
 			}
 		}
 		
 
-		this.renderBox.render({fill:false,strokeStyle: String.format(this.selectBoxColor.colorPattern,this.selectBoxColor.current), lineWidth: 2});
-		if(this.selectBoxColor.current >= this.selectBoxColor.max || this.selectBoxColor.current <= this.selectBoxColor.min)
+		this.renderBox.render({fill:false,strokeStyle: String.format(sbc.colorPattern,sbc.current), lineWidth: 2});
+		if(sbc.current >= sbc.max || sbc.current <= sbc.min)
 		{
-			this.selectBoxColor.direction *=-1;
+			sbc.direction *=-1;
 		}
-		this.selectBoxColor.current+=(this.selectBoxColor.step*this.selectBoxColor.direction);
+		sbc.current+=(sbc.step*sbc.direction);
 	},
 
 	clickHandler: function(){}
