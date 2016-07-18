@@ -476,3 +476,21 @@ function addListenerMulti(el, s, fn) {
   s.split(' ').forEach(function(e) {el.addEventListener(e, fn, false)});
 }
 
+function drawFigures(ctx, points, alpha){
+  if(alpha == undefined){
+    alpha = 1;
+  }
+  ctx.globalAlpha  = alpha;
+  for(var i = 0;i<points.length;i++){
+    var cp = points[i];
+    if(cp.length < 3){
+      continue;
+    }
+    ctx.beginPath();
+    ctx.moveTo(cp[0].x, cp[0].y);
+    for(var j = 1;j<cp.length;j++){
+      ctx.lineTo(cp[j].x,cp[j].y);
+    }
+    ctx.fill();
+  }
+}

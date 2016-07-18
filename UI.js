@@ -11,19 +11,61 @@ SCG.UI = {
 		}
 	},
 	addDefaultUIButtons: function(){
-		var btn = SCG.GO.create("button", {
-			position: new Vector2(SCG.viewfield.width - 25, SCG.viewfield.height - 25),
+		var btnFs = SCG.GO.create("button", {
+			position: new Vector2,
+			isFullscreen: false,
+			transparency: 0.75,
 			handlers: {
 				click: function(){
+					this.isFullscreen = !this.isFullscreen;
 					screenfull.toggle(document.documentElement);
 					return {
 						preventBubbling: true
 					};
 				}
+			},
+			internalUpdate: function(){
+				var s = this.size;
+
+				this.innerCanvasContext.clearRect(0, 0, s.x, s.y);
+				drawFigures(
+					this.innerCanvasContext,
+					!this.isFullscreen
+						? [[new Vector2(0,0),new Vector2(s.x*0.75,0),new Vector2(0,s.y*0.75)],[new Vector2(s.x*0.25,s.y),new Vector2(s.x,s.y),new Vector2(s.x,s.y*0.25)]] 
+				 	 	: [[new Vector2(0,s.y*0.475),new Vector2(s.x*0.475,0),new Vector2(s.x*0.475,s.y*0.475)],[new Vector2(s.x*0.525,s.y*0.525),new Vector2(s.x,s.y*0.525),new Vector2(s.x*0.525,s.y)]],
+				 	this.transparency);
 			}
 		});
 
-		SCG.scenes.activeScene.ui.push(btn);
+		btnFs.position = new Vector2(SCG.viewfield.width - btnFs.size.x/2, SCG.viewfield.height - btnFs.size.y/2);
+		SCG.scenes.activeScene.ui.push(btnFs);
+
+		var btnP = SCG.GO.create("button", {
+			position: new Vector2,
+			transparency: 0.75,
+			handlers: {
+				click: function(){
+					SCG.gameLogics.pauseToggle();
+					return {
+						preventBubbling: true
+					};
+				}
+			},
+			internalUpdate: function(){
+				var s = this.size;
+				this.innerCanvasContext.clearRect(0, 0, s.x, s.y);
+				drawFigures(
+					this.innerCanvasContext,
+					!SCG.gameLogics.isPaused
+						? [[new Vector2(s.x*0.2,0),new Vector2(s.x*0.4,0),new Vector2(s.x*0.4,s.y),new Vector2(s.x*0.2,s.y)],[new Vector2(s.x*0.6,0),new Vector2(s.x*0.8,0),new Vector2(s.x*0.8,s.y),new Vector2(s.x*0.6,s.y)]] 
+				 	 	: [[new Vector2(s.x*0.2,0),new Vector2(s.x*0.8,s.y*0.5),new Vector2(s.x*0.2,s.y)]],
+				 	this.transparency);
+			}
+		});
+
+		btnP.position = new Vector2(SCG.viewfield.width - btnFs.size.x - btnP.size.x/2, SCG.viewfield.height - btnP.size.y/2)
+
+		SCG.scenes.activeScene.ui.push(btnP);
 	},
 	initialize: function(){
 		if(this.initialized){ return; }
@@ -39,18 +81,19 @@ SCG.UI.controls = [{
 	size: new Vector2(50,50),
 	isCustomRender: true,
 	innerCanvas: undefined,
+	transparency: 1,
+	updateAlways : true,
 	initializer: function(that){
-		that.innerCanvas = document.createElement('canvas');
-		that.innerCanvas.width = that.size.x;
-		that.innerCanvas.height = that.size.y;
-		that.innerCanvasContext = that.innerCanvas.getContext('2d');
+		if(that.isCustomRender){
+			that.innerCanvas = document.createElement('canvas');
+			that.innerCanvas.width = that.size.x;
+			that.innerCanvas.height = that.size.y;
+			that.innerCanvasContext = that.innerCanvas.getContext('2d');
 
-		var ctx = that.innerCanvasContext;
-		ctx.beginPath();
-		ctx.rect(0, 0, that.size.x, that.size.y);
-		ctx.fillStyle = 'red';
-		ctx.fill()
-
+			// if(that.contentRender && isFunction(that.contentRender)){
+			// 	that.contentRender.call(that);
+			// }
+		}
 	},
 	customRender: function() {
 		SCG.contextUI.drawImage(this.innerCanvas, 

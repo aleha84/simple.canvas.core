@@ -6,6 +6,7 @@ SCG.GO.GO = function(prop){
 	this.renderPosition = new Vector2;
 	this.renderBox = undefined;
 	this.alive = true;
+	this.updateAlways = false;
 	this.type = 'unidentifiedType';
 	this.id = '';
 	this.size = new Vector2;
@@ -241,8 +242,7 @@ SCG.GO.GO.prototype = {
 	},
 
 	update: function(now){ 
-		
-		if(!this.alive || SCG.gameLogics.isPaused || SCG.gameLogics.gameOver || SCG.gameLogics.wrongDeviceOrientation){
+		if(!this.updateAlways && (!this.alive || SCG.gameLogics.isPaused || SCG.gameLogics.gameOver || SCG.gameLogics.wrongDeviceOrientation)){
 			return false;
 		}
 
