@@ -10,10 +10,10 @@ SCG.AI.initialize = function(){
 	if(as && as.AI){
 		SCG.AI.blobURL = URL.createObjectURL( new Blob([ '(',
 			"function(){var queue = [];\nconsole.log('worker start');\n" +
-
+				"var queueProcesser =\n"+
 				(as.AI.queueProcesser != undefined && isFunction(as.AI.queueProcesser) 
 				? as.AI.queueProcesser.toString() 
-				: "function queueProcesser(){}")+
+				: "function(){}")+
 
 				"\nfunction processMessageQueue(){\nif(queue.length > 0){\n"+
 						"queueProcesser();\n" +

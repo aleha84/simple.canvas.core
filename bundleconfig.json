@@ -5,9 +5,6 @@
       "lib/screenfull.js",
       "utils/box.js",
       "utils/extenders.js",
-      "utils/circle.js",
-      "utils/line.js",
-      "utils/poligon.js",
       "utils/utils.js",
       "utils/vector2.js",
       "game.js",
@@ -19,7 +16,8 @@
       "scenes.js",
       "AI.js",
       "UI.js",
-      "main.js"
+      "main.js",
+      "demo.js"
     ]
   }
 ]
