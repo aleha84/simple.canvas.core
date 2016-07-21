@@ -82,7 +82,7 @@ SCG.UI.controls = [{
 	isCustomRender: true,
 	innerCanvas: undefined,
 	transparency: 1,
-	updateAlways : true,
+	ui : true,
 	initializer: function(that){
 		if(that.isCustomRender){
 			that.innerCanvas = document.createElement('canvas');

@@ -70,6 +70,7 @@ SCG.gameControls = {
 		mode: 'free',
 		shiftSpeed: 5,
 		centeredOn: undefined,
+		resetAfterUpdate: false,
 		shifts: {
 			left: false,
 			right: false,
@@ -134,9 +135,16 @@ SCG.gameControls = {
 				}
 				if(direction!== undefined){
 					var delta = direction.mul(this.shiftSpeed);
-					var bfTL = SCG.viewfield.current.topLeft.clone();
-					bfTL.add(delta);
+					var bfTL = SCG.viewfield.current.topLeft.add(delta);
+
+					if(bfTL.x < 0 || bfTL.y < 0 || bfTL.x+SCG.viewfield.current.width > SCG.space.width || bfTL.y+SCG.viewfield.current.height > SCG.space.height){
+						return;
+					}
 					SCG.viewfield.current.update(bfTL);		
+				}
+
+				if(this.resetAfterUpdate){
+					this.reset();
 				}
 			}
 			else if(this.mode === 'centered' && this.centeredOn!== undefined){
