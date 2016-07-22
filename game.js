@@ -71,6 +71,7 @@ SCG.gameControls = {
 		shiftSpeed: 5,
 		centeredOn: undefined,
 		resetAfterUpdate: false,
+		preventModeSwitch: true,
 		shifts: {
 			left: false,
 			right: false,
@@ -78,10 +79,12 @@ SCG.gameControls = {
 			down: false
 		},
 		free: function(){
+			if(this.preventModeSwitch) {return;}
 			SCG.gameControls.camera.mode = 'free';
 			this.centeredOn = undefined;
 		},
 		center: function(){
+			if(this.preventModeSwitch) {return;}
 			var gc = SCG.gameControls;
 			if(gc.selectedGOs.length == 1){
 				gc.camera.mode = 'centered';
@@ -101,6 +104,7 @@ SCG.gameControls = {
 		},
 		update: function(now){
 			var sh = this.shifts;
+			var bfTL = undefined;
 			if(this.mode === 'free'){
 				var direction = undefined;
 				if(sh.left)
@@ -135,21 +139,36 @@ SCG.gameControls = {
 				}
 				if(direction!== undefined){
 					var delta = direction.mul(this.shiftSpeed);
-					var bfTL = SCG.viewfield.current.topLeft.add(delta);
-
-					if(bfTL.x < 0 || bfTL.y < 0 || bfTL.x+SCG.viewfield.current.width > SCG.space.width || bfTL.y+SCG.viewfield.current.height > SCG.space.height){
-						return;
-					}
-					SCG.viewfield.current.update(bfTL);		
-				}
-
-				if(this.resetAfterUpdate){
-					this.reset();
+					bfTL = SCG.viewfield.current.topLeft.add(delta);
 				}
 			}
 			else if(this.mode === 'centered' && this.centeredOn!== undefined){
-				var newBftl = this.centeredOn.position.substract(new Vector2(SCG.viewfield.width/2,SCG.viewfield.height/2),true);
-				SCG.viewfield.current.update(newBftl);
+				bfTL = this.centeredOn.position.substract(new Vector2(SCG.viewfield.default.width/2,SCG.viewfield.default.height/2));
+			}
+
+			if(this.resetAfterUpdate){
+				this.reset();
+			}
+
+			if(bfTL != undefined){
+				if(bfTL.x < 0)
+				{
+					bfTL.x = 0;
+				}
+				if(bfTL.y < 0)
+				{
+					bfTL.y = 0;
+				}
+				if(bfTL.x+SCG.viewfield.current.width > SCG.space.width)
+				{
+					bfTL.x = SCG.space.width-SCG.viewfield.current.width;
+				}
+				if(bfTL.y+SCG.viewfield.current.height > SCG.space.height)
+				{
+					bfTL.y = SCG.space.height-SCG.viewfield.current.height;
+				}
+				
+				SCG.viewfield.current.update(bfTL);
 			}
 			
 		}

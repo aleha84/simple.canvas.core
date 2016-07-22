@@ -284,7 +284,7 @@ SCG.GO.GO.prototype = {
 		this.box = new Box(new Vector2(this.position.x - this.size.x/2,this.position.y - this.size.y/2), this.size); //absolute positioning box
 
 		this.renderPosition = undefined;
-		if(SCG.viewfield.current.isIntersectsWithBox(this.box))
+		if(SCG.viewfield.current.isIntersectsWithBox(this.box) || this.ui)
 		{
 			this.renderPosition = this.position.add(this.ui ? new Vector2 : SCG.viewfield.current.topLeft.mul(-1)).mul(SCG.gameControls.scale.times);
 			this.renderBox = new Box(new Vector2(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2), this.renderSize);

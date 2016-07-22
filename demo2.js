@@ -9,7 +9,20 @@ document.addEventListener("DOMContentLoaded", function() {
 	var scene1 = {
 		name: "demo",
 		start: function(){ // called each time as scene selected
+			if(this.game.playerUnit != undefined){
+				return;
+			}
 
+			var unit = SCG.GO.create("simpleBox", {
+				position: new Vector2(250, 150)
+			});
+
+			this.go.push(unit);
+
+			this.game.playerUnit = unit;
+
+			SCG.gameControls.camera.mode = 'centered';
+			SCG.gameControls.camera.centeredOn = unit;
 		},
 		backgroundRender: function(){
 			SCG.contextBg.beginPath();
@@ -21,6 +34,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
 		},
 		game: {
+			playerUnit: undefined,
 			clickHandler: function(clickPosition){ // custom global click handler
 				if(SCG.gameControls.camera.mode === 'free')
 				{
@@ -50,12 +64,19 @@ document.addEventListener("DOMContentLoaded", function() {
 						SCG.gameControls.camera.shifts.down = false;
 					}	
 				}
+				else if(SCG.gameControls.camera.mode === 'centered'){
+					if(this.playerUnit){
+						var shiftedCP = clickPosition.add(SCG.viewfield.current.topLeft);
+						this.playerUnit.setDestination(shiftedCP);
+					}
+				}
 			},
 		},
 		gameObjectsBaseProperties: [
 			{ 
 				type: 'simpleBox',
 				size: new Vector2(20,20),
+				speed: 1,
 				isCustomRender: true,
 				customRender: function() {
 					SCG.context.beginPath();
@@ -79,10 +100,6 @@ document.addEventListener("DOMContentLoaded", function() {
 		gameObjectGenerator: function () {
 			var gos = [];
 
-			gos.push(SCG.GO.create("simpleBox", {
-				position: new Vector2(250, 150)
-			}));
-
 			gos.push(SCG.GO.create("line", {
 				position: new Vector2(0, 500),
 				size: new Vector2(1,1000)
@@ -102,6 +119,26 @@ document.addEventListener("DOMContentLoaded", function() {
 				position: new Vector2(300, 500),
 				size: new Vector2(1,1000)
 			}));
+
+			gos.push(SCG.GO.create("line", {
+				position: new Vector2(500, 0),
+				size: new Vector2(1000,1)
+			}));			
+
+			gos.push(SCG.GO.create("line", {
+				position: new Vector2(500, 100),
+				size: new Vector2(1000,1)
+			}));			
+
+			gos.push(SCG.GO.create("line", {
+				position: new Vector2(500, 200),
+				size: new Vector2(1000,1)
+			}));			
+
+			gos.push(SCG.GO.create("line", {
+				position: new Vector2(500, 300),
+				size: new Vector2(1000,1)
+			}));			
 
 			return gos;
 		}
