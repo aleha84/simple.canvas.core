@@ -117,10 +117,15 @@ SCG.draw = function(){
 		as.preMainWork();	
 	}
 	
+	SCG.gameControls.camera.update(now);
+
 	var i = as.go.length;
 	while (i--) {
 		as.go[i].update(now);
 		as.go[i].render();
+		if(as.go[i].renderPosition!=undefined){
+			SCG.frameCounter.visibleCount++;
+		}
 		if(!as.go[i].alive){
 			var deleted = as.go.splice(i,1);
 		}

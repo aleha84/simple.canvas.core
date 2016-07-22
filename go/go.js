@@ -6,7 +6,7 @@ SCG.GO.GO = function(prop){
 	this.renderPosition = new Vector2;
 	this.renderBox = undefined;
 	this.alive = true;
-	this.updateAlways = false;
+	this.ui = false;
 	this.type = 'unidentifiedType';
 	this.id = '';
 	this.size = new Vector2;
@@ -242,7 +242,7 @@ SCG.GO.GO.prototype = {
 	},
 
 	update: function(now){ 
-		if(!this.updateAlways && (!this.alive || SCG.gameLogics.isPaused || SCG.gameLogics.gameOver || SCG.gameLogics.wrongDeviceOrientation)){
+		if(!this.ui && (!this.alive || SCG.gameLogics.isPaused || SCG.gameLogics.gameOver || SCG.gameLogics.wrongDeviceOrientation)){
 			return false;
 		}
 
@@ -284,9 +284,9 @@ SCG.GO.GO.prototype = {
 		this.box = new Box(new Vector2(this.position.x - this.size.x/2,this.position.y - this.size.y/2), this.size); //absolute positioning box
 
 		this.renderPosition = undefined;
-		if(SCG.viewfield.current.isIntersectsWithBox(this.box))
+		if(SCG.viewfield.current.isIntersectsWithBox(this.box) || this.ui)
 		{
-			this.renderPosition = new Vector2(this.position.x * SCG.gameControls.scale.times, this.position.y * SCG.gameControls.scale.times).add(SCG.viewfield.current.topLeft.mul(-1));
+			this.renderPosition = this.position.add(this.ui ? new Vector2 : SCG.viewfield.current.topLeft.mul(-1)).mul(SCG.gameControls.scale.times);
 			this.renderBox = new Box(new Vector2(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2), this.renderSize);
 		}
 

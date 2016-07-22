@@ -70,6 +70,8 @@ SCG.gameControls = {
 		mode: 'free',
 		shiftSpeed: 5,
 		centeredOn: undefined,
+		resetAfterUpdate: false,
+		preventModeSwitch: true,
 		shifts: {
 			left: false,
 			right: false,
@@ -77,37 +79,43 @@ SCG.gameControls = {
 			down: false
 		},
 		free: function(){
+			if(this.preventModeSwitch) {return;}
 			SCG.gameControls.camera.mode = 'free';
 			this.centeredOn = undefined;
 		},
 		center: function(){
-			if(SCG.gameControls.selectedGOs.length == 1){
-				SCG.gameControls.camera.mode = 'centered';
-				this.centeredOn = SCG.gameControls.selectedGOs[0];
+			if(this.preventModeSwitch) {return;}
+			var gc = SCG.gameControls;
+			if(gc.selectedGOs.length == 1){
+				gc.camera.mode = 'centered';
+				this.centeredOn = gc.selectedGOs[0];
 			}
 			else{
-				SCG.gameControls.camera.mode = 'free';
+				gc.camera.mode = 'free';
 				this.centeredOn = undefined;
 			}
 		},
 		reset: function(){
-			this.shifts.left = false;
-			this.shifts.right = false;
-			this.shifts.up = false;
-			this.shifts.down = false;
+			var sh = this.shifts;
+			sh.left = false;
+			sh.right = false;
+			sh.up = false;
+			sh.down = false;
 		},
 		update: function(now){
+			var sh = this.shifts;
+			var bfTL = undefined;
 			if(this.mode === 'free'){
 				var direction = undefined;
-				if(this.shifts.left)
+				if(sh.left)
 				{
 					direction = Vector2.left();
 				}
-				if(this.shifts.right)
+				if(sh.right)
 				{
 					direction = Vector2.right();
 				}
-				if(this.shifts.up)
+				if(sh.up)
 				{
 					if(direction!= undefined)
 					{
@@ -118,7 +126,7 @@ SCG.gameControls = {
 						direction = Vector2.up();	
 					}
 				}
-				if(this.shifts.down)
+				if(sh.down)
 				{
 					if(direction!= undefined)
 					{
@@ -131,14 +139,36 @@ SCG.gameControls = {
 				}
 				if(direction!== undefined){
 					var delta = direction.mul(this.shiftSpeed);
-					var bfTL = SCG.viewfield.current.topLeft.clone();
-					bfTL.add(delta);
-					SCG.viewfield.current.update(bfTL);		
+					bfTL = SCG.viewfield.current.topLeft.add(delta);
 				}
 			}
 			else if(this.mode === 'centered' && this.centeredOn!== undefined){
-				var newBftl = this.centeredOn.position.substract(new Vector2(SCG.viewfield.width/2,SCG.viewfield.height/2),true);
-				SCG.viewfield.current.update(newBftl);
+				bfTL = this.centeredOn.position.substract(new Vector2(SCG.viewfield.default.width/2,SCG.viewfield.default.height/2));
+			}
+
+			if(this.resetAfterUpdate){
+				this.reset();
+			}
+
+			if(bfTL != undefined){
+				if(bfTL.x < 0)
+				{
+					bfTL.x = 0;
+				}
+				if(bfTL.y < 0)
+				{
+					bfTL.y = 0;
+				}
+				if(bfTL.x+SCG.viewfield.current.width > SCG.space.width)
+				{
+					bfTL.x = SCG.space.width-SCG.viewfield.current.width;
+				}
+				if(bfTL.y+SCG.viewfield.current.height > SCG.space.height)
+				{
+					bfTL.y = SCG.space.height-SCG.viewfield.current.height;
+				}
+				
+				SCG.viewfield.current.update(bfTL);
 			}
 			
 		}
@@ -162,10 +192,11 @@ SCG.gameControls = {
 			return 'position: '+this.position.toString()+'<br/>leftButtonDown: ' + this.leftButtonDown;
 		},
 		doClickCheck: function() {
+			var gc = SCG.gameControls;
 			for(var i = 0; i < this.eventHandlers.click.length;i++){
 				var ch = this.eventHandlers.click[i];
 				if(ch.renderBox!=undefined 
-					&& ch.renderBox.isPointInside(SCG.gameControls.mousestate.position) 
+					&& ch.renderBox.isPointInside(gc.mousestate.position) 
 					&& ch.handlers != undefined 
 					&& ch.handlers.click != undefined 
 					&& isFunction(ch.handlers.click))
@@ -179,9 +210,10 @@ SCG.gameControls = {
 				}
 			}
 
-			if(SCG.scenes.activeScene.game.clickHandler != undefined && isFunction(SCG.scenes.activeScene.game.clickHandler))
+			var asg = SCG.scenes.activeScene.game;
+			if(asg.clickHandler != undefined && isFunction(asg.clickHandler))
 			{
-				SCG.scenes.activeScene.game.clickHandler(SCG.gameControls.mousestate.position.division(SCG.gameControls.scale.times));
+				asg.clickHandler(gc.mousestate.position.division(gc.scale.times));
 			}
 		},
 		eventHandlers: {
@@ -195,26 +227,27 @@ SCG.gameControls = {
 	},
 
 	mouseDown: function(event){
+		var ms = SCG.gameControls.mousestate;
 		if(event.type == 'touchstart')
 		{
 			if(event.originalEvent.changedTouches != undefined && event.originalEvent.changedTouches.length == 1)
 			{
-				SCG.gameControls.mousestate.leftButtonDown = true;
+				ms.leftButtonDown = true;
 			}
 		}
 		else{
 			switch (event.which) {
 		        case 1:
-		            SCG.gameControls.mousestate.leftButtonDown = true;
+		            ms.leftButtonDown = true;
 		            break;
 		        case 2:
-		            SCG.gameControls.mousestate.middleButtonDown = true;
+		            ms.middleButtonDown = true;
 		            break;
 		        case 3:
-		            SCG.gameControls.mousestate.rightButtonDown = true;
+		            ms.rightButtonDown = true;
 		            break;
 		        default:
-		            SCG.gameControls.mousestate.reset();
+		            ms.reset();
 		            break;
 	    	}
 		}
@@ -225,28 +258,29 @@ SCG.gameControls = {
 	},
 	mouseUp: function(event){
 		var that = this;
+		var ms = SCG.gameControls.mousestate;
 		that.getEventAbsolutePosition(event);
 
 		if(event.type == 'touchstart')
 		{
 			if(event.originalEvent.changedTouches != undefined && event.originalEvent.changedTouches.length == 1)
 			{
-				SCG.gameControls.mousestate.leftButtonDown = false;
+				ms.leftButtonDown = false;
 			}
 		}
 		else{
 			switch (event.which) {
 		        case 1:
-		            SCG.gameControls.mousestate.leftButtonDown = false;
+		            ms.leftButtonDown = false;
 		            break;
 		        case 2:
-		            SCG.gameControls.mousestate.middleButtonDown = false;
+		            ms.middleButtonDown = false;
 		            break;
 		        case 3:
-		            SCG.gameControls.mousestate.rightButtonDown = false;
+		            ms.rightButtonDown = false;
 		            break;
 		        default:
-		            SCG.gameControls.mousestate.reset();
+		            ms.reset();
 		            break;
 		    }
 		}
@@ -257,11 +291,12 @@ SCG.gameControls = {
 	},
 	mouseMove: function(event){
 		var that = this;
-		var oldPosition = SCG.gameControls.mousestate.position.clone();
+		var ms = SCG.gameControls.mousestate;
+		var oldPosition = ms.position.clone();
 		that.getEventAbsolutePosition(event);
-		SCG.gameControls.mousestate.delta = SCG.gameControls.mousestate.position.substract(oldPosition);
+		ms.delta = ms.position.substract(oldPosition);
 
-		SCG.debugger.setValue(SCG.gameControls.mousestate.toString());
+		SCG.debugger.setValue(ms.toString());
 		//console.log(SCG.gameControls.mousestate.position);
 	},
 	getEventAbsolutePosition: function(event){
@@ -292,43 +327,38 @@ SCG.gameControls = {
 		this.graphInit();
 	},
 	graphInit: function(){
-		SCG.gameLogics.messageToShow = '';
-		SCG.gameLogics.wrongDeviceOrientation = !window.matchMedia("(orientation: landscape)").matches;
-		if(SCG.gameLogics.wrongDeviceOrientation) {
-			SCG.gameLogics.messageToShow = 'wrong device orientation - portrait';
+		var gl = SCG.gameLogics;
+		gl.messageToShow = '';
+		gl.wrongDeviceOrientation = !window.matchMedia("(orientation: landscape)").matches;
+		if(gl.wrongDeviceOrientation) {
+			gl.messageToShow = 'wrong device orientation - portrait';
 			return;
 		}
 
 		var width =  window.innerWidth;
 		if(width < SCG.viewfield.default.width)
 		{
-			SCG.gameLogics.messageToShow = String.format('width lesser than {3} (width: {0}, iH: {1}, iW: {2})',width, window.innerHeight, window.innerWidth, SCG.viewfield.default.width);
-			SCG.gameLogics.wrongDeviceOrientation = true;
+			gl.messageToShow = String.format('width lesser than {3} (width: {0}, iH: {1}, iW: {2})',width, window.innerHeight, window.innerWidth, SCG.viewfield.default.width);
+			gl.wrongDeviceOrientation = true;
 			return;
 		}
-		// var proportions = SCG.gameLogics.isMobile ?  (window.innerHeight / window.innerWidth) : (window.innerWidth / window.innerHeight);
-		// SCG.gameControls.scale.times = (width / SCG.viewfield.default.width) / proportions;
 
 		var _width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
 		var _height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 		var ratioX = _width /SCG.viewfield.default.width;
 		var ratioY = _height / SCG.viewfield.default.height;
 
-		SCG.gameControls.scale.times = Math.min(ratioX, ratioY); //_width > _height ? _height / SCG.viewfield.default.height : _width /SCG.viewfield.default.width;
+		SCG.gameControls.scale.times = Math.min(ratioX, ratioY); 
 
 		if(SCG.gameControls.scale.times < 1)
 		{
-			SCG.gameLogics.messageToShow = String.format('window is to small (width: {0}, height: {1})', _width, _height);
-			SCG.gameLogics.wrongDeviceOrientation = true;
+			gl.messageToShow = String.format('window is to small (width: {0}, height: {1})', _width, _height);
+			gl.wrongDeviceOrientation = true;
 			return;
 		}
 
-		//var oldSize = new Vector2(SCG.viewfield.width, SCG.viewfield.height);
-
 		SCG.viewfield.width = SCG.viewfield.default.width * SCG.gameControls.scale.times;
 		SCG.viewfield.height = SCG.viewfield.default.height * SCG.gameControls.scale.times;
-
-		//var sizeChanges = new Vector2(SCG.viewfield.width / oldSize.x, SCG.viewfield.height / oldSize.y);
 
 		var mTop = 0;
 		var mLeft = 0;
@@ -345,8 +375,9 @@ SCG.gameControls = {
 		this.setCanvasProperties(SCG.canvasBg, mTop, mLeft);
 		this.setCanvasProperties(SCG.canvasUI, mTop, mLeft);
 
-		if(SCG.scenes.activeScene.backgroundRender != undefined && isFunction(SCG.scenes.activeScene.backgroundRender)){
-			SCG.scenes.activeScene.backgroundRender();
+		var br = SCG.scenes.activeScene.backgroundRender;
+		if(br != undefined && isFunction(br)){
+			br();
 		}
 
 		SCG.UI.invalidate();
@@ -420,15 +451,17 @@ SCG.gameControls = {
 	},
 	permanentKeyDown : function (event)
 	{
-		this.keyboardstate.shiftPressed =event.shiftKey;
-		this.keyboardstate.ctrlPressed =event.ctrlKey;
-		this.keyboardstate.altPressed =event.altKey;
+		var ks = this.keyboardstate;
+		ks.shiftPressed =event.shiftKey;
+		ks.ctrlPressed =event.ctrlKey;
+		ks.altPressed =event.altKey;
 	},
 	permanentKeyUp : function (event)
 	{
-		this.keyboardstate.shiftPressed =event.shiftKey;
-		this.keyboardstate.ctrlPressed =event.ctrlKey;
-		this.keyboardstate.altPressed =event.altKey;
+		var ks = this.keyboardstate;
+		ks.shiftPressed =event.shiftKey;
+		ks.ctrlPressed =event.ctrlKey;
+		ks.altPressed =event.altKey;
 		switch(event.which)
 		{
 			case 32:
