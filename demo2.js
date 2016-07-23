@@ -1,28 +1,26 @@
 document.addEventListener("DOMContentLoaded", function() {
 
 	SCG.src = {
-		flower_sheet: 'content/images/flower_sheet.png',
-		butterfly_sheet: 'content/images/butterfly_sheet.png',
-		grassBackground: 'content/images/grassBackground.png'
+
 	}
 
 	var scene1 = {
 		name: "demo",
 		start: function(){ // called each time as scene selected
-			if(this.game.playerUnit != undefined){
-				return;
+			if(this.game.playerUnit == undefined){
+				var unit = SCG.GO.create("simpleBox", {
+					position: new Vector2(250, 150)
+				});
+
+				this.go.push(unit);
+
+				this.game.playerUnit = unit;
+
+				SCG.gameControls.camera.mode = 'centered';
 			}
 
-			var unit = SCG.GO.create("simpleBox", {
-				position: new Vector2(250, 150)
-			});
 
-			this.go.push(unit);
-
-			this.game.playerUnit = unit;
-
-			SCG.gameControls.camera.mode = 'centered';
-			SCG.gameControls.camera.centeredOn = unit;
+			SCG.gameControls.camera.centeredOn = this.game.playerUnit;
 		},
 		backgroundRender: function(){
 			SCG.contextBg.beginPath();
