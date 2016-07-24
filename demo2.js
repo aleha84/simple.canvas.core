@@ -148,6 +148,32 @@ document.addEventListener("DOMContentLoaded", function() {
 		width: 1000,
 		height: 1000
 	}
+	var n = SCG.audio.notes;
+	SCG.audio.addToQueue([
+		{value: n.o1.g, duration: n.dur.quarter},
+		{value: n.o1.e, duration: n.dur.quarter},
+		{value: n.o1.a, duration: n.dur.half},
+		{value: n.o1.g, duration: n.dur.half},
+		{value: n.o1.d, duration: n.dur.quarter},
+		{value: n.o1.f, duration: n.dur.quarter},
+		{value: n.o1.e, duration: n.dur.quarter},
+		{value: n.o1.d, duration: n.dur.quarter},
+		{value: n.o1.c, duration: n.dur.whole},
+		{value: n.o1.c, duration: n.dur.quarter},
+		{value: n.o1.e, duration: n.dur.quarter},
+		{value: n.o1.g, duration: n.dur.quarter},
+		{value: n.o1.a, duration: n.dur.quarter},
+		{value: n.o1.a, duration: n.dur.quarter},
+		{value: n.o1.a, duration: n.dur.quarter},
+		{value: n.o1.h, duration: n.dur.quarter},
+		{value: n.o2.d, duration: n.dur.quarter},
+		{value: n.o2.c, duration: n.dur.quarter},
+		{value: n.o1.h, duration: n.dur.quarter},
+		{value: n.o1.a, duration: n.dur.quarter},
+		{value: n.o2.c, duration: n.dur.half},
+		{value: n.o1.g, duration: n.dur.half},
+		{value: n.o1.g, duration: n.dur.quarter},
+	]);
 
 	SCG.gameControls.camera.resetAfterUpdate = true;
 

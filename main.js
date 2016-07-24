@@ -87,6 +87,10 @@ SCG.start = function(){
 
 		SCG.UI.invalidate();
 
+		if(SCG.audio){
+			SCG.audio.init();	
+		}
+	
 		SCG.animate();
 	});
 }
@@ -141,4 +145,8 @@ SCG.draw = function(){
 	}
 
 	SCG.frameCounter.doWork(now);
+
+	if(SCG.audio){
+		SCG.audio.update(now);	
+	}
 }

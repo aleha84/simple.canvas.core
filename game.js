@@ -54,6 +54,9 @@ SCG.gameLogics = {
 	pauseToggle: function(){
 		SCG.gameLogics.isPaused = !SCG.gameLogics.isPaused;	
 		SCG.UI.invalidate();
+		if(SCG.audio){
+			SCG.audio.playPause();	
+		}
 	}
 }
 
