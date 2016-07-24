@@ -16,6 +16,7 @@
       "scenes.js",
       "AI.js",
       "UI.js",
+      "audio.js",
       "main.js",
       "demo.js"
     ]

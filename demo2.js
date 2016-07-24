@@ -1,28 +1,26 @@
 document.addEventListener("DOMContentLoaded", function() {
 
 	SCG.src = {
-		flower_sheet: 'content/images/flower_sheet.png',
-		butterfly_sheet: 'content/images/butterfly_sheet.png',
-		grassBackground: 'content/images/grassBackground.png'
+
 	}
 
 	var scene1 = {
 		name: "demo",
 		start: function(){ // called each time as scene selected
-			if(this.game.playerUnit != undefined){
-				return;
+			if(this.game.playerUnit == undefined){
+				var unit = SCG.GO.create("simpleBox", {
+					position: new Vector2(250, 150)
+				});
+
+				this.go.push(unit);
+
+				this.game.playerUnit = unit;
+
+				SCG.gameControls.camera.mode = 'centered';
 			}
 
-			var unit = SCG.GO.create("simpleBox", {
-				position: new Vector2(250, 150)
-			});
 
-			this.go.push(unit);
-
-			this.game.playerUnit = unit;
-
-			SCG.gameControls.camera.mode = 'centered';
-			SCG.gameControls.camera.centeredOn = unit;
+			SCG.gameControls.camera.centeredOn = this.game.playerUnit;
 		},
 		backgroundRender: function(){
 			SCG.contextBg.beginPath();
@@ -150,6 +148,32 @@ document.addEventListener("DOMContentLoaded", function() {
 		width: 1000,
 		height: 1000
 	}
+	var n = SCG.audio.notes;
+	SCG.audio.addToQueue([
+		{value: n.o1.g, duration: n.dur.quarter},
+		{value: n.o1.e, duration: n.dur.quarter},
+		{value: n.o1.a, duration: n.dur.half},
+		{value: n.o1.g, duration: n.dur.half},
+		{value: n.o1.d, duration: n.dur.quarter},
+		{value: n.o1.f, duration: n.dur.quarter},
+		{value: n.o1.e, duration: n.dur.quarter},
+		{value: n.o1.d, duration: n.dur.quarter},
+		{value: n.o1.c, duration: n.dur.whole},
+		{value: n.o1.c, duration: n.dur.quarter},
+		{value: n.o1.e, duration: n.dur.quarter},
+		{value: n.o1.g, duration: n.dur.quarter},
+		{value: n.o1.a, duration: n.dur.quarter},
+		{value: n.o1.a, duration: n.dur.quarter},
+		{value: n.o1.a, duration: n.dur.quarter},
+		{value: n.o1.h, duration: n.dur.quarter},
+		{value: n.o2.d, duration: n.dur.quarter},
+		{value: n.o2.c, duration: n.dur.quarter},
+		{value: n.o1.h, duration: n.dur.quarter},
+		{value: n.o1.a, duration: n.dur.quarter},
+		{value: n.o2.c, duration: n.dur.half},
+		{value: n.o1.g, duration: n.dur.half},
+		{value: n.o1.g, duration: n.dur.quarter},
+	]);
 
 	SCG.gameControls.camera.resetAfterUpdate = true;
 
