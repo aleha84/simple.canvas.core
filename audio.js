@@ -8,6 +8,8 @@ SCG.audio = {
 	noteCurrentIndex: -1,
 	loop: true,
 	pause: false,
+	maxVol: 0.05,
+	mute: false, 
 	notes: {
 		dur: {
 			whole: 1000,
@@ -45,6 +47,7 @@ SCG.audio = {
 			h_fl: 932.32,
 			h: 987.75 // си
 		},
+		pause: 0
 	},
 	notesChangeTimer: {
 		ignorePause: true,
@@ -73,15 +76,19 @@ SCG.audio = {
 
 		this.oscillator = this.context.createOscillator();
 		this.gainNode = this.context.createGain();
+		this.filter = this.context.createBiquadFilter();
 
-		this.oscillator.connect(this.gainNode);
+		this.oscillator.connect(this.filter);
+		this.filter.connect(this.gainNode);
 		this.gainNode.connect(this.context.destination);
 
+		this.filter.type = 'lowpass';
+		this.filter.frequency.value = 440;
 		this.oscillator.type = 'triangle';
 		this.oscillator.frequency.value = 0;
 		this.oscillator.detune.value = 100; // value in cents
 
-		this.gainNode.gain.value = 0.1;
+		this.gainNode.gain.value = this.maxVol;
 
 		this.notesChangeTimer.doWorkInternal = this.noteChange;
 		this.notesChangeTimer.context = this;
@@ -101,6 +108,14 @@ SCG.audio = {
 		
 		this.pause = !this.pause;
 		this.pause ? this.gainNode.disconnect(this.context.destination) : this.gainNode.connect(this.context.destination);
+	},
+	muteToggle: function(){
+		if(!this.oscillator) {return;}
+		
+		this.mute = !this.mute;
+		this.mute ? this.gainNode.gain.value = 0 : this.gainNode.gain.value = this.maxVol;
+
+		SCG.UI.invalidate();
 	},
 	update: function(now){
 		if(!this.oscillator) {return;}

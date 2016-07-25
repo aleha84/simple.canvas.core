@@ -63,9 +63,38 @@ SCG.UI = {
 			}
 		});
 
-		btnP.position = new Vector2(SCG.viewfield.width - btnFs.size.x - btnP.size.x/2, SCG.viewfield.height - btnP.size.y/2)
+		btnP.position = new Vector2(SCG.viewfield.width - btnFs.size.x - btnP.size.x/2, SCG.viewfield.height - btnP.size.y/2);
 
 		SCG.scenes.activeScene.ui.push(btnP);
+
+		if(SCG.audio){
+			var btnM = SCG.GO.create("button", {
+				position: new Vector2,
+				transparency: 0.75,
+				handlers: {
+					click: function(){
+						SCG.audio.muteToggle();
+						return {
+							preventBubbling: true
+						};
+					}
+				},
+				internalUpdate: function(){
+					var s = this.size;
+					this.innerCanvasContext.clearRect(0, 0, s.x, s.y);
+					drawFigures(
+						this.innerCanvasContext,
+						!SCG.audio.mute
+							? [[new Vector2(s.x*0.1,s.y*0.3), new Vector2(s.x*0.3,s.y*0.3),new Vector2(s.x*0.5,0),new Vector2(s.x*0.5,s.y), new Vector2(s.x*0.3,s.y*0.7),new Vector2(s.x*0.1,s.y*0.7)], [new Vector2(s.x*0.55,s.y*0.4), new Vector2(s.x*0.65,s.y*0.4), new Vector2(s.x*0.65,s.y*0.6),new Vector2(s.x*0.55,s.y*0.6)],[new Vector2(s.x*0.75,s.y*0.2), new Vector2(s.x*0.85,s.y*0.2), new Vector2(s.x*0.85,s.y*0.8),new Vector2(s.x*0.75,s.y*0.8)]] 
+					 	 	: [[new Vector2(s.x*0.1,s.y*0.3), new Vector2(s.x*0.3,s.y*0.3),new Vector2(s.x*0.5,0),new Vector2(s.x*0.5,s.y), new Vector2(s.x*0.3,s.y*0.7),new Vector2(s.x*0.1,s.y*0.7)]],
+					 	this.transparency);
+				}
+			});
+
+			btnM.position = new Vector2(SCG.viewfield.width - btnFs.size.x - btnP.size.x - btnM.size.x/2, SCG.viewfield.height - btnM.size.y/2);
+
+			SCG.scenes.activeScene.ui.push(btnM);
+		}
 	},
 	initialize: function(){
 		if(this.initialized){ return; }
@@ -89,10 +118,6 @@ SCG.UI.controls = [{
 			that.innerCanvas.width = that.size.x;
 			that.innerCanvas.height = that.size.y;
 			that.innerCanvasContext = that.innerCanvas.getContext('2d');
-
-			// if(that.contentRender && isFunction(that.contentRender)){
-			// 	that.contentRender.call(that);
-			// }
 		}
 	},
 	customRender: function() {
