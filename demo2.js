@@ -160,6 +160,7 @@ document.addEventListener("DOMContentLoaded", function() {
 		{value: n.o1.d, duration: n.dur.quarter},
 		{value: n.o1.c, duration: n.dur.whole},
 		{value: n.o1.c, duration: n.dur.quarter},
+			//{value: n.pause, duration: n.dur.quarter}, 
 		{value: n.o1.e, duration: n.dur.quarter},
 		{value: n.o1.g, duration: n.dur.quarter},
 		{value: n.o1.a, duration: n.dur.quarter},
@@ -173,6 +174,36 @@ document.addEventListener("DOMContentLoaded", function() {
 		{value: n.o2.c, duration: n.dur.half},
 		{value: n.o1.g, duration: n.dur.half},
 		{value: n.o1.g, duration: n.dur.quarter},
+			//{value: n.pause, duration: n.dur.quarter}, 
+		{value: n.o1.a, duration: n.dur.quarter},
+		{value: n.o1.h, duration: n.dur.quarter},
+		{value: n.o2.c, duration: n.dur.half},
+		{value: n.o1.h, duration: n.dur.quarter},
+		{value: n.o1.a, duration: n.dur.quarter},
+		{value: n.o1.e, duration: n.dur.quarter},
+		{value: n.o1.g, duration: n.dur.quarter},
+		{value: n.o1.f, duration: n.dur.quarter},
+		{value: n.o1.a, duration: n.dur.whole},
+		{value: n.o1.a, duration: n.dur.quarter},
+
+		// {value: n.o1.e, duration: n.dur.quarter},
+		// {value: n.o1.c, duration: n.dur.quarter},
+		// {value: n.o1.d, duration: n.dur.quarter},
+		// {value: n.o1.e, duration: n.dur.quarter},
+		// {value: n.o1.c, duration: n.dur.half},
+
+		// {value: n.o1.g, duration: n.dur.quarter},
+		// {value: n.o1.f, duration: n.dur.quarter},
+		// {value: n.o1.e, duration: n.dur.quarter},
+		// {value: n.o1.d, duration: n.dur.quarter},
+
+		// {value: n.o1.e, duration: n.dur.quarter},
+		// {value: n.o1.c, duration: n.dur.quarter},
+		// {value: n.o1.d, duration: n.dur.quarter},
+		// {value: n.o1.e, duration: n.dur.quarter},
+		// {value: n.o1.c, duration: n.dur.whole},
+
+		//{value: n.pause, duration: n.dur.half},
 	]);
 
 	SCG.gameControls.camera.resetAfterUpdate = true;
