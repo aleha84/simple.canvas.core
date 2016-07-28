@@ -149,7 +149,7 @@ document.addEventListener("DOMContentLoaded", function() {
 		height: 1000
 	}
 	var n = SCG.audio.notes;
-	SCG.audio.addToQueue([
+	SCG.audio.start({notes: [
 		{value: n.o1.g, duration: n.dur.quarter},
 		{value: n.o1.e, duration: n.dur.quarter},
 		{value: n.o1.a, duration: n.dur.half},
@@ -204,7 +204,10 @@ document.addEventListener("DOMContentLoaded", function() {
 		// {value: n.o1.c, duration: n.dur.whole},
 
 		//{value: n.pause, duration: n.dur.half},
-	]);
+	],
+loop:true});
+
+	SCG.audio.start({notes: [{value: n.o2.h, duration: n.dur.whole},{value: n.o2.a, duration: n.dur.whole},{value: n.o2.h, duration: n.dur.whole},], loop:true});
 
 	SCG.gameControls.camera.resetAfterUpdate = true;
 
