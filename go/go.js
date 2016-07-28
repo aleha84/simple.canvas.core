@@ -91,10 +91,8 @@ SCG.GO.GO = function(prop){
 		throw 'SCG.GO.GO -> size is undefined';
 	}
 
-	if(prop!=undefined)
-	{
-		extend(true, this, prop);
-	}
+	extend(true, this, prop);
+	
 	if(this.direction!=undefined)
 	{
 		this.initialDirection = this.direction;

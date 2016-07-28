@@ -1,16 +1,8 @@
 SCG.audio = {
-	context : undefined,
-	oscillator : undefined,
-	gainNode  : undefined,
-	currentNote : undefined,
-	queues: [],
-	queueCurrentIndex: -1,
-	noteCurrentIndex: -1,
-	loop: true,
 	pause: false,
-	curVol: 0,
-	maxVol: 0.05,
+	initialized: false,
 	mute: false, 
+	players: [],
 	notes: {
 		dur: {
 			whole: 1000,
@@ -60,8 +52,7 @@ SCG.audio = {
 		context: undefined
 	},
 	init : function(){
-		if(this.queues.length == 0) {return;}
-
+		if(this.initialized){return;}
 		try {
 			// Fix up for prefixing
 			window.AudioContext = window.AudioContext||window.webkitAudioContext;
@@ -71,44 +62,86 @@ SCG.audio = {
 			alert('Web Audio API is not supported in this browser');
 		}
 
-		if(this.context == undefined){
-			return;
-		}
+		this.initialized = true;
 
-		this.notesChangeTimer.doWorkInternal = this.noteChange;
-		this.notesChangeTimer.context = this;
-
-		this.curVol = this.maxVol;
-
-		this.noteCurrentIndex = -1;
-		this.noteChange();
-	},
-	addToQueue: function(notes){
-		if(!isArray(notes) || notes.length == 0){ throw 'Notes array is empty!';}
-		this.queues.push(notes);
-		this.queueCurrentIndex = 0;
-		this.noteCurrentIndex = 0;
 	},
 	playPause: function () {
-		if(!this.oscillator) {return;}
-		
 		this.pause = !this.pause;
-		this.pause ? this.gainNode.disconnect(this.context.destination) : this.gainNode.connect(this.context.destination);
+		for(var i =0;i<this.players.length;i++){
+			this.players[i].connectToggle(this.pause);
+		}
 	},
 	muteToggle: function(){
-		if(!this.oscillator) {return;}
-		
 		this.mute = !this.mute;
-		//this.curVol = this.mute ? 0 : this.maxVol; //this.mute ? this.gainNode.gain.value = 0 : this.gainNode.gain.value = this.maxVol;
-		this.mute ? this.gainNode.disconnect(this.context.destination) : this.gainNode.connect(this.context.destination);
-
+		for(var i =0;i<this.players.length;i++){
+			this.players[i].connectToggle(this.mute);
+		}
 		SCG.UI.invalidate();
 	},
 	update: function(now){
-		if(!this.oscillator) {return;}
-		doWorkByTimer(this.notesChangeTimer, now);
+		var i = this.players.length;
+		while (i--) {
+			var p = this.players[i];
+			p.update(now);
+			
+			if(!p.isAlive){
+				var deleted = this.players.splice(i,1);
+			}
+		}
+	},
+	start: function(props){
+		if(!this.initialized){this.init();}
+		props.context = this.context;
+		this.players.push(new SCG.audio.Player(props));
+	}
+};
+
+SCG.audio.Player = function(prop){
+	this.loop = false;
+	this.notes = [];
+	this.noteIndex = -1;
+	this.curVol= 0;
+	this.maxVol= 0.05;
+	this.context = undefined;
+	this.oscillator = undefined;
+	this.gainNode  = undefined;
+	this.currentNote = undefined;
+	this.isAlive = true;
+	this.notesChangeTimer= {
+		ignorePause: true,
+		lastTimeWork: new Date,
+		delta : 0,
+		currentDelay: 0,
+		originDelay: 0,
+		doWorkInternal : undefined,
+		context: undefined
+	};
+
+	if(prop == undefined)
+	{
+		throw 'SCG.audio.Player -> props are undefined';
+	}
+
+	extend(true, this, prop);
+
+	this.notesChangeTimer.doWorkInternal = this.noteChange;
+	this.notesChangeTimer.context = this;
+
+	this.curVol = this.maxVol;
+
+	this.noteIndex = -1;
+	this.noteChange();
+}
+
+SCG.audio.Player.prototype = {
+	constructor: SCG.audio.Player,
+	update: function(now){
+		if(this.isAlive){
+			doWorkByTimer(this.notesChangeTimer, now);	
+		}
 	},
 	noteChange: function(){
+		if(!this.isAlive){ return; }
 		this.oscillator = this.context.createOscillator();
 		this.gainNode = this.context.createGain();
 		if(!this.mute){
@@ -119,22 +152,19 @@ SCG.audio = {
 		this.oscillator.type = 'triangle';
 		this.gainNode.gain.value = this.maxVol;
 
-		var currentQueue = this.queues[this.queueCurrentIndex];
-		if(this.noteCurrentIndex == currentQueue.length-1){
-			if(this.queueCurrentIndex == this.queues.length-1){
-				this.queueCurrentIndex = 0;
+		this.noteIndex++;
+
+		if(this.noteIndex >= this.notes.length){
+			if(!this.loop){
+				this.isAlive = false;
+				return;
 			}
 			else{
-				this.queueCurrentIndex++;
+				this.noteIndex = 0;
 			}
-			currentQueue = this.queues[this.queueCurrentIndex];
-			this.noteCurrentIndex = 0;
-		}
-		else{
-			this.noteCurrentIndex++;
 		}
 
-		this.setValues(currentQueue[this.noteCurrentIndex]);
+		this.setValues(this.notes[this.noteIndex]);
 	},
 	setValues: function(cn){
 		this.gainNode.gain.setValueAtTime(this.curVol, this.context.currentTime);
@@ -145,5 +175,9 @@ SCG.audio = {
 		this.notesChangeTimer.currentDelay = cn.duration;
 
 		this.oscillator.start(0);
+	},
+	connectToggle: function(connect){
+		this.mute = connect;
+		connect ? this.gainNode.disconnect(this.context.destination) : this.gainNode.connect(this.context.destination);
 	}
-};
+}
