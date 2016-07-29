@@ -5,51 +5,28 @@ SCG.audio = {
 	players: [],
 	notes: {
 		dur: {
-			whole: 1000,
-			half: 500,
-			quarter: 250,
-			eight: 125,
-			sixteenth: 62.5,
-			thirtySecond: 31.25
+			_1: 1,
+			_2: 0.5,
+			_4: 0.25,
+			_8: 0.125,
+			_16: 0.0625,
+			_32: 0.03125
 		},
-		o1:{
-			c: 261.63, // до
-			c_sh: 277.18, 
-			d: 293.66, // ре
-			d_sh: 311.13,
-			e: 329.63, // ми
-			f: 349.23, // фа
-			f_sh: 369.99,
-			g: 392.00, // соль
-			g_sh: 415.30,
-			a: 440.00, // ля
-			h_fl: 466.16,
-			h: 493.88 // си
-		},
-		o2:{
-			c: 523.25, // до
-			c_sh: 554.36, 
-			d: 587.32, // ре
-			d_sh: 622.26,
-			e: 659.26, // ми
-			f: 698.46, // фа
-			f_sh: 739.98,
-			g: 784.00, // соль
-			g_sh: 830.60,
-			a: 880.00, // ля
-			h_fl: 932.32,
-			h: 987.75 // си
-		},
+		// o1:{
+		// 	c: 261.63, // до
+		// 	c_sh: 277.18, 
+		// 	d: 293.66, // ре
+		// 	d_sh: 311.13,
+		// 	e: 329.63, // ми
+		// 	f: 349.23, // фа
+		// 	f_sh: 369.99,
+		// 	g: 392.00, // соль
+		// 	g_sh: 415.30,
+		// 	a: 440.00, // ля
+		// 	h_fl: 466.16,
+		// 	h: 493.88 // си
+		// }
 		pause: 0
-	},
-	notesChangeTimer: {
-		ignorePause: true,
-		lastTimeWork: new Date,
-		delta : 0,
-		currentDelay: 0,
-		originDelay: 0,
-		doWorkInternal : undefined,
-		context: undefined
 	},
 	init : function(){
 		if(this.initialized){return;}
@@ -62,21 +39,28 @@ SCG.audio = {
 			alert('Web Audio API is not supported in this browser');
 		}
 
+		var nNames = ['c','c_sh','d', 'd_sh','e','f','f_sh','g','g_sh','a','a_sh','h'];
+		for(var oIndex = 0;oIndex <9;oIndex++){
+			this.notes['o'+oIndex] = {};
+			for(var nIndex = 0;nIndex<12;nIndex++){
+				this.notes['o'+oIndex][nNames[nIndex]]=440* Math.pow(2, ((oIndex-4)*12 +(nIndex-9)) / 12);
+			}
+		}
+
 		this.initialized = true;
 
 	},
-	playPause: function () {
-		this.pause = !this.pause;
-		for(var i =0;i<this.players.length;i++){
-			this.players[i].connectToggle(this.pause);
-		}
+	playPause: function (pause) {
+		this.connectToggle(pause);
 	},
 	muteToggle: function(){
 		this.mute = !this.mute;
+		this.connectToggle(this.mute);
+	},
+	connectToggle: function(state){
 		for(var i =0;i<this.players.length;i++){
-			this.players[i].connectToggle(this.mute);
+			this.players[i].connectToggle(state);
 		}
-		SCG.UI.invalidate();
 	},
 	update: function(now){
 		var i = this.players.length;
@@ -85,7 +69,7 @@ SCG.audio = {
 			p.update(now);
 			
 			if(!p.isAlive){
-				var deleted = this.players.splice(i,1);
+				this.players.splice(i,1);
 			}
 		}
 	},
@@ -96,6 +80,8 @@ SCG.audio = {
 	}
 };
 
+SCG.audio.init();
+
 SCG.audio.Player = function(prop){
 	this.loop = false;
 	this.notes = [];
@@ -103,10 +89,10 @@ SCG.audio.Player = function(prop){
 	this.curVol= 0;
 	this.maxVol= 0.05;
 	this.context = undefined;
-	this.oscillator = undefined;
-	this.gainNode  = undefined;
+	this.gainNodes  = [];
 	this.currentNote = undefined;
 	this.isAlive = true;
+	this.length = 1000;
 	this.notesChangeTimer= {
 		ignorePause: true,
 		lastTimeWork: new Date,
@@ -142,15 +128,6 @@ SCG.audio.Player.prototype = {
 	},
 	noteChange: function(){
 		if(!this.isAlive){ return; }
-		this.oscillator = this.context.createOscillator();
-		this.gainNode = this.context.createGain();
-		if(!this.mute){
-			this.oscillator.connect(this.gainNode);
-			this.gainNode.connect(this.context.destination);	
-		}
-		
-		this.oscillator.type = 'triangle';
-		this.gainNode.gain.value = this.maxVol;
 
 		this.noteIndex++;
 
@@ -167,17 +144,39 @@ SCG.audio.Player.prototype = {
 		this.setValues(this.notes[this.noteIndex]);
 	},
 	setValues: function(cn){
-		this.gainNode.gain.setValueAtTime(this.curVol, this.context.currentTime);
-		this.gainNode.gain.exponentialRampToValueAtTime(0.0001, this.context.currentTime + (cn.duration*3/1000));
+		var notes = [];
+		this.gainNodes = [];
+		isArray(cn.value) ? notes = cn.value : notes.push(cn.value);
+		var duration = cn.duration*this.length;
+		for(var n = 0;n<notes.length;n++){
+			if(notes[n] == 0){continue;}
+			var oscillator = this.context.createOscillator();
+			var gainNode = this.context.createGain();
 
-		this.oscillator.frequency.value = cn.value;
-		this.notesChangeTimer.originDelay = cn.duration;
-		this.notesChangeTimer.currentDelay = cn.duration;
+			if(!this.mute){
+				oscillator.connect(gainNode);
+				gainNode.connect(this.context.destination);	
+			}
 
-		this.oscillator.start(0);
+			oscillator.type = 'triangle';
+			gainNode.gain.value = this.maxVol;
+			gainNode.gain.setValueAtTime(this.curVol, this.context.currentTime);
+			gainNode.gain.exponentialRampToValueAtTime(0.0001, this.context.currentTime + (duration*3/1000));
+			oscillator.frequency.value = notes[n];
+
+			this.gainNodes.push(gainNode);
+			oscillator.start(0);
+			oscillator.stop(this.context.currentTime + duration);
+		}
+
+		this.notesChangeTimer.originDelay = duration;
+		this.notesChangeTimer.currentDelay = duration;
 	},
 	connectToggle: function(connect){
 		this.mute = connect;
-		connect ? this.gainNode.disconnect(this.context.destination) : this.gainNode.connect(this.context.destination);
+		for(var gn=0;gn<this.gainNodes.length;gn++){
+			connect ? this.gainNodes[gn].disconnect(this.context.destination) : this.gainNodes[gn].connect(this.context.destination);	
+		}
+		
 	}
 }

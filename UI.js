@@ -74,6 +74,7 @@ SCG.UI = {
 				handlers: {
 					click: function(){
 						SCG.audio.muteToggle();
+						SCG.UI.invalidate();
 						return {
 							preventBubbling: true
 						};
