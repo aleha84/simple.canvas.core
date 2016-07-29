@@ -55,7 +55,7 @@ SCG.gameLogics = {
 		SCG.gameLogics.isPaused = !SCG.gameLogics.isPaused;	
 		SCG.UI.invalidate();
 		if(SCG.audio){
-			SCG.audio.playPause();	
+			SCG.audio.playPause(SCG.gameLogics.isPaused);	
 		}
 	}
 }

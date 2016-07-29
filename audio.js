@@ -50,9 +50,8 @@ SCG.audio = {
 		this.initialized = true;
 
 	},
-	playPause: function () {
-		this.pause = !this.pause;
-		this.connectToggle(this.pause);
+	playPause: function (pause) {
+		this.connectToggle(pause);
 	},
 	muteToggle: function(){
 		this.mute = !this.mute;
@@ -60,7 +59,7 @@ SCG.audio = {
 	},
 	connectToggle: function(state){
 		for(var i =0;i<this.players.length;i++){
-			this.players[i].connectToggle(this.mute);
+			this.players[i].connectToggle(state);
 		}
 	},
 	update: function(now){
@@ -70,7 +69,7 @@ SCG.audio = {
 			p.update(now);
 			
 			if(!p.isAlive){
-				var deleted = this.players.splice(i,1);
+				this.players.splice(i,1);
 			}
 		}
 	},

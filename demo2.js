@@ -203,7 +203,7 @@ document.addEventListener("DOMContentLoaded", function() {
 		{value: [n.o2.a,n.o3.d,n.o3.f,n.o3.a],duration: n.dur._8},
 		{value: [n.o3.d,n.o3.f,n.o4.d],duration: n.dur._8},
 		],
-		loop:true, length:4000});
+		loop:true, length:4000,maxVol:0.1});
 	SCG.audio.start({notes: [
 		//requem upper
 		{value: n.pause,duration: n.dur._1},
