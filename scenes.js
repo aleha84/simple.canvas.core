@@ -8,10 +8,11 @@ SCG.scenes = {
 
 		this.activeScene = this.scenes[sceneName];
 
+		var as = this.activeScene;
 		// reset go event handlers
 		SCG.gameControls.mousestate.eventHandlers.click = [];
-		for(var i = 0, len = this.activeScene.go.length; i < len;i++){
-			var sg = this.activeScene.go[i];
+		for(var i = 0, len = as.go.length; i < len;i++){
+			var sg = as.go[i];
 			if(sg.handlers.click){
 				var eh = SCG.gameControls.mousestate.eventHandlers;
 				if(eh.click.indexOf(sg) == -1){
@@ -24,8 +25,8 @@ SCG.scenes = {
 		if(SCG.contextBg){
 			SCG.contextBg.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
 
-			if(this.activeScene.backgroundRender != undefined && isFunction(this.activeScene.backgroundRender)){
-				this.activeScene.backgroundRender();
+			if(as.backgroundRender != undefined && isFunction(as.backgroundRender)){
+				as.backgroundRender();
 			}	
 		}
 
@@ -33,7 +34,7 @@ SCG.scenes = {
 		SCG.AI.initialize();
 
 		// reset ui
-		this.activeScene.ui = [];
+		as.ui = [];
 		if(SCG.globals.addDefaultUIButtons){
 			SCG.UI.addDefaultUIButtons();
 		}
@@ -42,8 +43,13 @@ SCG.scenes = {
 			SCG.UI.invalidate();
 		}
 
-		if(this.activeScene.start != undefined && isFunction(this.activeScene.start)){
-			this.activeScene.start();
+		SCG.space = {
+			width: as.space.width,
+			height: as.space.height
+		};	
+
+		if(as.start != undefined && isFunction(as.start)){
+			as.start();
 		}
 	},
 	registerScene: function(scene) {
@@ -73,6 +79,7 @@ SCG.scenes = {
 			go: scene.gameObjectGenerator != undefined && isFunction(scene.gameObjectGenerator) ? scene.gameObjectGenerator() : [],
 			backgroundRender: scene.backgroundRender != undefined && isFunction(scene.backgroundRender) ? scene.backgroundRender : undefined,
 			game: extend(true, {}, scene.game),
+			space: scene.space ? scene.space : { width: SCG.viewfield.default.width, height: SCG.viewfield.default.height },
 			ui: []
 		};
 
