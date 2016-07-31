@@ -86,16 +86,18 @@ SCG.gameControls = {
 			SCG.gameControls.camera.mode = 'free';
 			this.centeredOn = undefined;
 		},
-		center: function(){
+		center: function(centeredOn){
 			if(this.preventModeSwitch) {return;}
 			var gc = SCG.gameControls;
-			if(gc.selectedGOs.length == 1){
+			if(centeredOn == undefined && gc.selectedGOs.length == 1){
+				centeredOn = gc.selectedGOs[0];
+			}
+			if(centeredOn){
 				gc.camera.mode = 'centered';
-				this.centeredOn = gc.selectedGOs[0];
+				this.centeredOn = centeredOn;
 			}
 			else{
-				gc.camera.mode = 'free';
-				this.centeredOn = undefined;
+				this.free();
 			}
 		},
 		reset: function(){

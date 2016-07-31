@@ -4,8 +4,51 @@ document.addEventListener("DOMContentLoaded", function() {
 
 	}
 
+	var scene2 = {
+		name: "demo_s2",
+		space: {
+			width: 500,
+			height: 300
+		},
+		start: function () {
+			SCG.gameControls.camera.preventModeSwitch = false;
+			SCG.gameControls.camera.free();
+			SCG.viewfield.current.update(new Vector2);
+			SCG.gameControls.camera.preventModeSwitch = true;
+		},
+		backgroundRender: function(){
+			SCG.contextBg.beginPath();
+			SCG.contextBg.rect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
+			SCG.contextBg.fillStyle ='lightgreen';
+			SCG.contextBg.fill()
+		},
+		preMainWork: function() {
+			SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
+		},
+		gameObjectGenerator: function () {
+			var gos = [];
+
+			gos.push(SCG.GO.create("line", {
+				position: new Vector2(250, 150),
+				size: new Vector2(1,300)
+			}));
+
+			gos.push(SCG.GO.create("line", {
+				position: new Vector2(250, 150),
+				size: new Vector2(500,1)
+			}));
+
+			return gos;
+		}
+	}
+
+
 	var scene1 = {
-		name: "demo",
+		name: "demo_s1",
+		space: {
+			width: 1000,
+			height: 1000
+		},
 		start: function(){ // called each time as scene selected
 			if(this.game.playerUnit == undefined){
 				var unit = SCG.GO.create("simpleBox", {
@@ -19,12 +62,13 @@ document.addEventListener("DOMContentLoaded", function() {
 				SCG.gameControls.camera.mode = 'centered';
 			}
 
-
-			SCG.gameControls.camera.centeredOn = this.game.playerUnit;
+			SCG.gameControls.camera.preventModeSwitch = false;
+			SCG.gameControls.camera.center(this.game.playerUnit);
+			SCG.gameControls.camera.preventModeSwitch = true;
 		},
 		backgroundRender: function(){
 			SCG.contextBg.beginPath();
-			SCG.contextBg.rect(0, 0, SCG.viewfield.width, SCG.viewfield.width);
+			SCG.contextBg.rect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
 			SCG.contextBg.fillStyle ='gray';
 			SCG.contextBg.fill()
 		},
@@ -143,11 +187,11 @@ document.addEventListener("DOMContentLoaded", function() {
 	}	
 
 
-	//globals init
-	SCG.space = {
-		width: 1000,
-		height: 1000
-	}
+	// //globals init
+	// SCG.space = {
+	// 	width: 1000,
+	// 	height: 1000
+	// }
 	var n = SCG.audio.notes;
 	//requem lower
 	SCG.audio.start({notes: [
@@ -393,6 +437,7 @@ loop:true, length:4000});
 	SCG.gameControls.camera.resetAfterUpdate = true;
 
 	SCG.scenes.registerScene(scene1);
+	SCG.scenes.registerScene(scene2);
 
 	SCG.scenes.selectScene(scene1.name);
 
