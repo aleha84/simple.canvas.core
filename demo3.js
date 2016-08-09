@@ -12,9 +12,18 @@ document.addEventListener("DOMContentLoaded", function() {
 		},
 		start: function(){ // called each time as scene selected
 			if(this.game.playerUnit == undefined){
+				var sword = SCG.GO.create("weapon", {
+					position: new Vector2(5, 25),
+					imgPropertyName: 'weapons',
+				});
+
+
 				var unit = SCG.GO.create("unit", {
 					position: new Vector2(250, 150),
-					size:new Vector2(50,50)
+					size:new Vector2(50,50),
+					items: {
+						leftHand: sword
+					}
 				});
 
 				this.go.push(unit);
@@ -40,39 +49,9 @@ document.addEventListener("DOMContentLoaded", function() {
 		game: {
 			playerUnit: undefined,
 			clickHandler: function(clickPosition){ // custom global click handler
-				if(SCG.gameControls.camera.mode === 'free')
-				{
-					var direction = undefined;
-					if(clickPosition.x < 15*SCG.gameControls.scale.times){
-						SCG.gameControls.camera.shifts.left = true;
-					}
-					else{
-						SCG.gameControls.camera.shifts.left = false;	
-					}
-					if(clickPosition.x > (SCG.viewfield.default.width - 15*SCG.gameControls.scale.times)){
-						SCG.gameControls.camera.shifts.right = true;
-					}
-					else{
-						SCG.gameControls.camera.shifts.right = false;
-					}
-					if(clickPosition.y < 15*SCG.gameControls.scale.times){
-						SCG.gameControls.camera.shifts.up = true;
-					}
-					else{
-						SCG.gameControls.camera.shifts.up = false;
-					}
-					if(clickPosition.y > (SCG.viewfield.default.height - 15*SCG.gameControls.scale.times)){
-						SCG.gameControls.camera.shifts.down = true;
-					}
-					else{
-						SCG.gameControls.camera.shifts.down = false;
-					}	
-				}
-				else if(SCG.gameControls.camera.mode === 'centered'){
-					if(this.playerUnit){
-						var shiftedCP = clickPosition.add(SCG.viewfield.current.topLeft);
-						this.playerUnit.setDestination(shiftedCP);
-					}
+				if(this.playerUnit){
+					var shiftedCP = clickPosition.add(SCG.viewfield.current.topLeft);
+					this.playerUnit.setDestination(shiftedCP);
 				}
 			},
 		},
@@ -88,10 +67,18 @@ document.addEventListener("DOMContentLoaded", function() {
 					end: 1,
 					step: 0.1
 				},
+				items: {},
+
 				internalUpdate: function(){
+					for (var key in this.items) {
+					  if (this.items.hasOwnProperty(key)) {
+					    this.items[key].update();
+					  }
+					}
+
 					var jo = this.jumpOptions;
 					if(this.renderPosition && (this.destination || (jo.current != -1 && jo.current <= jo.end))){
-						this.renderPosition.y+= (-1* (Math.pow(jo.current,2)+1))*10;
+						this.renderPosition.y-= (-1*Math.pow(jo.current,2)+1)*10;
 					}
 					else{
 						return;
@@ -101,14 +88,19 @@ document.addEventListener("DOMContentLoaded", function() {
 					if(jo.current > jo.end){
 						jo.current = jo.start;
 					}
+				},
+				internalRender: function()
+				{
+					SCG.context.translate(this.renderPosition.x,this.renderPosition.y);
+
+					for (var key in this.items) {
+					  if (this.items.hasOwnProperty(key)) {
+					    this.items[key].render();
+					  }
+					}
+
+					SCG.context.translate(-this.renderPosition.x,-this.renderPosition.y);
 				}
-				// isCustomRender: true,
-				// customRender: function() {
-				// 	SCG.context.beginPath();
-				// 	SCG.context.rect(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2, this.renderSize.x, this.renderSize.y);
-				// 	SCG.context.fillStyle ='green';
-				// 	SCG.context.fill()
-				// },
 			},
 			{ 
 				type: 'line',
@@ -120,6 +112,12 @@ document.addEventListener("DOMContentLoaded", function() {
 					SCG.context.fillStyle ='red';
 					SCG.context.fill()
 				},
+			},
+			{
+				type: 'weapon',
+				size: new Vector2(10,50),
+				damage: 1,
+				rate: 1000,
 			}
 		],
 		gameObjectGenerator: function () {
@@ -189,6 +187,16 @@ document.addEventListener("DOMContentLoaded", function() {
 		unitCanvasContext.fillRect(20,25,10,2);
 
 		SCG.images['unit'] = unitCanvas;
+
+		var weaponsCanvas = document.createElement('canvas');
+		weaponsCanvas.width = 50;
+		weaponsCanvas.height = 10;
+		var weaponsCanvasContext = weaponsCanvas.getContext('2d');
+		drawFigures(weaponsCanvasContext,
+			[[new Vector2(0,20),new Vector2(5,5),new Vector2(10,20)]],
+			{alpha: 1, fill: '#cd7f32', stroke:'#b87333'})
+
+		SCG.images['weapons'] = unitCanvas;
 	})
 
 	SCG.gameControls.camera.resetAfterUpdate = true;
