@@ -35,7 +35,7 @@ SCG.UI = {
 					!this.isFullscreen
 						? [[new Vector2(0,0),new Vector2(s.x*0.75,0),new Vector2(0,s.y*0.75)],[new Vector2(s.x*0.25,s.y),new Vector2(s.x,s.y),new Vector2(s.x,s.y*0.25)]] 
 				 	 	: [[new Vector2(0,s.y*0.475),new Vector2(s.x*0.475,0),new Vector2(s.x*0.475,s.y*0.475)],[new Vector2(s.x*0.525,s.y*0.525),new Vector2(s.x,s.y*0.525),new Vector2(s.x*0.525,s.y)]],
-				 	this.transparency);
+				 	{alpha: this.transparency, fill: 'darkgrey'});
 			}
 		});
 
@@ -62,7 +62,7 @@ SCG.UI = {
 					!SCG.gameLogics.isPaused
 						? [[new Vector2(s.x*0.2,0),new Vector2(s.x*0.4,0),new Vector2(s.x*0.4,s.y),new Vector2(s.x*0.2,s.y)],[new Vector2(s.x*0.6,0),new Vector2(s.x*0.8,0),new Vector2(s.x*0.8,s.y),new Vector2(s.x*0.6,s.y)]] 
 				 	 	: [[new Vector2(s.x*0.2,0),new Vector2(s.x*0.8,s.y*0.5),new Vector2(s.x*0.2,s.y)]],
-				 	this.transparency);
+				 	{alpha: this.transparency, fill: 'darkgrey'});
 			}
 		});
 
@@ -92,7 +92,7 @@ SCG.UI = {
 						!SCG.audio.mute
 							? [[new Vector2(s.x*0.1,s.y*0.3), new Vector2(s.x*0.3,s.y*0.3),new Vector2(s.x*0.5,0),new Vector2(s.x*0.5,s.y), new Vector2(s.x*0.3,s.y*0.7),new Vector2(s.x*0.1,s.y*0.7)], [new Vector2(s.x*0.55,s.y*0.4), new Vector2(s.x*0.65,s.y*0.4), new Vector2(s.x*0.65,s.y*0.6),new Vector2(s.x*0.55,s.y*0.6)],[new Vector2(s.x*0.75,s.y*0.2), new Vector2(s.x*0.85,s.y*0.2), new Vector2(s.x*0.85,s.y*0.8),new Vector2(s.x*0.75,s.y*0.8)]] 
 					 	 	: [[new Vector2(s.x*0.1,s.y*0.3), new Vector2(s.x*0.3,s.y*0.3),new Vector2(s.x*0.5,0),new Vector2(s.x*0.5,s.y), new Vector2(s.x*0.3,s.y*0.7),new Vector2(s.x*0.1,s.y*0.7)]],
-					 	this.transparency);
+					 	{alpha: this.transparency, fill: 'darkgrey'});
 				}
 			});
 
