@@ -31,8 +31,6 @@ SCG.gameLogics = {
 	isPaused: false,
 	isPausedStep: false,
 	gameOver: false,
-	drawBoundings: true,
-	fillBoundings: false,
 	wrongDeviceOrientation: false,
 	messageToShow: '',
 	isMobile: false,
@@ -74,7 +72,7 @@ SCG.gameControls = {
 		shiftSpeed: 5,
 		centeredOn: undefined,
 		resetAfterUpdate: false,
-		preventModeSwitch: true,
+		preventModeSwitch: false,
 		shifts: {
 			left: false,
 			right: false,
@@ -301,7 +299,9 @@ SCG.gameControls = {
 		that.getEventAbsolutePosition(event);
 		ms.delta = ms.position.substract(oldPosition);
 
-		SCG.debugger.setValue(ms.toString());
+		if(SCG.debugger){
+			SCG.debugger.setValue(ms.toString());
+		}
 		//console.log(SCG.gameControls.mousestate.position);
 	},
 	getEventAbsolutePosition: function(event){
@@ -476,12 +476,6 @@ SCG.gameControls = {
 				else{
 					SCG.gameLogics.pauseToggle();
 				}
-				break;
-			case 69:
-				SCG.GO.EnemyPaths.show = !SCG.GO.EnemyPaths.show;
-				break;
-			case 80: //show placeable
-				SCG.Placeable.show = !SCG.Placeable.show;
 				break;
 			default:
 				break;

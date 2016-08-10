@@ -127,9 +127,11 @@ SCG.draw = function(){
 	while (i--) {
 		as.go[i].update(now);
 		as.go[i].render();
-		if(as.go[i].renderPosition!=undefined){
+
+		if(SCG.frameCounter && as.go[i].renderPosition!=undefined){
 			SCG.frameCounter.visibleCount++;
 		}
+		
 		if(!as.go[i].alive){
 			var deleted = as.go.splice(i,1);
 		}
@@ -144,7 +146,9 @@ SCG.draw = function(){
 		SCG.gameLogics.isPausedStep =false;
 	}
 
-	SCG.frameCounter.doWork(now);
+	if(SCG.frameCounter){
+		SCG.frameCounter.doWork(now);
+	}
 
 	if(SCG.audio){
 		SCG.audio.update(now);	

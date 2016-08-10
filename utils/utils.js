@@ -318,7 +318,7 @@ function drawFigures(ctx, points, props){
   ctx.globalAlpha  = props.alpha;
   for(var i = 0;i<points.length;i++){
     var cp = points[i];
-    if(cp.length < 3){
+    if(props.fill && cp.length < 3){
       continue;
     }
     ctx.beginPath();

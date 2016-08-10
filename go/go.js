@@ -6,7 +6,7 @@ SCG.GO.GO = function(prop){
 	this.renderPosition = new Vector2;
 	this.renderBox = undefined;
 	this.alive = true;
-	this.ui = false;
+	this.static = false;
 	this.type = 'unidentifiedType';
 	this.id = '';
 	this.size = new Vector2;
@@ -15,8 +15,7 @@ SCG.GO.GO = function(prop){
 	this.direction = new Vector2;
 	this.speed = 0;
 	this.angle = 0;
-	//this.radius = 10;
-	this.renderRadius = 10;
+
 	this.img = undefined;
 	this.imgPropertyName = undefined;
 	this.selected = false;
@@ -29,7 +28,6 @@ SCG.GO.GO = function(prop){
 	this.setDeadOnDestinationComplete = false;
 	this.health = 1;
 	this.maxHealth = 1;
-	this.isDrawingHealthBar = false;
 	this.isCustomRender = false;
 
 	this.handlers = {};
@@ -200,6 +198,8 @@ SCG.GO.GO.prototype = {
 			{
 				var rp = this.renderPosition;
 				var rs = this.renderSize;
+				var rsp = this.renderSourcePosition;
+				var s = this.size;
 				if(this.isAnimated)
 				{
 					var ani = this.animation;
@@ -215,11 +215,25 @@ SCG.GO.GO.prototype = {
 					);
 				}
 				else{
-					SCG.context.drawImage(this.img, 
-						(rp.x - rs.x/2), 
-						(rp.y - rs.y/2), 
-						rs.x, 
-						rs.y);		
+					if(rsp != undefined){
+						SCG.context.drawImage(this.img, 
+							rsp.x,
+							rsp.y,
+							s.x,
+							s.y,
+							(rp.x - rs.x/2), 
+							(rp.y - rs.y/2), 
+							rs.x, 
+							rs.y);		
+					}
+					else {
+						SCG.context.drawImage(this.img, 
+							(rp.x - rs.x/2), 
+							(rp.y - rs.y/2), 
+							rs.x, 
+							rs.y);			
+					}
+					
 				}
 			}	
 		}
@@ -240,7 +254,19 @@ SCG.GO.GO.prototype = {
 	},
 
 	update: function(now){ 
-		if(!this.ui && (!this.alive || SCG.gameLogics.isPaused || SCG.gameLogics.gameOver || SCG.gameLogics.wrongDeviceOrientation)){
+		this.renderSize = this.size.mul(SCG.gameControls.scale.times);
+
+		this.box = new Box(new Vector2(this.position.x - this.size.x/2,this.position.y - this.size.y/2), this.size); //absolute positioning box
+
+		this.renderPosition = undefined;
+		if(SCG.viewfield.current.isIntersectsWithBox(this.box) || this.static)
+		{
+			this.renderPosition = this.position.add(this.static ? new Vector2 : SCG.viewfield.current.topLeft.mul(-1)).mul(SCG.gameControls.scale.times);
+			this.renderBox = new Box(new Vector2(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2), this.renderSize);
+		}
+
+		
+		if(!this.static && (!this.alive || SCG.gameLogics.isPaused || SCG.gameLogics.gameOver || SCG.gameLogics.wrongDeviceOrientation)){
 			return false;
 		}
 
@@ -276,17 +302,6 @@ SCG.GO.GO.prototype = {
 			}
 		}
 		
-
-		this.renderSize = this.size.mul(SCG.gameControls.scale.times);
-
-		this.box = new Box(new Vector2(this.position.x - this.size.x/2,this.position.y - this.size.y/2), this.size); //absolute positioning box
-
-		this.renderPosition = undefined;
-		if(SCG.viewfield.current.isIntersectsWithBox(this.box) || this.ui)
-		{
-			this.renderPosition = this.position.add(this.ui ? new Vector2 : SCG.viewfield.current.topLeft.mul(-1)).mul(SCG.gameControls.scale.times);
-			this.renderBox = new Box(new Vector2(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2), this.renderSize);
-		}
 
 		//this.boundingBox = new Box(new Vector2(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2), this.renderSize);
 		//this.mouseOver = this.box.isPointInside(SCG.gameControls.mousestate.position.division(SCG.gameControls.scale.times));
