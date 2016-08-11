@@ -26,8 +26,6 @@ SCG.GO.GO = function(prop){
 	this.randomizeDestination = false;
 	this.randomizeDestinationRadius = new Vector2;
 	this.setDeadOnDestinationComplete = false;
-	this.health = 1;
-	this.maxHealth = 1;
 	this.isCustomRender = false;
 
 	this.handlers = {};
@@ -118,7 +116,6 @@ SCG.GO.GO = function(prop){
 	}
 	this.id = this.type + (++SCG.GO.GO.counter[this.type]);
 
-	this.health = this.maxHealth;
 	this.creationTime = new Date;
 
 	//register click for new objects
@@ -265,7 +262,7 @@ SCG.GO.GO.prototype = {
 			this.renderBox = new Box(new Vector2(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2), this.renderSize);
 		}
 
-		
+
 		if(!this.static && (!this.alive || SCG.gameLogics.isPaused || SCG.gameLogics.gameOver || SCG.gameLogics.wrongDeviceOrientation)){
 			return false;
 		}

@@ -10,7 +10,18 @@ document.addEventListener("DOMContentLoaded", function() {
 			width: 1000,
 			height: 1000
 		},
+		dispose: function(){
+			for(var i=0;i<this.game.intervals.length;i++){
+				clearInterval(this.game.intervals[i]);
+			}
+		},
 		start: function(){ // called each time as scene selected
+			this.game.AI.initialize();
+			var that = this;
+			this.game.intervals.push(setInterval(
+				function() {SCG.AI.sendEvent({type:'units', message: that.go.filter(function(el){return el.toPlain}).map(function(el) { return el.toPlain(); }) });}
+				, 200));
+
 			if(this.game.playerUnit == undefined){
 				var sword = SCG.GO.create("weapon", {
 					position: new Vector2(-20, 0),
@@ -57,6 +68,71 @@ document.addEventListener("DOMContentLoaded", function() {
 					this.playerUnit.setDestination(shiftedCP);
 				}
 			},
+			intervals: [],
+			AI: {
+				initialize: function(){ // just helper to init environment
+					SCG.AI.initializeEnvironment({
+						space: {
+							width: SCG.space.width,
+							height: SCG.space.height
+						},
+						units: {
+							ai: [],
+							player: []
+						}
+					});
+				},
+				messagesProcesser: function(wm){ // proccess messages from AI
+					if(wm == undefined){
+						return;
+					}
+					if(wm.command){
+					}
+				},
+				queueProcesser: function queueProcesser(){ // queue processer (on AI side)
+					while(queue.length){
+						var task = queue.pop();
+						console.log(task.type);
+						switch(task.type){
+							case 'start':
+								self.helpers = {
+									log: function(){
+										console.log(self.environment)
+									},
+									normalize: function(vector){
+										var module = this.module(vector);
+										vector.x /= module;
+										vector.y /= module;
+										return vector;
+									},
+									module: function(vector){
+										return Math.sqrt(Math.pow(vector.x,2) + Math.pow(vector.y,2));
+									},
+									direction: function(vector,target){
+										return this.normalize({x:target.x-vector.x,y:target.y - vector.y});
+									}
+								}
+
+								break;
+							case 'units':
+								var eu = self.environment.units;
+								for(var i =1;i<3;i++){
+									eu[i==1?'player':'ai'] = task.message.filter(function(el){ return el.side == i});
+								}
+
+								if(self.helpers == undefined){return;}
+								for(var i = 0;i< eu.ai.length;i++){
+									var direction = self.helpers.direction(eu.ai[i].position,eu.player[0].position);
+									console.log(direction);
+								}
+
+								break;
+							default:
+								break;
+						}
+					}
+				}
+			}
 		},
 		gameObjectsBaseProperties: [
 			{ 
@@ -110,6 +186,16 @@ document.addEventListener("DOMContentLoaded", function() {
 						return {
 							preventBubbling: true
 						};
+					}
+				},
+				toPlain: function(){
+					return {
+						id: this.id,
+						position: this.position,
+						health: this.health,
+						damage: this.currentDamage,
+						side: this.side,
+						range: this.currentAttackRadius
 					}
 				},
 				canAttackToggle: function(){
