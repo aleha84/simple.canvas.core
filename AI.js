@@ -27,6 +27,7 @@ SCG.AI.initialize = function(){
 							"break;\n"+
 						"case 'initialize':\n"+
 							"self.environment=msg.environment;\n"+
+							"self.importScripts(msg.url + 'utils.min.js');\n" +
 							"queue.push({type: 'start', message: undefined})\n" +
 							"break;\n"+
 						"default:\n"+
@@ -52,7 +53,12 @@ SCG.AI.initialize = function(){
 }
 
 SCG.AI.initializeEnvironment = function (environment) {
-	SCG.AI.worker.postMessage({ command: "initialize", environment: environment });
+	var url =  document.location.href;
+	var index = url.indexOf('index');
+    if (index != -1) {
+      url = url.substring(0, index);
+    }
+	SCG.AI.worker.postMessage({ command: "initialize", environment: environment, url:url });
 }
 
 SCG.AI.sendEvent = function (event) {

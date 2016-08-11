@@ -43,6 +43,12 @@ document.addEventListener("DOMContentLoaded", function() {
 					side: 2,
 				}));
 
+				this.go.push(SCG.GO.create("unit", {
+					position: new Vector2(400, 50),
+					size:new Vector2(50,50),
+					side: 2,
+				}));
+
 				unit.selected = true;
 				this.game.playerUnit = unit;
 
@@ -87,6 +93,20 @@ document.addEventListener("DOMContentLoaded", function() {
 						return;
 					}
 					if(wm.command){
+						switch(wm.command){
+							case 'move':
+								var as = SCG.scenes.activeScene;
+								var unit = undefined;
+								for(var i=0;i<as.go.length;i++){
+									if(as.go[i].id == wm.message.id){
+										as.go[i].setDestination(new V2(wm.message.position));
+										break;
+									}
+								}
+								break;
+							default:
+								break;
+						}
 					}
 				},
 				queueProcesser: function queueProcesser(){ // queue processer (on AI side)
@@ -99,17 +119,8 @@ document.addEventListener("DOMContentLoaded", function() {
 									log: function(){
 										console.log(self.environment)
 									},
-									normalize: function(vector){
-										var module = this.module(vector);
-										vector.x /= module;
-										vector.y /= module;
-										return vector;
-									},
-									module: function(vector){
-										return Math.sqrt(Math.pow(vector.x,2) + Math.pow(vector.y,2));
-									},
-									direction: function(vector,target){
-										return this.normalize({x:target.x-vector.x,y:target.y - vector.y});
+									move: function(id, position){
+										self.postMessage({command: 'move', message: { id: id, position: position } });				
 									}
 								}
 
@@ -120,10 +131,20 @@ document.addEventListener("DOMContentLoaded", function() {
 									eu[i==1?'player':'ai'] = task.message.filter(function(el){ return el.side == i});
 								}
 
-								if(self.helpers == undefined){return;}
+								var sh = self.helpers;
+								if(sh == undefined){return;}
+
 								for(var i = 0;i< eu.ai.length;i++){
-									var direction = self.helpers.direction(eu.ai[i].position,eu.player[0].position);
-									console.log(direction);
+									var aiUnit = eu.ai[i];
+
+									//find closest player unit
+									//check history
+									//if no history or this player unit moved then reposition this ai unit
+									//if position is occupied (check by intersections with other ai units position) then rotate around player unit by clockwise
+
+									var playerPosition = new V2(eu.player[0].position);
+									var target = playerPosition.add(new V2(aiUnit.position).direction(playerPosition).mul(-0.8*aiUnit.range));
+									sh.move(aiUnit.id, target);
 								}
 
 								break;
@@ -248,6 +269,9 @@ document.addEventListener("DOMContentLoaded", function() {
 							renderSourcePosition : new Vector2(shift*50,0),
 							size: new Vector2(50,50)
 						}));
+
+					SCG.audio.start({notes: [{value:200,duration:0.7}],loop:false});
+					SCG.audio.start({notes: [{value:1000,duration:0.3}],loop:false});
 
 					this.canAttackToggle();
 					// temp
