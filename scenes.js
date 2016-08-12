@@ -85,7 +85,8 @@ SCG.scenes = {
 			backgroundRender: scene.backgroundRender != undefined && isFunction(scene.backgroundRender) ? scene.backgroundRender : undefined,
 			game: extend(true, {}, scene.game),
 			space: scene.space ? scene.space : { width: SCG.viewfield.default.width, height: SCG.viewfield.default.height },
-			ui: []
+			ui: [],
+			unshift: []
 		};
 
 		

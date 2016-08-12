@@ -11,7 +11,6 @@ SCG.GO.GO = function(prop){
 	this.id = '';
 	this.size = new Vector2;
 	this.renderSize = new Vector2;
-	this.initialDirection = new Vector2;
 	this.direction = new Vector2;
 	this.speed = 0;
 	this.angle = 0;
@@ -88,14 +87,6 @@ SCG.GO.GO = function(prop){
 	}
 
 	extend(true, this, prop);
-	
-	if(this.direction!=undefined)
-	{
-		this.initialDirection = this.direction;
-	}
-	// if(this.size.equal(new Vector2)){
-	// 	this.size = new Vector2(this.radius,this.radius);
-	// }
 
 	if(this.isAnimated){
 		this.size = this.animation.destinationFrameSize.clone();
@@ -197,10 +188,11 @@ SCG.GO.GO.prototype = {
 				var rs = this.renderSize;
 				var rsp = this.renderSourcePosition;
 				var s = this.size;
+				var ctx = SCG.context;
 				if(this.isAnimated)
 				{
 					var ani = this.animation;
-					SCG.context.drawImage(this.img,  
+					ctx.drawImage(this.img,  
 						ani.currentDestination.x * ani.sourceFrameSize.x,
 						ani.currentDestination.y * ani.sourceFrameSize.y,
 						ani.sourceFrameSize.x,
@@ -213,7 +205,7 @@ SCG.GO.GO.prototype = {
 				}
 				else{
 					if(rsp != undefined){
-						SCG.context.drawImage(this.img, 
+						ctx.drawImage(this.img, 
 							rsp.x,
 							rsp.y,
 							s.x,
@@ -224,7 +216,7 @@ SCG.GO.GO.prototype = {
 							rs.y);		
 					}
 					else {
-						SCG.context.drawImage(this.img, 
+						ctx.drawImage(this.img, 
 							(rp.x - rs.x/2), 
 							(rp.y - rs.y/2), 
 							rs.x, 
@@ -250,15 +242,16 @@ SCG.GO.GO.prototype = {
 
 	},
 
-	update: function(now){ 
-		this.renderSize = this.size.mul(SCG.gameControls.scale.times);
+	update: function(now){
+		var scale = SCG.gameControls.scale;
+		this.renderSize = this.size.mul(scale.times);
 
 		this.box = new Box(new Vector2(this.position.x - this.size.x/2,this.position.y - this.size.y/2), this.size); //absolute positioning box
 
 		this.renderPosition = undefined;
 		if(SCG.viewfield.current.isIntersectsWithBox(this.box) || this.static)
 		{
-			this.renderPosition = this.position.add(this.static ? new Vector2 : SCG.viewfield.current.topLeft.mul(-1)).mul(SCG.gameControls.scale.times);
+			this.renderPosition = this.position.add(this.static ? new Vector2 : SCG.viewfield.current.topLeft.mul(-1)).mul(scale.times);
 			this.renderBox = new Box(new Vector2(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2), this.renderSize);
 		}
 

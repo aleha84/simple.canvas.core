@@ -123,6 +123,13 @@ SCG.draw = function(){
 	
 	SCG.gameControls.camera.update(now);
 
+	
+	if(as.unshift.length > 0){
+		for(var ui=0;ui<as.unshift.length;ui++){
+			as.go.unshift(as.unshift[ui]);
+		}
+		as.unshift = [];
+	}
 	var i = as.go.length;
 	while (i--) {
 		as.go[i].update(now);
@@ -131,7 +138,7 @@ SCG.draw = function(){
 		if(SCG.frameCounter && as.go[i].renderPosition!=undefined){
 			SCG.frameCounter.visibleCount++;
 		}
-		
+
 		if(!as.go[i].alive){
 			var deleted = as.go.splice(i,1);
 		}

@@ -41,12 +41,14 @@ document.addEventListener("DOMContentLoaded", function() {
 					position: new Vector2(150, 50),
 					size:new Vector2(50,50),
 					side: 2,
+					health:1,
 				}));
 
 				this.go.push(SCG.GO.create("unit", {
 					position: new Vector2(400, 50),
 					size:new Vector2(50,50),
 					side: 2,
+					health:1,
 				}));
 
 				unit.selected = true;
@@ -84,7 +86,8 @@ document.addEventListener("DOMContentLoaded", function() {
 						},
 						units: {
 							ai: [],
-							player: []
+							player: [],
+							history: {}
 						}
 					});
 				},
@@ -112,7 +115,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				queueProcesser: function queueProcesser(){ // queue processer (on AI side)
 					while(queue.length){
 						var task = queue.pop();
-						console.log(task.type);
+						//console.log(task.type);
 						switch(task.type){
 							case 'start':
 								self.helpers = {
@@ -128,23 +131,53 @@ document.addEventListener("DOMContentLoaded", function() {
 							case 'units':
 								var eu = self.environment.units;
 								for(var i =1;i<3;i++){
-									eu[i==1?'player':'ai'] = task.message.filter(function(el){ return el.side == i});
+									eu[i==1?'player':'ai'] = task.message.filter(function(el){ return el.side == i}).map(function(el){  el.position = new V2(el.position); return el;});
 								}
 
 								var sh = self.helpers;
-								if(sh == undefined){return;}
-
+								if(sh == undefined || eu.player.length == 0){return;}
+								var currentDestinations = [];
 								for(var i = 0;i< eu.ai.length;i++){
 									var aiUnit = eu.ai[i];
 
 									//find closest player unit
+									var distances = eu.player.map(function(el){ return { distance: aiUnit.position.distance(el.position),unit: el }});
+									var closest = distances[0];
+									if(distances.length>1){
+										for(var j = 1;j<distances.length;j++){
+											if(distances[j].distance < closest.distance){
+												closest = distances[j];
+											}
+										}
+									}
+									
 									//check history
-									//if no history or this player unit moved then reposition this ai unit
-									//if position is occupied (check by intersections with other ai units position) then rotate around player unit by clockwise
+									//if no history or this player unit moved, then reposition this ai unit
+									var hUnit = eu.history[closest.unit.id];
+									if(!hUnit || !hUnit.position.equal(closest.unit.position)){
+										var playerPosition = closest.unit.position;
+										var initialInvertedDirection = aiUnit.position.direction(playerPosition).mul(-1);
+										var dir = initialInvertedDirection;
+										var target = undefined;
+										//if position is occupied (check by intersections with other ai units position) then rotate around player unit by clockwise
+										for(var tryCount = 0;tryCount<20;tryCount++){
+											target = playerPosition.add(dir.mul(0.8*aiUnit.range));
+											if(currentDestinations.filter(function(el){ return boxIntersectsBox({center:target,size:aiUnit.size}, {center:el.dest, size: el.unit.size}); }).length == 0){
+												break;
+											}
 
-									var playerPosition = new V2(eu.player[0].position);
-									var target = playerPosition.add(new V2(aiUnit.position).direction(playerPosition).mul(-0.8*aiUnit.range));
-									sh.move(aiUnit.id, target);
+											dir = initialInvertedDirection.rotate((Math.floor(tryCount/2) + 1)*10*(tryCount%2==0 ? 1 : -1),false,false);
+										}
+
+
+										currentDestinations.push({dest: target, unit: aiUnit});
+										sh.move(aiUnit.id, target);
+									}
+								}
+
+								// update history
+								for(var puIndex = 0;puIndex<eu.player.length;puIndex++){
+									eu.history[eu.player[puIndex].id] = eu.player[puIndex];
 								}
 
 								break;
@@ -180,8 +213,8 @@ document.addEventListener("DOMContentLoaded", function() {
 				originAttackRate: 500,
 				currentAttackRate: 500,
 				initializer: function(that){
-					that.originAttackRadius = this.size.x;
-					that.currentAttackRadius = this.size.x;
+					that.originAttackRadius = that.size.x;
+					that.currentAttackRadius = that.size.x;
 
 					that.attackDelayTimer = {
 						lastTimeWork: new Date,
@@ -216,7 +249,8 @@ document.addEventListener("DOMContentLoaded", function() {
 						health: this.health,
 						damage: this.currentDamage,
 						side: this.side,
-						range: this.currentAttackRadius
+						range: this.currentAttackRadius,
+						size: this.size
 					}
 				},
 				canAttackToggle: function(){
@@ -231,12 +265,33 @@ document.addEventListener("DOMContentLoaded", function() {
 						return;
 					}
 
+					SCG.scenes.activeScene.unshift.push(
+						SCG.GO.create("fadingObject", {
+							position: this.position.clone(),
+							lifeTime: 1000,
+							text: {
+								size:12,
+								color: '#ff2400',
+								value: damage,
+							},
+							size: new Vector2(10,10),
+							shift: new Vector2(0.15,-0.5)
+						}));
 					this.health-=damage;
-					//show fading damage text (red)
 
 					if(this.health <= 0){
 						this.setDead();
 					}
+				},
+				beforeDead: function(){
+					SCG.scenes.activeScene.go.push(
+						SCG.GO.create("fadingObject", {
+							position: this.position.clone(),
+							imgPropertyName: 'actions',
+							renderSourcePosition : new Vector2(250,0),
+							size: new Vector2(50,50),
+							lifeTime: 5000,
+						}));
 				},
 				addItem: function(item){
 					this.items.push(item);
@@ -262,7 +317,7 @@ document.addEventListener("DOMContentLoaded", function() {
 						shift++;
 					}
 
-					SCG.scenes.activeScene.go.push(
+					SCG.scenes.activeScene.unshift.push(
 						SCG.GO.create("fadingObject", {
 							position: this.position.clone(),
 							imgPropertyName: 'actions',
@@ -274,8 +329,7 @@ document.addEventListener("DOMContentLoaded", function() {
 					SCG.audio.start({notes: [{value:1000,duration:0.3}],loop:false});
 
 					this.canAttackToggle();
-					// temp
-					//target.receiveAttack(this.currentDamage);
+					target.receiveAttack(this.currentDamage);
 				},
 				internalUpdate: function(now){
 					for(var i=0;i<this.items.length;i++){
@@ -348,6 +402,13 @@ document.addEventListener("DOMContentLoaded", function() {
 				type: 'fadingObject',
 				lifeTime: 500,
 				alpha: 1,
+				shift: undefined,
+				text: undefined,
+				initializer: function(that){
+					if(that.text){
+						that.isCustomRender = true;
+					}
+				},
 				internalPreRender: function(){
 					SCG.context.save();
 					SCG.context.globalAlpha = this.alpha;
@@ -355,11 +416,28 @@ document.addEventListener("DOMContentLoaded", function() {
 				internalRender: function(){
 					SCG.context.restore();
 				},
+				customRender: function(){
+					var ctx = SCG.context;
+					var t = this.text;
+					ctx.font = t.renderSize+'px Arial';
+					if(t.color){
+						ctx.fillStyle = t.color;
+					}
+					ctx.fillText(t.value, this.renderPosition.x, this.renderPosition.y);
+				},
 				internalUpdate: function(now){
 					this.alpha = 1 - (now - this.creationTime)/this.lifeTime;
 
 					if(this.alpha <= 0){
 						this.alive = false;
+					}
+
+					if(this.shift != undefined){
+						this.position.add(this.shift,true);
+					}
+
+					if(this.text){
+						this.text.renderSize = this.text.size* SCG.gameControls.scale.times;
 					}
 				}
 			},
@@ -464,7 +542,7 @@ document.addEventListener("DOMContentLoaded", function() {
 		SCG.images['weapons'] = weaponsCanvas;
 
 		var actionsCanvas = document.createElement('canvas');
-		actionsCanvas.width = 250;
+		actionsCanvas.width = 300;
 		actionsCanvas.height = 50;
 		var actionsCanvasContext = actionsCanvas.getContext('2d');
 		actionsCanvasContext.lineWidth=5;
@@ -488,11 +566,23 @@ document.addEventListener("DOMContentLoaded", function() {
 		actionsCanvasContext.lineWidth=1;
 		drawFigures(actionsCanvasContext, // select box
 			[[new Vector2(1+delta,0),new Vector2(10+delta,0),new Vector2(1+delta,10)],
-			[new Vector2(40+delta,0),new Vector2(50+delta,0),new Vector2(50+delta,10)],
-			[new Vector2(50+delta,40),new Vector2(50+delta,50),new Vector2(40+delta,50)],
+			[new Vector2(40+delta,0),new Vector2(49+delta,0),new Vector2(49+delta,10)],
+			[new Vector2(49+delta,40),new Vector2(49+delta,50),new Vector2(40+delta,50)],
 			[new Vector2(10+delta,50),new Vector2(1+delta,50),new Vector2(1+delta,40)]],
 			{alpha: 1, fill:'#ffd700',stroke:'#998200'})
-		
+		delta = 250;
+		drawFigures(actionsCanvasContext, // grave
+			[[new Vector2(10+delta,40),new Vector2(10+delta,20),{type:'curve', control: new Vector2(25+delta,10), p: new Vector2(40+delta,20)},new Vector2(40+delta,40)]],
+			{alpha: 1, fill:'#4b4d4b'})
+		actionsCanvasContext.fillStyle = "#5da130";
+		actionsCanvasContext.fillRect(5+delta,40,40,5);
+
+		actionsCanvasContext.fillStyle = "#1b1116";
+		actionsCanvasContext.fillRect(15+delta,25,20,5);
+
+		actionsCanvasContext.fillStyle = "#1b1116";
+		actionsCanvasContext.fillRect(15+delta,32,20,2);
+
 
 		SCG.images['actions'] = actionsCanvas;
 	})
