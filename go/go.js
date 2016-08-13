@@ -285,8 +285,7 @@ SCG.GO.GO.prototype = {
 			{
 				this.setDestination(this.path.shift());
 			}
-
-			if(this.setDeadOnDestinationComplete) {
+			else if(this.setDeadOnDestinationComplete) {
 				this.setDead();
 				return false;
 			}

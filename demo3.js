@@ -25,8 +25,15 @@ document.addEventListener("DOMContentLoaded", function() {
 			if(this.game.playerUnit == undefined){
 				var sword = SCG.GO.create("weapon", {
 					position: new Vector2(-20, 0),
-					imgPropertyName: 'weapons',
 					renderSourcePosition : new Vector2(10,0)
+				});
+
+				var bow = SCG.GO.create("weapon", {
+					position: new Vector2(-17.5, 0),
+					renderSourcePosition : new Vector2(20,0),
+					size:new Vector2(20,50),
+					ranged: true,
+					attackRadius: 200
 				});
 
 
@@ -34,21 +41,23 @@ document.addEventListener("DOMContentLoaded", function() {
 					position: new Vector2(250, 150),
 					size:new Vector2(50,50),
 				});
-				unit.addItem(sword);
+				unit.addItem(bow);
 				this.go.push(unit);
 
 				this.go.push(SCG.GO.create("unit", {
 					position: new Vector2(150, 50),
 					size:new Vector2(50,50),
 					side: 2,
-					health:1,
+					health:10,
+					speed:0.5
 				}));
 
 				this.go.push(SCG.GO.create("unit", {
 					position: new Vector2(400, 50),
 					size:new Vector2(50,50),
 					side: 2,
-					health:1,
+					health:10,
+					speed:0.5
 				}));
 
 				unit.selected = true;
@@ -212,6 +221,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				currentAttackRadius: 20,
 				originAttackRate: 500,
 				currentAttackRate: 500,
+				ranged: false,
 				initializer: function(that){
 					that.originAttackRadius = that.size.x;
 					that.currentAttackRadius = that.size.x;
@@ -224,6 +234,8 @@ document.addEventListener("DOMContentLoaded", function() {
 						doWorkInternal : that.canAttackToggle,
 						context: that
 					}
+
+					that.renderSourcePosition = new Vector2((that.side-1)*50,0);
 				},
 				handlers: {
 					click: function(){
@@ -306,6 +318,11 @@ document.addEventListener("DOMContentLoaded", function() {
 						this.attackDelayTimer.currentDelay = this.currentAttackRate;
 						this.attackDelayTimer.originDelay = this.currentAttackRate;
 					}
+
+					if(item.ranged !== undefined){
+						this.ranged = item.ranged;	
+					}
+					
 				},
 				attack: function(target){
 					var dir = this.position.substract(target.position);
@@ -317,19 +334,31 @@ document.addEventListener("DOMContentLoaded", function() {
 						shift++;
 					}
 
-					SCG.scenes.activeScene.unshift.push(
-						SCG.GO.create("fadingObject", {
-							position: this.position.clone(),
-							imgPropertyName: 'actions',
-							renderSourcePosition : new Vector2(shift*50,0),
-							size: new Vector2(50,50)
-						}));
+					if(!this.ranged){
+						SCG.scenes.activeScene.unshift.push(
+							SCG.GO.create("fadingObject", {
+								position: this.position.clone(),
+								imgPropertyName: 'actions',
+								renderSourcePosition : new Vector2(shift*50,0),
+								size: new Vector2(50,50)
+							}));	
 
-					SCG.audio.start({notes: [{value:200,duration:0.7}],loop:false});
-					SCG.audio.start({notes: [{value:1000,duration:0.3}],loop:false});
+						SCG.audio.start({notes: [{value:200,duration:0.7}],loop:false});
+						SCG.audio.start({notes: [{value:1000,duration:0.3}],loop:false});
+
+						target.receiveAttack(this.currentDamage);
+					}
+					else{
+						SCG.scenes.activeScene.unshift.push(
+							SCG.GO.create("projectile", {
+								position: this.position.clone(),
+								path: [target.position.clone()],
+							}));
+					}
+					
+					//SCG.audio.start({notes: [{value:207,duration:0.1},{value:307,duration:0.1}],loop:false,type:'square'});
 
 					this.canAttackToggle();
-					target.receiveAttack(this.currentDamage);
 				},
 				internalUpdate: function(now){
 					for(var i=0;i<this.items.length;i++){
@@ -399,6 +428,16 @@ document.addEventListener("DOMContentLoaded", function() {
 				},
 			},
 			{
+				type: 'projectile',
+				damage: 1,
+				path: [],
+				speed: 5,
+				renderSourcePosition : new Vector2(40,0),
+				imgPropertyName: 'weapons',
+				size: new Vector2(10,25),
+				setDeadOnDestinationComplete: true
+			},
+			{
 				type: 'fadingObject',
 				lifeTime: 500,
 				alpha: 1,
@@ -444,6 +483,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			{
 				type: 'weapon',
 				size: new Vector2(10,50),
+				imgPropertyName: 'weapons',
 				attackRadius: 10,
 				damage: 1,
 				attackRate: 1000,
@@ -499,27 +539,32 @@ document.addEventListener("DOMContentLoaded", function() {
 
 	SCG.customInitializaers.push(function () {
 		var unitCanvas = document.createElement('canvas');
-		unitCanvas.width = 50;
+		unitCanvas.width = 100;
 		unitCanvas.height = 50;
 		var unitCanvasContext = unitCanvas.getContext('2d');
+		var delta = 0;	
+		for(var ui=0;ui<2;ui++){
+			drawFigures(
+				unitCanvasContext,
+				[[
+				new Vector2(20+delta,11.5),new Vector2(30+delta,11.5),{type:'curve', control: new Vector2(40+delta,10), p: new Vector2(38.5+delta,20)},
+				new Vector2(38.5+delta,30),{type:'curve', control: new Vector2(40+delta,40), p: new Vector2(30+delta,38.5)}, 
+				new Vector2(20+delta,38.5),{type:'curve', control: new Vector2(10+delta,40), p: new Vector2(11.5+delta,30)}, new Vector2(11.5+delta,20),{type:'curve', control: new Vector2(10+delta,10), p: new Vector2(20+delta,11.5)}],
+				[new Vector2(1+delta,20),new Vector2(10+delta,20),new Vector2(10+delta,30),new Vector2(1+delta,30),new Vector2(1+delta,20)],
+				[new Vector2(40+delta,20),new Vector2(49+delta,20),new Vector2(49+delta,30),new Vector2(40+delta,30),new Vector2(40+delta,20)]],
+			 	{alpha: 1, fill: ui == 0? 'white': '#dcdcdc', stroke:'black'});
+			unitCanvasContext.fillRect(19+delta,20,2,2);
+			unitCanvasContext.fillRect(29+delta,20,2,2);
+			unitCanvasContext.fillRect(20+delta,25,10,2);
 
-		drawFigures(
-			unitCanvasContext,
-			[[
-			new Vector2(20,11.5),new Vector2(30,11.5),{type:'curve', control: new Vector2(40,10), p: new Vector2(38.5,20)},
-			new Vector2(38.5,30),{type:'curve', control: new Vector2(40,40), p: new Vector2(30,38.5)}, 
-			new Vector2(20,38.5),{type:'curve', control: new Vector2(10,40), p: new Vector2(11.5,30)}, new Vector2(11.5,20),{type:'curve', control: new Vector2(10,10), p: new Vector2(20,11.5)}],
-			[new Vector2(1,20),new Vector2(10,20),new Vector2(10,30),new Vector2(1,30),new Vector2(1,20)],
-			[new Vector2(40,20),new Vector2(49,20),new Vector2(49,30),new Vector2(40,30),new Vector2(40,20)]],
-		 	{alpha: 1, fill: 'white', stroke:'black'});
-		unitCanvasContext.fillRect(19,20,2,2);
-		unitCanvasContext.fillRect(29,20,2,2);
-		unitCanvasContext.fillRect(20,25,10,2);
+			delta+=50;
+		}
+		
 
 		SCG.images['unit'] = unitCanvas;
 
 		var weaponsCanvas = document.createElement('canvas');
-		weaponsCanvas.width = 20;
+		weaponsCanvas.width = 50;
 		weaponsCanvas.height = 50;
 		var weaponsCanvasContext = weaponsCanvas.getContext('2d');
 
@@ -530,7 +575,7 @@ document.addEventListener("DOMContentLoaded", function() {
 		weaponsCanvasContext.fillRect(1.5,20,7,2);
 		weaponsCanvasContext.fillStyle = "#5b3a29";
 		weaponsCanvasContext.fillRect(3.5,22,3,3);
-		var delta = 10;
+		delta = 10;
 		drawFigures(weaponsCanvasContext, //long sword
 			[[new Vector2(2.5+delta,20),new Vector2(2.5+delta,5),new Vector2(5+delta,2.5),new Vector2(7.5+delta,5),new Vector2(7.5+delta,20)]],
 			{alpha: 1, fill: '#cd7f32', stroke:'#b87333'})
@@ -538,6 +583,24 @@ document.addEventListener("DOMContentLoaded", function() {
 		weaponsCanvasContext.fillRect(1.5+delta,20,7,2);
 		weaponsCanvasContext.fillStyle = "#5b3a29";
 		weaponsCanvasContext.fillRect(3.5+delta,22,3,3);
+		var delta = 20;
+		weaponsCanvasContext.lineWidth=2;
+		drawFigures(weaponsCanvasContext, //bow
+			[[new Vector2(15+delta,45),{type:'curve', control: new Vector2(0+delta,25), p: new Vector2(15+delta,5)}]],
+			{alpha: 1, stroke:'#5b3a29'})
+		weaponsCanvasContext.lineWidth=1;
+		drawFigures(weaponsCanvasContext, //bow
+			[[new Vector2(15+delta,45),new Vector2(15+delta,5)]],
+			{alpha: 1, stroke:'#black'})
+		delta = 40;
+		drawFigures(weaponsCanvasContext, //arrow
+			[[new Vector2(2+delta,27),new Vector2(5+delta,25),new Vector2(8+delta,27)]],
+			{alpha: 1, stroke:'#dc143c'});
+		weaponsCanvasContext.fillStyle = "#964b00";
+		weaponsCanvasContext.fillRect(5+delta,5,1,20);
+		drawFigures(weaponsCanvasContext,
+			[[new Vector2(2+delta,7),new Vector2(5+delta,5),new Vector2(8+delta,7)]],
+			{alpha: 1, stroke:'#c0c0c0'});
 
 		SCG.images['weapons'] = weaponsCanvas;
 
