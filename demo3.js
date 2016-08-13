@@ -349,10 +349,18 @@ document.addEventListener("DOMContentLoaded", function() {
 						target.receiveAttack(this.currentDamage);
 					}
 					else{
+						var direction = this.position.direction(target.position);
+						var distance = this.position.distance(target.position);
+						var path = [];
+						for(var pi = 0;pi <10;pi++){
+							var step = this.position.add(direction.mul((distance/10)*(pi+1)));
+							step.y-=  ((-0.04*Math.pow(pi-5,2)+1)* distance/5);
+							path.push(step);
+						}
 						SCG.scenes.activeScene.unshift.push(
 							SCG.GO.create("projectile", {
-								position: this.position.clone(),
-								path: [target.position.clone()],
+								position: path.shift(),
+								path: path,
 							}));
 					}
 					
@@ -435,7 +443,25 @@ document.addEventListener("DOMContentLoaded", function() {
 				renderSourcePosition : new Vector2(40,0),
 				imgPropertyName: 'weapons',
 				size: new Vector2(10,25),
-				setDeadOnDestinationComplete: true
+				setDeadOnDestinationComplete: true,
+				angle: 0,
+				internalPreRender: function(){
+					var ctx =SCG.context; 
+					var rp = this.renderPosition;
+					ctx.translate(rp.x,rp.y);
+					if(this.direction && !this.direction.equal(new Vector2)){
+						this.angle = Vector2.up().angleTo(this.direction,true);
+						ctx.rotate(this.angle);	
+					}
+					ctx.translate(-rp.x,-rp.y);
+				},
+				internalRender: function(){
+					var ctx =SCG.context; 
+					var rp = this.renderPosition;
+					ctx.translate(rp.x,rp.y);
+					ctx.rotate(-this.angle);
+					ctx.translate(-rp.x,-rp.y);
+				},
 			},
 			{
 				type: 'fadingObject',
@@ -594,12 +620,12 @@ document.addEventListener("DOMContentLoaded", function() {
 			{alpha: 1, stroke:'#black'})
 		delta = 40;
 		drawFigures(weaponsCanvasContext, //arrow
-			[[new Vector2(2+delta,27),new Vector2(5+delta,25),new Vector2(8+delta,27)]],
+			[[new Vector2(3+delta,25),new Vector2(5+delta,22),new Vector2(7+delta,25)]],
 			{alpha: 1, stroke:'#dc143c'});
 		weaponsCanvasContext.fillStyle = "#964b00";
-		weaponsCanvasContext.fillRect(5+delta,5,1,20);
+		weaponsCanvasContext.fillRect(4.5+delta,5,1,17);
 		drawFigures(weaponsCanvasContext,
-			[[new Vector2(2+delta,7),new Vector2(5+delta,5),new Vector2(8+delta,7)]],
+			[[new Vector2(3+delta,7),new Vector2(5+delta,3),new Vector2(7+delta,7)]],
 			{alpha: 1, stroke:'#c0c0c0'});
 
 		SCG.images['weapons'] = weaponsCanvas;

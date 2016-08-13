@@ -76,6 +76,7 @@ SCG.audio = {
 	start: function(props){
 		if(!this.initialized){this.init();}
 		props.context = this.context;
+		props.mute = this.mute;
 		this.players.push(new SCG.audio.Player(props));
 	}
 };
@@ -168,7 +169,10 @@ SCG.audio.Player.prototype = {
 
 			this.gainNodes.push(gainNode);
 			oscillator.start(0);
-			oscillator.stop(this.context.currentTime + duration);
+			oscillator.stop(this.context.currentTime + cn.duration*4);
+			oscillator.onended = function() {
+			  gainNode.disconnect();
+			}
 		}
 
 		this.notesChangeTimer.originDelay = duration;
