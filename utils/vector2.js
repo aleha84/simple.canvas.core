@@ -1,10 +1,17 @@
 function Vector2(x,y){
-	if(x == undefined){
-		x = 0;
+	if(typeof x == 'object'){
+		y = x.y;
+		x = x.x;
 	}
-	if(y == undefined){
-		y = 0;
+	else{
+		if(x == undefined){
+			x = 0;
+		}
+		if(y == undefined){
+			y = 0;
+		}	
 	}
+	
 	this.x = x;
 	this.y = y;
 }
@@ -202,3 +209,5 @@ Vector2.up = function(){
 Vector2.down = function(){
 	return new Vector2(0,1);
 }
+
+var V2 = Vector2;

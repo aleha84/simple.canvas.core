@@ -307,21 +307,45 @@ function addListenerMulti(el, s, fn) {
   s.split(' ').forEach(function(e) {el.addEventListener(e, fn, false)});
 }
 
-function drawFigures(ctx, points, alpha){
-  if(alpha == undefined){
-    alpha = 1;
+function drawFigures(ctx, points, props){
+  ctx.save();
+
+  ctx.lineJoin = 'bevel';
+  if(props == undefined){
+    props.alpha = 1;
   }
-  ctx.globalAlpha  = alpha;
+
+  ctx.globalAlpha  = props.alpha;
   for(var i = 0;i<points.length;i++){
     var cp = points[i];
-    if(cp.length < 3){
+    if(props.fill && cp.length < 3){
       continue;
     }
     ctx.beginPath();
     ctx.moveTo(cp[0].x, cp[0].y);
     for(var j = 1;j<cp.length;j++){
-      ctx.lineTo(cp[j].x,cp[j].y);
+      var p = cp[j];
+      if(p instanceof Vector2){
+        p = {p: p, type: 'line'};
+      }
+
+      if(p.type == 'line'){
+        ctx.lineTo(p.p.x,p.p.y);
+      }
+      else if(p.type == 'curve'){
+        ctx.quadraticCurveTo(p.control.x,p.control.y,p.p.x, p.p.y);
+      }
     }
-    ctx.fill();
+    if(props.fill){
+      ctx.fillStyle = props.fill;
+      ctx.fill();
+    }
+    if(props.stroke){
+      ctx.strokeStyle = props.stroke;
+      ctx.stroke();
+    }
+    
   }
+
+  ctx.restore();
 }

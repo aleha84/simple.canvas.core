@@ -93,6 +93,7 @@ SCG.audio.Player = function(prop){
 	this.currentNote = undefined;
 	this.isAlive = true;
 	this.length = 1000;
+	this.type = 'triangle';
 	this.notesChangeTimer= {
 		ignorePause: true,
 		lastTimeWork: new Date,
@@ -144,6 +145,7 @@ SCG.audio.Player.prototype = {
 		this.setValues(this.notes[this.noteIndex]);
 	},
 	setValues: function(cn){
+		//console.log(cn);
 		var notes = [];
 		this.gainNodes = [];
 		isArray(cn.value) ? notes = cn.value : notes.push(cn.value);
@@ -158,7 +160,7 @@ SCG.audio.Player.prototype = {
 				gainNode.connect(this.context.destination);	
 			}
 
-			oscillator.type = 'triangle';
+			oscillator.type = this.type;
 			gainNode.gain.value = this.maxVol;
 			gainNode.gain.setValueAtTime(this.curVol, this.context.currentTime);
 			gainNode.gain.exponentialRampToValueAtTime(0.0001, this.context.currentTime + (duration*3/1000));

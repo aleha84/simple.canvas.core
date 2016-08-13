@@ -6,6 +6,10 @@ SCG.scenes = {
 			throw String.format('Scene {0} not found!', sceneName);
 		}
 
+		if(this.activeScene && this.activeScene.dispose){
+			this.activeScene.dispose();
+		}
+
 		this.activeScene = this.scenes[sceneName];
 
 		var as = this.activeScene;
@@ -74,13 +78,15 @@ SCG.scenes = {
 
 		this.scenes[scene.name] = {
 			start : (scene.start !== undefined && isFunction(scene.start)) ? scene.start : undefined,
+			dispose : (scene.dispose !== undefined && isFunction(scene.dispose)) ? scene.dispose : undefined,
 			preMainWork : (scene.preMainWork !== undefined && isFunction(scene.preMainWork)) ? scene.preMainWork.bind(this) : undefined,
 			afterMainWork : (scene.afterMainWork !== undefined && isFunction(scene.afterMainWork)) ? scene.afterMainWork.bind(this) : undefined,
 			go: scene.gameObjectGenerator != undefined && isFunction(scene.gameObjectGenerator) ? scene.gameObjectGenerator() : [],
 			backgroundRender: scene.backgroundRender != undefined && isFunction(scene.backgroundRender) ? scene.backgroundRender : undefined,
 			game: extend(true, {}, scene.game),
 			space: scene.space ? scene.space : { width: SCG.viewfield.default.width, height: SCG.viewfield.default.height },
-			ui: []
+			ui: [],
+			unshift: []
 		};
 
 		

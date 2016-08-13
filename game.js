@@ -31,8 +31,6 @@ SCG.gameLogics = {
 	isPaused: false,
 	isPausedStep: false,
 	gameOver: false,
-	drawBoundings: true,
-	fillBoundings: false,
 	wrongDeviceOrientation: false,
 	messageToShow: '',
 	isMobile: false,
@@ -74,7 +72,7 @@ SCG.gameControls = {
 		shiftSpeed: 5,
 		centeredOn: undefined,
 		resetAfterUpdate: false,
-		preventModeSwitch: true,
+		preventModeSwitch: false,
 		shifts: {
 			left: false,
 			right: false,
@@ -301,7 +299,9 @@ SCG.gameControls = {
 		that.getEventAbsolutePosition(event);
 		ms.delta = ms.position.substract(oldPosition);
 
-		SCG.debugger.setValue(ms.toString());
+		if(SCG.debugger){
+			SCG.debugger.setValue(ms.toString());
+		}
 		//console.log(SCG.gameControls.mousestate.position);
 	},
 	getEventAbsolutePosition: function(event){
@@ -333,6 +333,7 @@ SCG.gameControls = {
 	},
 	graphInit: function(){
 		var gl = SCG.gameLogics;
+		var vf = SCG.viewfield;
 		gl.messageToShow = '';
 		gl.wrongDeviceOrientation = !window.matchMedia("(orientation: landscape)").matches;
 		if(gl.wrongDeviceOrientation) {
@@ -341,39 +342,40 @@ SCG.gameControls = {
 		}
 
 		var width =  window.innerWidth;
-		if(width < SCG.viewfield.default.width)
+		if(width < vf.default.width)
 		{
-			gl.messageToShow = String.format('width lesser than {3} (width: {0}, iH: {1}, iW: {2})',width, window.innerHeight, window.innerWidth, SCG.viewfield.default.width);
+			gl.messageToShow = String.format('width lesser than {3} (width: {0}, iH: {1}, iW: {2})',width, window.innerHeight, window.innerWidth, vf.default.width);
 			gl.wrongDeviceOrientation = true;
 			return;
 		}
 
 		var _width = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
 		var _height = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-		var ratioX = _width /SCG.viewfield.default.width;
-		var ratioY = _height / SCG.viewfield.default.height;
+		var ratioX = _width /vf.default.width;
+		var ratioY = _height / vf.default.height;
 
-		SCG.gameControls.scale.times = Math.min(ratioX, ratioY); 
+		var scale = SCG.gameControls.scale;
+		scale.times = Math.min(ratioX, ratioY); 
 
-		if(SCG.gameControls.scale.times < 1)
+		if(scale.times < 1)
 		{
 			gl.messageToShow = String.format('window is to small (width: {0}, height: {1})', _width, _height);
 			gl.wrongDeviceOrientation = true;
 			return;
 		}
 
-		SCG.viewfield.width = SCG.viewfield.default.width * SCG.gameControls.scale.times;
-		SCG.viewfield.height = SCG.viewfield.default.height * SCG.gameControls.scale.times;
+		vf.width = vf.default.width * scale.times;
+		vf.height = vf.default.height * scale.times;
 
 		var mTop = 0;
 		var mLeft = 0;
-		if(SCG.viewfield.width < _width)
+		if(vf.width < _width)
 		{
-			mLeft = Math.round((_width - SCG.viewfield.width)/2);
+			mLeft = Math.round((_width - vf.width)/2);
 		}
-		else if(SCG.viewfield.height < _height)
+		else if(vf.height < _height)
 		{
-			mTop = Math.round((_height - SCG.viewfield.height)/2);
+			mTop = Math.round((_height - vf.height)/2);
 		}
 
 		this.setCanvasProperties(SCG.canvas, mTop, mLeft);
@@ -388,22 +390,23 @@ SCG.gameControls = {
 		SCG.UI.invalidate();
 	},
 	setCanvasProperties: function(canvas, mTop, mLeft){
+		var vf = SCG.viewfield;
 		setAttributes(
 			canvas, 
 			{
-				width: SCG.viewfield.width,
-				height: SCG.viewfield.height,
+				width: vf.width,
+				height: vf.height,
 				css: {
-					width:SCG.viewfield.width+'px',
-					height:SCG.viewfield.height+'px',
+					width:vf.width+'px',
+					height:vf.height+'px',
 					'margin-top': mTop+'px',
 					'margin-left': mLeft+'px'
 				}
 			}
 		);
 
-		canvas.width = SCG.viewfield.width;
-		canvas.height = SCG.viewfield.height;
+		canvas.width = vf.width;
+		canvas.height = vf.height;
 		canvas.margins = {
 			top : mTop,
 			left: mLeft
@@ -476,12 +479,6 @@ SCG.gameControls = {
 				else{
 					SCG.gameLogics.pauseToggle();
 				}
-				break;
-			case 69:
-				SCG.GO.EnemyPaths.show = !SCG.GO.EnemyPaths.show;
-				break;
-			case 80: //show placeable
-				SCG.Placeable.show = !SCG.Placeable.show;
 				break;
 			default:
 				break;

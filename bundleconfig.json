@@ -5,8 +5,6 @@
       "lib/screenfull.js",
       "utils/box.js",
       "utils/extenders.js",
-      "utils/utils.js",
-      "utils/vector2.js",
       "game.js",
       "debugger.js",
       "go/go.js",
@@ -18,7 +16,14 @@
       "UI.js",
       "audio.js",
       "main.js",
-      "demo.js"
+      "demo3.js"
+    ]
+  },
+  {
+    "outputFileName": "build/utils.min.js",
+    "inputFiles": [
+      "utils/utils.js",
+      "utils/vector2.js"
     ]
   }
 ]
