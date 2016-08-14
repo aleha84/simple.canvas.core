@@ -307,6 +307,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				},
 				addItem: function(item){
 					this.items.push(item);
+					
 					if(item.attackRadius){
 						this.currentAttackRadius = this.originAttackRadius+item.attackRadius;
 					}
@@ -352,7 +353,7 @@ document.addEventListener("DOMContentLoaded", function() {
 						var direction = this.position.direction(target.position);
 						var distance = this.position.distance(target.position);
 						var path = [];
-						for(var pi = 0;pi <10;pi++){
+						for(var pi = 0;pi <10;pi++){//calculate pseudo-parabolic flight path
 							var step = this.position.add(direction.mul((distance/10)*(pi+1)));
 							step.y-=  ((-0.04*Math.pow(pi-5,2)+1)* distance/5);
 							path.push(step);
@@ -361,6 +362,8 @@ document.addEventListener("DOMContentLoaded", function() {
 							SCG.GO.create("projectile", {
 								position: path.shift(),
 								path: path,
+								side: this.side,
+								damage: this.currentDamage
 							}));
 					}
 					
@@ -445,6 +448,14 @@ document.addEventListener("DOMContentLoaded", function() {
 				size: new Vector2(10,25),
 				setDeadOnDestinationComplete: true,
 				angle: 0,
+				beforeDead: function(){
+					var as = SCG.scenes.activeScene;
+					var that = this;
+					var gos = as.go.filter(function(el){return el.type=='unit' && el.side && el.side != that.side && el.box.isPointInside(that.position)});
+					for(var ui = 0;ui < gos.length;ui++){
+						gos[ui].receiveAttack(this.damage);
+					}
+				},
 				internalPreRender: function(){
 					var ctx =SCG.context; 
 					var rp = this.renderPosition;
