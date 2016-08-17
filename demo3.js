@@ -23,23 +23,31 @@ document.addEventListener("DOMContentLoaded", function() {
 				, 200));
 
 			if(this.game.playerUnit == undefined){
-				var sword = SCG.GO.create("weapon", {
+				var sword = SCG.GO.create("item", {
 					position: new Vector2(-20, 0),
-					renderSourcePosition : new Vector2(10,0)
+					attackRadius: 10,
+					damage: 1,
+					attackRate: 1000,
+					renderSourcePosition : new Vector2(10,0),
+					itemType: 'weapon'
 				});
 
-				var bow = SCG.GO.create("weapon", {
+				var bow = SCG.GO.create("item", {
 					position: new Vector2(-17.5, 0),
 					renderSourcePosition : new Vector2(20,0),
 					size:new Vector2(20,50),
 					ranged: true,
-					attackRadius: 200
+					damage: 1,
+					attackRate: 1000,
+					attackRadius: 200,
+					itemType: 'weapon'
 				});
 
 
 				var unit = SCG.GO.create("unit", {
 					position: new Vector2(250, 150),
 					size:new Vector2(50,50),
+					health: 1000,
 				});
 				unit.addItem(bow);
 				this.go.push(unit);
@@ -48,7 +56,7 @@ document.addEventListener("DOMContentLoaded", function() {
 					position: new Vector2(150, 50),
 					size:new Vector2(50,50),
 					side: 2,
-					health:10,
+					health:1000,
 					speed:0.5
 				}));
 
@@ -56,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function() {
 					position: new Vector2(400, 50),
 					size:new Vector2(50,50),
 					side: 2,
-					health:10,
+					health:1000,
 					speed:0.5
 				}));
 
@@ -209,22 +217,27 @@ document.addEventListener("DOMContentLoaded", function() {
 					end: 1,
 					step: 0.1
 				},
-				items: [],
+				items: {
+					weapon : undefined,
+					shield: undefined,
+					armor: undefined,
+					helmet: undefined,
+				},
 				side: 1,
 				health: 100,
 				canAttack: true,
-				originDefence: 1,
-				currentDefence: 1,
-				originDamage: 2,
-				currentDamage: 2,
-				originAttackRadius: 20,
-				currentAttackRadius: 20,
-				originAttackRate: 500,
-				currentAttackRate: 500,
-				ranged: false,
+				defence: 1,
+				damage: 2,
+				attackRadius: 20,
+				attackRate: 500,
+				stats: {
+					str: 0,
+					agl: 0,
+					dex: 0,
+					con: 0
+				},
 				initializer: function(that){
-					that.originAttackRadius = that.size.x;
-					that.currentAttackRadius = that.size.x;
+					that.attackRadius = that.size.x;
 
 					that.attackDelayTimer = {
 						lastTimeWork: new Date,
@@ -254,24 +267,45 @@ document.addEventListener("DOMContentLoaded", function() {
 						};
 					}
 				},
+				getStats: function(type){
+					var items = this.items;
+					var weapon = items.weapon;
+					switch(type){
+						case 'attackRadius':
+							return this.attackRadius + (weapon ? weapon.attackRadius : 0);
+						case 'damage':
+							return this.damage + (weapon ? weapon.damage : 0);
+						case 'defence': 
+							return this.defence + (items.armor ? items.armor.defence : 0) 
+												+ (items.helmet ? items.helmet.defence : 0); 
+						case 'attackRate':
+							return weapon ? weapon.attackRate : this.attackRate;
+						case 'health':
+							return this.health; // to do: use stats
+						case 'ranged':
+							return weapon && weapon.ranged ? weapon.ranged : false;
+						default:
+							break;
+					}
+				},
 				toPlain: function(){
 					return {
 						id: this.id,
 						position: this.position,
-						health: this.health,
-						damage: this.currentDamage,
+						health: this.getStats('health'),
+						damage: this.getStats('damage'),
 						side: this.side,
-						range: this.currentAttackRadius,
+						range: this.getStats('attackRadius'),
 						size: this.size
 					}
 				},
 				canAttackToggle: function(){
 					this.canAttack = !this.canAttack;
 					this.attackDelayTimer.lastTimeWork = new Date;
-					this.attackDelayTimer.currentDelay = this.currentAttackRate;
+					this.attackDelayTimer.currentDelay = this.getStats('attackRate');
 				},
 				receiveAttack: function(damage){
-					damage-=this.currentDefence;
+					damage-=this.getStats('defence');
 					if(damage<=0){
 						//show fading success damage
 						return;
@@ -291,7 +325,7 @@ document.addEventListener("DOMContentLoaded", function() {
 						}));
 					this.health-=damage;
 
-					if(this.health <= 0){
+					if(this.getStats('health') <= 0){
 						this.setDead();
 					}
 				},
@@ -306,22 +340,12 @@ document.addEventListener("DOMContentLoaded", function() {
 						}));
 				},
 				addItem: function(item){
-					this.items.push(item);
+					this.items[item.itemType] = item;
 					
-					if(item.attackRadius){
-						this.currentAttackRadius = this.originAttackRadius+item.attackRadius;
-					}
-					if(item.damage){
-						this.currentDamage = this.originDamage+item.damage;
-					}
-					if(item.attackRate){
-						this.currentAttackRate = item.attackRate;
-						this.attackDelayTimer.currentDelay = this.currentAttackRate;
-						this.attackDelayTimer.originDelay = this.currentAttackRate;
-					}
-
-					if(item.ranged !== undefined){
-						this.ranged = item.ranged;	
+					if(item.itemType == 'weapon'){
+						var ar = this.getStats('attackRate');
+						this.attackDelayTimer.currentDelay = ar;
+						this.attackDelayTimer.originDelay = ar;
 					}
 					
 				},
@@ -334,8 +358,8 @@ document.addEventListener("DOMContentLoaded", function() {
 					if(dir.y < 0){
 						shift++;
 					}
-
-					if(!this.ranged){
+					var damage = this.getStats('damage');
+					if(!this.getStats('ranged')){
 						SCG.scenes.activeScene.unshift.push(
 							SCG.GO.create("fadingObject", {
 								position: this.position.clone(),
@@ -347,7 +371,7 @@ document.addEventListener("DOMContentLoaded", function() {
 						SCG.audio.start({notes: [{value:200,duration:0.7}],loop:false});
 						SCG.audio.start({notes: [{value:1000,duration:0.3}],loop:false});
 
-						target.receiveAttack(this.currentDamage);
+						target.receiveAttack(damage);
 					}
 					else{
 						var direction = this.position.direction(target.position);
@@ -363,7 +387,7 @@ document.addEventListener("DOMContentLoaded", function() {
 								position: path.shift(),
 								path: path,
 								side: this.side,
-								damage: this.currentDamage
+								damage: damage
 							}));
 					}
 					
@@ -381,7 +405,7 @@ document.addEventListener("DOMContentLoaded", function() {
 						var i = as.go.length;
 						while (i--) {
 							var go = as.go[i];
-							if(go.type =='unit' && go.side != this.side && this.position.distance(go.position) < this.currentAttackRadius){
+							if(go.type =='unit' && go.side != this.side && this.position.distance(go.position) < this.getStats('attackRadius')){
 								this.attack(go);
 								break;
 							}
@@ -518,12 +542,9 @@ document.addEventListener("DOMContentLoaded", function() {
 				}
 			},
 			{
-				type: 'weapon',
+				type: 'item',
 				size: new Vector2(10,50),
-				imgPropertyName: 'weapons',
-				attackRadius: 10,
-				damage: 1,
-				attackRate: 1000,
+				imgPropertyName: 'items',
 				static: true
 			}
 		],
@@ -600,46 +621,46 @@ document.addEventListener("DOMContentLoaded", function() {
 
 		SCG.images['unit'] = unitCanvas;
 
-		var weaponsCanvas = document.createElement('canvas');
-		weaponsCanvas.width = 50;
-		weaponsCanvas.height = 50;
-		var weaponsCanvasContext = weaponsCanvas.getContext('2d');
+		var itemsCanvas = document.createElement('canvas');
+		itemsCanvas.width = 50;
+		itemsCanvas.height = 50;
+		var itemsCanvasContext = itemsCanvas.getContext('2d');
 
-		drawFigures(weaponsCanvasContext, //dagger
+		drawFigures(itemsCanvasContext, //dagger
 			[[new Vector2(2.5,20),new Vector2(2.5,15),new Vector2(5,12.5),new Vector2(7.5,15),new Vector2(7.5,20)]],
 			{alpha: 1, fill: '#cd7f32', stroke:'#b87333'})
-		weaponsCanvasContext.fillStyle = "#ffd700";
-		weaponsCanvasContext.fillRect(1.5,20,7,2);
-		weaponsCanvasContext.fillStyle = "#5b3a29";
-		weaponsCanvasContext.fillRect(3.5,22,3,3);
+		itemsCanvasContext.fillStyle = "#ffd700";
+		itemsCanvasContext.fillRect(1.5,20,7,2);
+		itemsCanvasContext.fillStyle = "#5b3a29";
+		itemsCanvasContext.fillRect(3.5,22,3,3);
 		delta = 10;
-		drawFigures(weaponsCanvasContext, //long sword
+		drawFigures(itemsCanvasContext, //long sword
 			[[new Vector2(2.5+delta,20),new Vector2(2.5+delta,5),new Vector2(5+delta,2.5),new Vector2(7.5+delta,5),new Vector2(7.5+delta,20)]],
 			{alpha: 1, fill: '#cd7f32', stroke:'#b87333'})
-		weaponsCanvasContext.fillStyle = "#ffd700";
-		weaponsCanvasContext.fillRect(1.5+delta,20,7,2);
-		weaponsCanvasContext.fillStyle = "#5b3a29";
-		weaponsCanvasContext.fillRect(3.5+delta,22,3,3);
+		itemsCanvasContext.fillStyle = "#ffd700";
+		itemsCanvasContext.fillRect(1.5+delta,20,7,2);
+		itemsCanvasContext.fillStyle = "#5b3a29";
+		itemsCanvasContext.fillRect(3.5+delta,22,3,3);
 		var delta = 20;
-		weaponsCanvasContext.lineWidth=2;
-		drawFigures(weaponsCanvasContext, //bow
+		itemsCanvasContext.lineWidth=2;
+		drawFigures(itemsCanvasContext, //bow
 			[[new Vector2(15+delta,45),{type:'curve', control: new Vector2(0+delta,25), p: new Vector2(15+delta,5)}]],
 			{alpha: 1, stroke:'#5b3a29'})
-		weaponsCanvasContext.lineWidth=1;
-		drawFigures(weaponsCanvasContext, //bow
+		itemsCanvasContext.lineWidth=1;
+		drawFigures(itemsCanvasContext, //bow
 			[[new Vector2(15+delta,45),new Vector2(15+delta,5)]],
 			{alpha: 1, stroke:'#black'})
 		delta = 40;
-		drawFigures(weaponsCanvasContext, //arrow
+		drawFigures(itemsCanvasContext, //arrow
 			[[new Vector2(3+delta,25),new Vector2(5+delta,22),new Vector2(7+delta,25)]],
 			{alpha: 1, stroke:'#dc143c'});
-		weaponsCanvasContext.fillStyle = "#964b00";
-		weaponsCanvasContext.fillRect(4.5+delta,5,1,17);
-		drawFigures(weaponsCanvasContext,
+		itemsCanvasContext.fillStyle = "#964b00";
+		itemsCanvasContext.fillRect(4.5+delta,5,1,17);
+		drawFigures(itemsCanvasContext,
 			[[new Vector2(3+delta,7),new Vector2(5+delta,3),new Vector2(7+delta,7)]],
 			{alpha: 1, stroke:'#c0c0c0'});
 
-		SCG.images['weapons'] = weaponsCanvas;
+		SCG.images['items'] = itemsCanvas;
 
 		var actionsCanvas = document.createElement('canvas');
 		actionsCanvas.width = 300;
