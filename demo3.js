@@ -283,7 +283,7 @@ document.addEventListener("DOMContentLoaded", function() {
 						case 'health':
 							return this.health; // to do: use stats
 						case 'ranged':
-							return weapon && weapon.ranged ? weapon.ranged : false;
+							return (weapon && weapon.ranged ? weapon.ranged : false);
 						default:
 							break;
 					}
@@ -396,9 +396,10 @@ document.addEventListener("DOMContentLoaded", function() {
 					this.canAttackToggle();
 				},
 				internalUpdate: function(now){
-					for(var i=0;i<this.items.length;i++){
-						this.items[i].update();
-					}
+					var that = this;
+					Object.keys(this.items).forEach(function(key, index){
+						that.items[key].update();
+					});
 
 					if(this.canAttack){
 						var as = SCG.scenes.activeScene;
@@ -432,9 +433,10 @@ document.addEventListener("DOMContentLoaded", function() {
 				{
 					SCG.context.translate(this.renderPosition.x,this.renderPosition.y);
 
-					for(var i=0;i<this.items.length;i++){
-						this.items[i].render();
-					}
+					var that = this;
+					Object.keys(this.items).forEach(function(key, index){
+						that.items[key].render();
+					});
 
 					if(this.selected){
 						SCG.context.drawImage(SCG.images['actions'], 
@@ -468,7 +470,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				path: [],
 				speed: 5,
 				renderSourcePosition : new Vector2(40,0),
-				imgPropertyName: 'weapons',
+				imgPropertyName: 'items',
 				size: new Vector2(10,25),
 				setDeadOnDestinationComplete: true,
 				angle: 0,
