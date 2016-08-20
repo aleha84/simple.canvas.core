@@ -24,20 +24,20 @@ document.addEventListener("DOMContentLoaded", function() {
 
 			if(this.game.playerUnit == undefined){
 				var sword = SCG.GO.create("item", {
-					position: new Vector2(-20, 0),
+					position: new V2(-20, 0),
 					attackRadius: 10,
-					damage: 1,
+					damage: {min:1,max:5,crit:1},
 					attackRate: 1000,
-					renderSourcePosition : new Vector2(10,0),
+					renderSourcePosition : new V2(10,0),
 					itemType: 'weapon'
 				});
 
 				var bow = SCG.GO.create("item", {
-					position: new Vector2(-17.5, 0),
-					renderSourcePosition : new Vector2(20,0),
-					size:new Vector2(20,50),
+					position: new V2(-17.5, 0),
+					renderSourcePosition : new V2(20,0),
+					size:new V2(20,50),
 					ranged: true,
-					damage: 1,
+					damage: {min:5,max:10,crit:10},
 					attackRate: 1000,
 					attackRadius: 200,
 					itemType: 'weapon'
@@ -45,24 +45,24 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 				var unit = SCG.GO.create("unit", {
-					position: new Vector2(250, 150),
-					size:new Vector2(50,50),
+					position: new V2(250, 150),
+					size:new V2(50,50),
 					health: 1000,
 				});
 				unit.addItem(bow);
 				this.go.push(unit);
 
 				this.go.push(SCG.GO.create("unit", {
-					position: new Vector2(150, 50),
-					size:new Vector2(50,50),
+					position: new V2(150, 50),
+					size:new V2(50,50),
 					side: 2,
 					health:1000,
 					speed:0.5
 				}));
 
 				this.go.push(SCG.GO.create("unit", {
-					position: new Vector2(400, 50),
-					size:new Vector2(50,50),
+					position: new V2(400, 50),
+					size:new V2(50,50),
 					side: 2,
 					health:1000,
 					speed:0.5
@@ -86,6 +86,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
 		},
 		game: {
+			money: 0,
 			playerUnit: undefined,
 			clickHandler: function(clickPosition){ // custom global click handler
 				if(this.playerUnit){
@@ -208,7 +209,7 @@ document.addEventListener("DOMContentLoaded", function() {
 		gameObjectsBaseProperties: [
 			{ 
 				type: 'unit',
-				size: new Vector2(20,20),
+				size: new V2(20,20),
 				speed: 1,
 				imgPropertyName: 'unit',
 				jumpOptions: {
@@ -223,11 +224,13 @@ document.addEventListener("DOMContentLoaded", function() {
 					armor: undefined,
 					helmet: undefined,
 				},
+				level: 1,
+				experience: 0,
 				side: 1,
 				health: 100,
 				canAttack: true,
 				defence: 1,
-				damage: 2,
+				damage: {min:2, max:5, crit:1},
 				attackRadius: 20,
 				attackRate: 500,
 				stats: {
@@ -248,7 +251,7 @@ document.addEventListener("DOMContentLoaded", function() {
 						context: that
 					}
 
-					that.renderSourcePosition = new Vector2((that.side-1)*50,0);
+					that.renderSourcePosition = new V2((that.side-1)*50,0);
 				},
 				handlers: {
 					click: function(){
@@ -274,14 +277,18 @@ document.addEventListener("DOMContentLoaded", function() {
 						case 'attackRadius':
 							return this.attackRadius + (weapon ? weapon.attackRadius : 0);
 						case 'damage':
-							return this.damage + (weapon ? weapon.damage : 0);
+						var strenghtDamageModifier = 1+(0.2*this.stats.str);
+							return { 
+								min: (this.damage.min + (weapon ? weapon.damage.min : 0))*strenghtDamageModifier, 
+								max: (this.damage.max + (weapon ? weapon.damage.max : 0))*strenghtDamageModifier, 
+								crit: weapon ? weapon.damage.crit : this.damage.crit};
 						case 'defence': 
-							return this.defence + (items.armor ? items.armor.defence : 0) 
-												+ (items.helmet ? items.helmet.defence : 0); 
+							return (this.defence + (items.armor ? items.armor.defence : 0) 
+												+ (items.helmet ? items.helmet.defence : 0))*(1+(0.2*this.stats.agl)); 
 						case 'attackRate':
 							return weapon ? weapon.attackRate : this.attackRate;
 						case 'health':
-							return this.health; // to do: use stats
+							return this.health+(this.stats.con*20);
 						case 'ranged':
 							return (weapon && weapon.ranged ? weapon.ranged : false);
 						default:
@@ -311,6 +318,8 @@ document.addEventListener("DOMContentLoaded", function() {
 						return;
 					}
 
+					damage = parseFloat(damage.toFixed(1));
+
 					SCG.scenes.activeScene.unshift.push(
 						SCG.GO.create("fadingObject", {
 							position: this.position.clone(),
@@ -320,8 +329,8 @@ document.addEventListener("DOMContentLoaded", function() {
 								color: '#ff2400',
 								value: damage,
 							},
-							size: new Vector2(10,10),
-							shift: new Vector2(0.15,-0.5)
+							size: new V2(10,10),
+							shift: new V2(0.15,-0.5)
 						}));
 					this.health-=damage;
 
@@ -334,8 +343,8 @@ document.addEventListener("DOMContentLoaded", function() {
 						SCG.GO.create("fadingObject", {
 							position: this.position.clone(),
 							imgPropertyName: 'actions',
-							renderSourcePosition : new Vector2(250,0),
-							size: new Vector2(50,50),
+							renderSourcePosition : new V2(250,0),
+							size: new V2(50,50),
 							lifeTime: 5000,
 						}));
 				},
@@ -358,14 +367,15 @@ document.addEventListener("DOMContentLoaded", function() {
 					if(dir.y < 0){
 						shift++;
 					}
-					var damage = this.getStats('damage');
+					var damageObj = this.getStats('damage');
+					var damage = getRandom(damageObj.min,damageObj.max)*(Math.random() < damageObj.crit/100 ? 3 : 1);
 					if(!this.getStats('ranged')){
 						SCG.scenes.activeScene.unshift.push(
 							SCG.GO.create("fadingObject", {
 								position: this.position.clone(),
 								imgPropertyName: 'actions',
-								renderSourcePosition : new Vector2(shift*50,0),
-								size: new Vector2(50,50)
+								renderSourcePosition : new V2(shift*50,0),
+								size: new V2(50,50)
 							}));	
 
 						SCG.audio.start({notes: [{value:200,duration:0.7}],loop:false});
@@ -455,7 +465,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			},
 			{ 
 				type: 'line',
-				size: new Vector2(1,1),
+				size: new V2(1,1),
 				isCustomRender: true,
 				customRender: function() {
 					SCG.context.beginPath();
@@ -469,9 +479,9 @@ document.addEventListener("DOMContentLoaded", function() {
 				damage: 1,
 				path: [],
 				speed: 5,
-				renderSourcePosition : new Vector2(40,0),
+				renderSourcePosition : new V2(40,0),
 				imgPropertyName: 'items',
-				size: new Vector2(10,25),
+				size: new V2(10,25),
 				setDeadOnDestinationComplete: true,
 				angle: 0,
 				beforeDead: function(){
@@ -486,8 +496,8 @@ document.addEventListener("DOMContentLoaded", function() {
 					var ctx =SCG.context; 
 					var rp = this.renderPosition;
 					ctx.translate(rp.x,rp.y);
-					if(this.direction && !this.direction.equal(new Vector2)){
-						this.angle = Vector2.up().angleTo(this.direction,true);
+					if(this.direction && !this.direction.equal(new V2)){
+						this.angle = V2.up().angleTo(this.direction,true);
 						ctx.rotate(this.angle);	
 					}
 					ctx.translate(-rp.x,-rp.y);
@@ -545,7 +555,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			},
 			{
 				type: 'item',
-				size: new Vector2(10,50),
+				size: new V2(10,50),
 				imgPropertyName: 'items',
 				static: true
 			}
@@ -554,43 +564,43 @@ document.addEventListener("DOMContentLoaded", function() {
 			var gos = [];
 
 			gos.push(SCG.GO.create("line", {
-				position: new Vector2(0, 500),
-				size: new Vector2(1,1000)
+				position: new V2(0, 500),
+				size: new V2(1,1000)
 			}));
 
 			gos.push(SCG.GO.create("line", {
-				position: new Vector2(100, 500),
-				size: new Vector2(1,1000)
+				position: new V2(100, 500),
+				size: new V2(1,1000)
 			}));
 
 			gos.push(SCG.GO.create("line", {
-				position: new Vector2(200, 500),
-				size: new Vector2(1,1000)
+				position: new V2(200, 500),
+				size: new V2(1,1000)
 			}));
 
 			gos.push(SCG.GO.create("line", {
-				position: new Vector2(300, 500),
-				size: new Vector2(1,1000)
+				position: new V2(300, 500),
+				size: new V2(1,1000)
 			}));
 
 			gos.push(SCG.GO.create("line", {
-				position: new Vector2(500, 0),
-				size: new Vector2(1000,1)
+				position: new V2(500, 0),
+				size: new V2(1000,1)
 			}));			
 
 			gos.push(SCG.GO.create("line", {
-				position: new Vector2(500, 100),
-				size: new Vector2(1000,1)
+				position: new V2(500, 100),
+				size: new V2(1000,1)
 			}));			
 
 			gos.push(SCG.GO.create("line", {
-				position: new Vector2(500, 200),
-				size: new Vector2(1000,1)
+				position: new V2(500, 200),
+				size: new V2(1000,1)
 			}));			
 
 			gos.push(SCG.GO.create("line", {
-				position: new Vector2(500, 300),
-				size: new Vector2(1000,1)
+				position: new V2(500, 300),
+				size: new V2(1000,1)
 			}));			
 
 			return gos;
@@ -607,11 +617,11 @@ document.addEventListener("DOMContentLoaded", function() {
 			drawFigures(
 				unitCanvasContext,
 				[[
-				new Vector2(20+delta,11.5),new Vector2(30+delta,11.5),{type:'curve', control: new Vector2(40+delta,10), p: new Vector2(38.5+delta,20)},
-				new Vector2(38.5+delta,30),{type:'curve', control: new Vector2(40+delta,40), p: new Vector2(30+delta,38.5)}, 
-				new Vector2(20+delta,38.5),{type:'curve', control: new Vector2(10+delta,40), p: new Vector2(11.5+delta,30)}, new Vector2(11.5+delta,20),{type:'curve', control: new Vector2(10+delta,10), p: new Vector2(20+delta,11.5)}],
-				[new Vector2(1+delta,20),new Vector2(10+delta,20),new Vector2(10+delta,30),new Vector2(1+delta,30),new Vector2(1+delta,20)],
-				[new Vector2(40+delta,20),new Vector2(49+delta,20),new Vector2(49+delta,30),new Vector2(40+delta,30),new Vector2(40+delta,20)]],
+				new V2(20+delta,11.5),new V2(30+delta,11.5),{type:'curve', control: new V2(40+delta,10), p: new V2(38.5+delta,20)},
+				new V2(38.5+delta,30),{type:'curve', control: new V2(40+delta,40), p: new V2(30+delta,38.5)}, 
+				new V2(20+delta,38.5),{type:'curve', control: new V2(10+delta,40), p: new V2(11.5+delta,30)}, new V2(11.5+delta,20),{type:'curve', control: new V2(10+delta,10), p: new V2(20+delta,11.5)}],
+				[new V2(1+delta,20),new V2(10+delta,20),new V2(10+delta,30),new V2(1+delta,30),new V2(1+delta,20)],
+				[new V2(40+delta,20),new V2(49+delta,20),new V2(49+delta,30),new V2(40+delta,30),new V2(40+delta,20)]],
 			 	{alpha: 1, fill: ui == 0? 'white': '#dcdcdc', stroke:'black'});
 			unitCanvasContext.fillRect(19+delta,20,2,2);
 			unitCanvasContext.fillRect(29+delta,20,2,2);
@@ -629,7 +639,7 @@ document.addEventListener("DOMContentLoaded", function() {
 		var itemsCanvasContext = itemsCanvas.getContext('2d');
 
 		drawFigures(itemsCanvasContext, //dagger
-			[[new Vector2(2.5,20),new Vector2(2.5,15),new Vector2(5,12.5),new Vector2(7.5,15),new Vector2(7.5,20)]],
+			[[new V2(2.5,20),new V2(2.5,15),new V2(5,12.5),new V2(7.5,15),new V2(7.5,20)]],
 			{alpha: 1, fill: '#cd7f32', stroke:'#b87333'})
 		itemsCanvasContext.fillStyle = "#ffd700";
 		itemsCanvasContext.fillRect(1.5,20,7,2);
@@ -637,7 +647,7 @@ document.addEventListener("DOMContentLoaded", function() {
 		itemsCanvasContext.fillRect(3.5,22,3,3);
 		delta = 10;
 		drawFigures(itemsCanvasContext, //long sword
-			[[new Vector2(2.5+delta,20),new Vector2(2.5+delta,5),new Vector2(5+delta,2.5),new Vector2(7.5+delta,5),new Vector2(7.5+delta,20)]],
+			[[new V2(2.5+delta,20),new V2(2.5+delta,5),new V2(5+delta,2.5),new V2(7.5+delta,5),new V2(7.5+delta,20)]],
 			{alpha: 1, fill: '#cd7f32', stroke:'#b87333'})
 		itemsCanvasContext.fillStyle = "#ffd700";
 		itemsCanvasContext.fillRect(1.5+delta,20,7,2);
@@ -646,20 +656,20 @@ document.addEventListener("DOMContentLoaded", function() {
 		var delta = 20;
 		itemsCanvasContext.lineWidth=2;
 		drawFigures(itemsCanvasContext, //bow
-			[[new Vector2(15+delta,45),{type:'curve', control: new Vector2(0+delta,25), p: new Vector2(15+delta,5)}]],
+			[[new V2(15+delta,45),{type:'curve', control: new V2(0+delta,25), p: new V2(15+delta,5)}]],
 			{alpha: 1, stroke:'#5b3a29'})
 		itemsCanvasContext.lineWidth=1;
 		drawFigures(itemsCanvasContext, //bow
-			[[new Vector2(15+delta,45),new Vector2(15+delta,5)]],
+			[[new V2(15+delta,45),new V2(15+delta,5)]],
 			{alpha: 1, stroke:'#black'})
 		delta = 40;
 		drawFigures(itemsCanvasContext, //arrow
-			[[new Vector2(3+delta,25),new Vector2(5+delta,22),new Vector2(7+delta,25)]],
+			[[new V2(3+delta,25),new V2(5+delta,22),new V2(7+delta,25)]],
 			{alpha: 1, stroke:'#dc143c'});
 		itemsCanvasContext.fillStyle = "#964b00";
 		itemsCanvasContext.fillRect(4.5+delta,5,1,17);
 		drawFigures(itemsCanvasContext,
-			[[new Vector2(3+delta,7),new Vector2(5+delta,3),new Vector2(7+delta,7)]],
+			[[new V2(3+delta,7),new V2(5+delta,3),new V2(7+delta,7)]],
 			{alpha: 1, stroke:'#c0c0c0'});
 
 		SCG.images['items'] = itemsCanvas;
@@ -670,32 +680,32 @@ document.addEventListener("DOMContentLoaded", function() {
 		var actionsCanvasContext = actionsCanvas.getContext('2d');
 		actionsCanvasContext.lineWidth=5;
 		drawFigures(actionsCanvasContext, // right upper swing
-			[[new Vector2(5,3),{type:'curve', control: new Vector2(50,0), p: new Vector2(45,47.5)}]],
+			[[new V2(5,3),{type:'curve', control: new V2(50,0), p: new V2(45,47.5)}]],
 			{alpha: 1, stroke:'#87cefa'})
 		delta=50;
 		drawFigures(actionsCanvasContext, // right bottom swing
-			[[new Vector2(45+delta,5),{type:'curve', control: new Vector2(50+delta,50), p: new Vector2(5+delta,47)}]],
+			[[new V2(45+delta,5),{type:'curve', control: new V2(50+delta,50), p: new V2(5+delta,47)}]],
 			{alpha: 1, stroke:'#87cefa'})
 		delta=100;
 		drawFigures(actionsCanvasContext, // left upper swing
-			[[new Vector2(5+delta,47),{type:'curve', control: new Vector2(0+delta,0), p: new Vector2(45+delta,3)}]],
+			[[new V2(5+delta,47),{type:'curve', control: new V2(0+delta,0), p: new V2(45+delta,3)}]],
 			{alpha: 1, stroke:'#87cefa'})
 		delta=150;
 		drawFigures(actionsCanvasContext, // left bottom swing
-			[[new Vector2(45+delta,47),{type:'curve', control: new Vector2(0+delta,50), p: new Vector2(5+delta,3)}]],
+			[[new V2(45+delta,47),{type:'curve', control: new V2(0+delta,50), p: new V2(5+delta,3)}]],
 			{alpha: 1, stroke:'#87cefa'})
 
 		delta = 200;
 		actionsCanvasContext.lineWidth=1;
 		drawFigures(actionsCanvasContext, // select box
-			[[new Vector2(1+delta,0),new Vector2(10+delta,0),new Vector2(1+delta,10)],
-			[new Vector2(40+delta,0),new Vector2(49+delta,0),new Vector2(49+delta,10)],
-			[new Vector2(49+delta,40),new Vector2(49+delta,50),new Vector2(40+delta,50)],
-			[new Vector2(10+delta,50),new Vector2(1+delta,50),new Vector2(1+delta,40)]],
+			[[new V2(1+delta,0),new V2(10+delta,0),new V2(1+delta,10)],
+			[new V2(40+delta,0),new V2(49+delta,0),new V2(49+delta,10)],
+			[new V2(49+delta,40),new V2(49+delta,50),new V2(40+delta,50)],
+			[new V2(10+delta,50),new V2(1+delta,50),new V2(1+delta,40)]],
 			{alpha: 1, fill:'#ffd700',stroke:'#998200'})
 		delta = 250;
 		drawFigures(actionsCanvasContext, // grave
-			[[new Vector2(10+delta,40),new Vector2(10+delta,20),{type:'curve', control: new Vector2(25+delta,10), p: new Vector2(40+delta,20)},new Vector2(40+delta,40)]],
+			[[new V2(10+delta,40),new V2(10+delta,20),{type:'curve', control: new V2(25+delta,10), p: new V2(40+delta,20)},new V2(40+delta,40)]],
 			{alpha: 1, fill:'#4b4d4b'})
 		actionsCanvasContext.fillStyle = "#5da130";
 		actionsCanvasContext.fillRect(5+delta,40,40,5);

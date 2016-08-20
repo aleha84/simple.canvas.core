@@ -2,16 +2,16 @@ SCG.GO = {};
 
 SCG.GO.GO = function(prop){
 	this.defaultInitProperties = {};
-	this.position = new Vector2;
-	this.renderPosition = new Vector2;
+	this.position = new V2;
+	this.renderPosition = new V2;
 	this.renderBox = undefined;
 	this.alive = true;
 	this.static = false;
 	this.type = 'unidentifiedType';
 	this.id = '';
-	this.size = new Vector2;
-	this.renderSize = new Vector2;
-	this.direction = new Vector2;
+	this.size = new V2;
+	this.renderSize = new V2;
+	this.direction = new V2;
 	this.speed = 0;
 	this.angle = 0;
 
@@ -23,7 +23,7 @@ SCG.GO.GO = function(prop){
 	this.path = [];
 	this.mouseOver = false;
 	this.randomizeDestination = false;
-	this.randomizeDestinationRadius = new Vector2;
+	this.randomizeDestinationRadius = new V2;
 	this.setDeadOnDestinationComplete = false;
 	this.isCustomRender = false;
 
@@ -35,9 +35,9 @@ SCG.GO.GO = function(prop){
 		framesInRow: 0,
 		framesRowsCount: 0,
 		frameChangeDelay: 0,
-		destinationFrameSize: new Vector2,
-		sourceFrameSize: new Vector2,
-		currentDestination : new Vector2,
+		destinationFrameSize: new V2,
+		sourceFrameSize: new V2,
+		currentDestination : new V2,
 		currentFrame: 0,
 		reverse: false,
 		paused: false,
@@ -72,7 +72,7 @@ SCG.GO.GO = function(prop){
 			}
 			var crow = Math.ceil(ani.currentFrame/ani.framesInRow);
 			var ccol = ani.framesInRow - ((crow*ani.framesInRow) - ani.currentFrame);
-			ani.currentDestination = new Vector2(ccol - 1, crow - 1);
+			ani.currentDestination = new V2(ccol - 1, crow - 1);
 		}
 	};
 
@@ -81,7 +81,7 @@ SCG.GO.GO = function(prop){
 		throw 'SCG.GO.GO -> props are undefined';
 	}
 
-	if(prop.size == undefined || prop.size.equal(new Vector2))
+	if(prop.size == undefined || prop.size.equal(new V2))
 	{
 		throw 'SCG.GO.GO -> size is undefined';
 	}
@@ -246,13 +246,13 @@ SCG.GO.GO.prototype = {
 		var scale = SCG.gameControls.scale;
 		this.renderSize = this.size.mul(scale.times);
 
-		this.box = new Box(new Vector2(this.position.x - this.size.x/2,this.position.y - this.size.y/2), this.size); //absolute positioning box
+		this.box = new Box(new V2(this.position.x - this.size.x/2,this.position.y - this.size.y/2), this.size); //absolute positioning box
 
 		this.renderPosition = undefined;
 		if(SCG.viewfield.current.isIntersectsWithBox(this.box) || this.static)
 		{
-			this.renderPosition = this.position.add(this.static ? new Vector2 : SCG.viewfield.current.topLeft.mul(-1)).mul(scale.times);
-			this.renderBox = new Box(new Vector2(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2), this.renderSize);
+			this.renderPosition = this.position.add(this.static ? new V2 : SCG.viewfield.current.topLeft.mul(-1)).mul(scale.times);
+			this.renderBox = new Box(new V2(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2), this.renderSize);
 		}
 
 
@@ -292,7 +292,7 @@ SCG.GO.GO.prototype = {
 		}
 		
 
-		//this.boundingBox = new Box(new Vector2(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2), this.renderSize);
+		//this.boundingBox = new Box(new V2(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2), this.renderSize);
 		//this.mouseOver = this.box.isPointInside(SCG.gameControls.mousestate.position.division(SCG.gameControls.scale.times));
 
 		if(this.isAnimated)
@@ -318,17 +318,17 @@ SCG.GO.GO.prototype = {
 
 	setDestination: function(newDestination)
 	{
-		if(newDestination !== undefined && newDestination instanceof Vector2){
+		if(newDestination !== undefined && newDestination instanceof V2){
 			if(this.randomizeDestination){
 				var rdr = this.randomizeDestinationRadius;
-				newDestination.add(new Vector2(getRandom(-rdr, rdr), getRandom(-rdr, rdr)), true);
+				newDestination.add(new V2(getRandom(-rdr, rdr), getRandom(-rdr, rdr)), true);
 			}
 			this.destination = newDestination;
 			this.direction = this.position.direction(this.destination);
 		}
 		else{
 			this.destination = undefined;
-			this.direction = new Vector2;
+			this.direction = new V2;
 		}
 	},
 

@@ -112,32 +112,32 @@ SCG.gameControls = {
 				var direction = undefined;
 				if(sh.left)
 				{
-					direction = Vector2.left();
+					direction = V2.left();
 				}
 				if(sh.right)
 				{
-					direction = Vector2.right();
+					direction = V2.right();
 				}
 				if(sh.up)
 				{
 					if(direction!= undefined)
 					{
-						direction.add(Vector2.up());
+						direction.add(V2.up());
 					}
 					else
 					{
-						direction = Vector2.up();	
+						direction = V2.up();	
 					}
 				}
 				if(sh.down)
 				{
 					if(direction!= undefined)
 					{
-						direction.add(Vector2.down());
+						direction.add(V2.down());
 					}
 					else
 					{
-						direction = Vector2.down();	
+						direction = V2.down();	
 					}
 				}
 				if(direction!== undefined){
@@ -146,7 +146,7 @@ SCG.gameControls = {
 				}
 			}
 			else if(this.mode === 'centered' && this.centeredOn!== undefined){
-				bfTL = this.centeredOn.position.substract(new Vector2(SCG.viewfield.default.width/2,SCG.viewfield.default.height/2));
+				bfTL = this.centeredOn.position.substract(new V2(SCG.viewfield.default.width/2,SCG.viewfield.default.height/2));
 			}
 
 			if(this.resetAfterUpdate){
@@ -177,8 +177,8 @@ SCG.gameControls = {
 		}
 	},
 	mousestate : {
-		position: new Vector2,
-		delta: new Vector2,
+		position: new V2,
+		delta: new V2,
 		leftButtonDown: false,
 		rightButtonDown: false,
 		middleButtonDown: false,
@@ -189,7 +189,7 @@ SCG.gameControls = {
             this.middleButtonDown = false;
 		},
 		stopped : function(){
-			SCG.gameControls.mousestate.delta = new Vector2;
+			SCG.gameControls.mousestate.delta = new V2;
 		},
 		toString: function(){
 			return 'position: '+this.position.toString()+'<br/>leftButtonDown: ' + this.leftButtonDown;
@@ -306,7 +306,7 @@ SCG.gameControls = {
 	},
 	getEventAbsolutePosition: function(event){
 		var eventPos = pointerEventToXY(event);
-		SCG.gameControls.mousestate.position = new Vector2(eventPos.x - SCG.canvasUI.margins.left,eventPos.y - SCG.canvasUI.margins.top);
+		SCG.gameControls.mousestate.position = new V2(eventPos.x - SCG.canvasUI.margins.left,eventPos.y - SCG.canvasUI.margins.top);
 	},
 	orientationChangeEventInit: function() {
 		var that = this;
