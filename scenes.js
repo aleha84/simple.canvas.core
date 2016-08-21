@@ -1,7 +1,7 @@
 SCG.scenes = {
 	activeScene: undefined,
 	scenes: {},
-	selectScene: function(sceneName){
+	selectScene: function(sceneName, sceneProperties){
 		if(this.scenes[sceneName]==undefined){
 			throw String.format('Scene {0} not found!', sceneName);
 		}
@@ -14,16 +14,18 @@ SCG.scenes = {
 
 		var as = this.activeScene;
 		// reset go event handlers
-		SCG.gameControls.mousestate.eventHandlers.click = [];
-		for(var i = 0, len = as.go.length; i < len;i++){
-			var sg = as.go[i];
-			if(sg.handlers.click){
-				var eh = SCG.gameControls.mousestate.eventHandlers;
-				if(eh.click.indexOf(sg) == -1){
-					eh.click.push(sg);
-				}
-			}
-		}
+		var eh = SCG.gameControls.mousestate.eventHandlers;
+		eh.click = [];
+
+		as.go.forEach(function(el){ el.regClick(); })
+		// for(var i = 0, len = as.go.length; i < len;i++){
+		// 	var sg = as.go[i];
+		// 	if(sg.handlers.click){
+		// 		if(eh.click.indexOf(sg) == -1){
+		// 			eh.click.push(sg);
+		// 		}
+		// 	}
+		// }
 
 		//clean background
 		if(SCG.contextBg){
@@ -53,7 +55,7 @@ SCG.scenes = {
 		};	
 
 		if(as.start != undefined && isFunction(as.start)){
-			as.start();
+			as.start(sceneProperties);
 		}
 	},
 	registerScene: function(scene) {
@@ -77,6 +79,7 @@ SCG.scenes = {
 		}
 
 		this.scenes[scene.name] = {
+			name: scene.name,
 			start : (scene.start !== undefined && isFunction(scene.start)) ? scene.start : undefined,
 			dispose : (scene.dispose !== undefined && isFunction(scene.dispose)) ? scene.dispose : undefined,
 			preMainWork : (scene.preMainWork !== undefined && isFunction(scene.preMainWork)) ? scene.preMainWork.bind(this) : undefined,

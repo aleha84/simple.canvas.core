@@ -1,6 +1,9 @@
 SCG.UI = {
 	initialized: false,
 	invalidate: function(){
+		if(!SCG.contextUI){
+			return;
+		}
 		SCG.contextUI.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
 
 		var as = SCG.scenes.activeScene;
@@ -117,12 +120,37 @@ SCG.UI.controls = [{
 	innerCanvas: undefined,
 	transparency: 1,
 	static : true,
+	text: undefined,
 	initializer: function(that){
 		if(that.isCustomRender){
 			that.innerCanvas = document.createElement('canvas');
-			that.innerCanvas.width = that.size.x;
-			that.innerCanvas.height = that.size.y;
-			that.innerCanvasContext = that.innerCanvas.getContext('2d');
+			var canvas = that.innerCanvas;
+			canvas.width = that.size.x;
+			canvas.height = that.size.y;
+			that.innerCanvasContext = canvas.getContext('2d');
+			var context = that.innerCanvasContext;
+
+			if(this.text != undefined){
+				var textWidth = 0;
+				if(this.text.autoSize){
+					var fontsize=300;
+
+					// lower the font size until the text fits the canvas
+					do{
+						fontsize--;
+						context.font=fontsize+"px "+this.text.font;
+						textWidth = context.measureText(this.text.value).width;
+					}while(textWidth>canvas.width*0.8)
+				}
+				else{
+					context.font = this.text.font;
+					textWidth = context.measureText(this.text.value).width;
+				}
+
+				context.fillText(this.text.value, (this.size.x/2) - (textWidth / 2),(this.size.y/2)+fontsize/2);
+				context.rect(1,1,this.size.x-1,this.size.y-1);
+				context.stroke();
+			}
 		}
 	},
 	customRender: function() {

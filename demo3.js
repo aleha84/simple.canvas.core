@@ -16,13 +16,14 @@ document.addEventListener("DOMContentLoaded", function() {
 			}
 		},
 		start: function(){ // called each time as scene selected
-			this.game.AI.initialize();
+			var game = this.game;
+			game.AI.initialize();
 			var that = this;
-			this.game.intervals.push(setInterval(
+			game.intervals.push(setInterval(
 				function() {SCG.AI.sendEvent({type:'units', message: that.go.filter(function(el){return el.toPlain}).map(function(el) { return el.toPlain(); }) });}
 				, 200));
 
-			if(this.game.playerUnit == undefined){
+			if(game.playerUnit == undefined){
 				var sword = SCG.GO.create("item", {
 					position: new V2(-20, 0),
 					attackRadius: 10,
@@ -69,21 +70,27 @@ document.addEventListener("DOMContentLoaded", function() {
 				}));
 
 				unit.selected = true;
-				this.game.playerUnit = unit;
+				game.playerUnit = unit;
 
 				SCG.gameControls.camera.mode = 'centered';
+
+				// testing
+				SCG.scenes.selectScene(scene2.name, {money: 1000, fromBattle: true, gos: this.go.filter(function(el){return el.side == 1})});
 			}
 
-			SCG.gameControls.camera.center(this.game.playerUnit);
+			SCG.gameControls.camera.center(game.playerUnit);
 		},
 		backgroundRender: function(){
-			SCG.contextBg.beginPath();
-			SCG.contextBg.rect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
-			SCG.contextBg.fillStyle ='gray';
-			SCG.contextBg.fill()
+			var ctx = SCG.contextBg;
+			var viewfield = SCG.viewfield;
+			ctx.beginPath();
+			ctx.rect(0, 0, viewfield.width, viewfield.height);
+			ctx.fillStyle ='gray';
+			ctx.fill()
 		},
 		preMainWork: function() {
-			SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
+			var viewfield = SCG.viewfield;
+			SCG.context.clearRect(0, 0, viewfield.width, viewfield.height);
 		},
 		game: {
 			money: 0,
@@ -261,8 +268,14 @@ document.addEventListener("DOMContentLoaded", function() {
 								as.go[i].selected = false;
 							}
 							this.selected = true;
-							as.game.playerUnit = this;
-							SCG.gameControls.camera.center(as.game.playerUnit);
+							if(as.name =='management'){
+								as.game.unitSelected(this);
+							}
+							else{
+								as.game.playerUnit = this;
+								SCG.gameControls.camera.center(as.game.playerUnit);	
+							}
+							
 						}
 						
 						return {
@@ -605,7 +618,119 @@ document.addEventListener("DOMContentLoaded", function() {
 
 			return gos;
 		}
-	}	
+	}
+
+	var scene2 = {
+		name: "management",
+		space: {
+			width: 500,
+			height: 300
+		},
+		dispose: function(){
+		},
+		start: function(props){ // called each time as scene selected
+			if(props.fromBattle){
+				this.go = props.gos;
+				this.game.money = props.money;
+
+				this.go.forEach(function(el,i){
+					el.position = new V2(el.size.x/2,(el.size.y/2)+i*50);
+					el.selected = false;
+					el.regClick();
+				});	
+			}
+			else if(props.fromUTSelect){
+				alert('must create new unit type of: ' + props.type);
+			}
+			
+			if(this.go.length<6){
+				this.ui.push(SCG.GO.create("button", {
+					position: new V2(25,100),
+					text: {value:'HIRE',autoSize:true,font:'Arial'},
+					handlers: {
+						click: function(){
+							SCG.scenes.selectScene(scene3.name);
+							return {
+								preventBubbling: true
+							};
+						}
+					}
+				}));
+
+				SCG.UI.invalidate();
+			}
+		},
+		backgroundRender: function(){
+			var ctx = SCG.contextBg;
+			var viewfield = SCG.viewfield;
+			ctx.beginPath();
+			ctx.rect(0, 0, viewfield.width, viewfield.height);
+			ctx.fillStyle ='gray';
+			ctx.fill()
+		},
+		preMainWork: function() {
+			var viewfield = SCG.viewfield;
+			SCG.context.clearRect(0, 0, viewfield.width, viewfield.height);
+		},
+		game: {
+			money: 0,
+			unitSelected: function(unit){
+				alert(unit.id);
+			}
+		}
+	}
+
+	var scene3 = 	{
+		name: "ut_select",
+		space: {
+			width: SCG.viewfield.default.width,
+			height: SCG.viewfield.default.height
+		},
+		start: function(props){
+			var that = this;
+			for(var i =0;i<3;i++){
+				(function(index){
+					var type = 
+					(function(i){
+						switch(i){
+							case 0:
+								return 'Fighter';
+							case 1: 
+								return 'Defender';
+							case 2:
+								return 'Ranged';
+						}
+					})(index);
+
+					that.ui.push(SCG.GO.create("button", {
+						position: new V2(95 + 150*index,150),
+						size: new V2(150,250),
+						text: {value: type, autoSize:true,font:'Arial'},
+						handlers: {
+							click: function(){
+								SCG.scenes.selectScene(scene2.name, {fromUTSelect: true, type: type});
+								return {
+									preventBubbling: true
+								};
+							}
+						}
+					}));
+				})(i);	
+			}
+			var viewfield = SCG.viewfield;
+			SCG.context.clearRect(0, 0, viewfield.width, viewfield.height);
+			SCG.UI.invalidate();
+			
+		},
+		backgroundRender: function(){
+			var ctx = SCG.contextBg;
+			var viewfield = SCG.viewfield;
+			ctx.beginPath();
+			ctx.rect(0, 0, viewfield.width, viewfield.height);
+			ctx.fillStyle ='gray';
+			ctx.fill()
+		},
+	}
 
 	SCG.customInitializaers.push(function () {
 		var unitCanvas = document.createElement('canvas');
@@ -723,6 +848,8 @@ document.addEventListener("DOMContentLoaded", function() {
 	SCG.gameControls.camera.resetAfterUpdate = true;
 
 	SCG.scenes.registerScene(scene1);
+	SCG.scenes.registerScene(scene2);
+	SCG.scenes.registerScene(scene3);
 
 	SCG.scenes.selectScene(scene1.name);
 

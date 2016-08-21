@@ -109,13 +109,14 @@ SCG.GO.GO = function(prop){
 
 	this.creationTime = new Date;
 
-	//register click for new objects
-	if(this.handlers.click && isFunction(this.handlers.click)){
-		var eh = SCG.gameControls.mousestate.eventHandlers;
-		if(eh.click.indexOf(this) == -1){
-			eh.click.push(this);
-		}
-	}
+	// //register click for new objects
+	// if(this.handlers.click && isFunction(this.handlers.click)){
+	// 	var eh = SCG.gameControls.mousestate.eventHandlers;
+	// 	if(eh.click.indexOf(this) == -1){
+	// 		eh.click.push(this);
+	// 	}
+	// }
+	this.regClick();
 
 	if(this.initializer != undefined && isFunction(this.initializer)){
 		this.initializer(this);
@@ -357,5 +358,15 @@ SCG.GO.GO.prototype = {
 		sbc.current+=(sbc.step*sbc.direction);
 	},
 
-	clickHandler: function(){}
+	clickHandler: function(){},
+
+	regClick: function(){
+		//register click for new objects
+		if(this.handlers.click && isFunction(this.handlers.click)){
+			var eh = SCG.gameControls.mousestate.eventHandlers;
+			if(eh.click.indexOf(this) == -1){
+				eh.click.push(this);
+			}
+		}
+	}
 }
