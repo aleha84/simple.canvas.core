@@ -110,6 +110,24 @@ SCG.UI = {
 		for(var i = 0;i< this.controls.length;i++){
 			SCG.GO.register(this.controls[i].type, this.controls[i]);	
 		}
+	},
+	helpers: {
+		render: function (ui) {
+			var rp = ui.renderPosition;
+			var rs = ui.renderSize;
+			SCG.contextUI.drawImage(ui.innerCanvas, 
+				(rp.x - rs.x/2), 
+				(rp.y - rs.y/2), 
+				rs.x, 
+				rs.y);
+		},
+		createCanvas: function(ui){
+			ui.innerCanvas = document.createElement('canvas');
+			var canvas = ui.innerCanvas;
+			canvas.width = ui.size.x;
+			canvas.height = ui.size.y;
+			ui.innerCanvasContext = canvas.getContext('2d');
+		}
 	}
 };
 
@@ -123,11 +141,7 @@ SCG.UI.controls = [{
 	text: undefined,
 	initializer: function(that){
 		if(that.isCustomRender){
-			that.innerCanvas = document.createElement('canvas');
-			var canvas = that.innerCanvas;
-			canvas.width = that.size.x;
-			canvas.height = that.size.y;
-			that.innerCanvasContext = canvas.getContext('2d');
+			SCG.UI.helpers.createCanvas(that);
 			var context = that.innerCanvasContext;
 
 			if(this.text != undefined){
@@ -140,7 +154,7 @@ SCG.UI.controls = [{
 						fontsize--;
 						context.font=fontsize+"px "+this.text.font;
 						textWidth = context.measureText(this.text.value).width;
-					}while(textWidth>canvas.width*0.8)
+					}while(textWidth>this.size.x*0.8)
 				}
 				else{
 					context.font = this.text.font;
@@ -154,12 +168,52 @@ SCG.UI.controls = [{
 		}
 	},
 	customRender: function() {
-		SCG.contextUI.drawImage(this.innerCanvas, 
-						(this.renderPosition.x - this.renderSize.x/2), 
-						(this.renderPosition.y - this.renderSize.y/2), 
-						this.renderSize.x, 
-						this.renderSize.y);
+		SCG.UI.helpers.render(this);
 	},
+},
+{
+	type:'label',
+	size: new V2(50,10),
+	isCustomRender: true,
+	innerCanvas: undefined,
+	static : true,
+	text: {
+		value: 'sample',
+		format: undefined,
+		font: 'px Arial',
+		size: 20,
+		color: 'black',
+		border: false,
+		align: 'center'
+	},
+	initializer: function(that){
+		if(that.isCustomRender){
+			SCG.UI.helpers.createCanvas(that);
+		}
+	},
+	internalUpdate: function(now){
+		var icc = this.innerCanvasContext;
+		var s = this.size;
+		var text = this.text;
+		icc.clearRect(0, 0, s.x, s.y);
+		icc.font = text.size + text.font;
+		icc.fillStyle = text.color;
+		var resultValue = text.value;
+		if(text.format){
+			resultValue = String.format(text.format, text.value);
+		}
+		icc.textAlign = text.align;
+		icc.textBaseline = 'middle';
+
+		icc.fillText(resultValue, this.size.x/2,this.size.y/2);
+		if(text.border){
+			icc.rect(1,1,this.size.x-1,this.size.y-1);
+			icc.stroke();	
+		}
+	},
+	customRender: function () {
+		SCG.UI.helpers.render(this);
+	}
 }]
 
 SCG.UI.initialize();

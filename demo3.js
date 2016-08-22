@@ -49,6 +49,7 @@ document.addEventListener("DOMContentLoaded", function() {
 					position: new V2(250, 150),
 					size:new V2(50,50),
 					health: 1000,
+					unitType: 'Ranged'
 				});
 				unit.addItem(bow);
 				this.go.push(unit);
@@ -240,6 +241,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				damage: {min:2, max:5, crit:1},
 				attackRadius: 20,
 				attackRate: 500,
+				unitType: 'Fighter',
 				stats: {
 					str: 0,
 					agl: 0,
@@ -259,6 +261,24 @@ document.addEventListener("DOMContentLoaded", function() {
 					}
 
 					that.renderSourcePosition = new V2((that.side-1)*50,0);
+					var stats = that.stats;
+					switch(that.unitType){
+						case 'Fighter':
+							stats.str = 2;
+							stats.con = 1;
+							break;
+						case 'Defender':
+							stats.agl = 2;
+							stats.con = 1;
+							break;
+						case 'Ranged':
+							stats.con = 2;
+							stats.str = 1;
+							stats.agl = 1;
+							break;
+						default:
+							throw 'Unknown unit type';
+					}
 				},
 				handlers: {
 					click: function(){
@@ -325,10 +345,13 @@ document.addEventListener("DOMContentLoaded", function() {
 					this.attackDelayTimer.currentDelay = this.getStats('attackRate');
 				},
 				receiveAttack: function(damage){
-					damage-=this.getStats('defence');
+					var defence = this.getStats('defence');
+					damage-=defence;
 					if(damage<=0){
-						//show fading success damage
-						return;
+						damage = Math.random() < (1/((defence-damage)*1.5) ? damage / 3 : 0);
+						if(damage<=0){
+							return;
+						}
 					}
 
 					damage = parseFloat(damage.toFixed(1));
@@ -629,36 +652,56 @@ document.addEventListener("DOMContentLoaded", function() {
 		dispose: function(){
 		},
 		start: function(props){ // called each time as scene selected
+			var sc = this.game.selectedUnit.statsControls;
+			if(!sc.initialized){
+				sc.initialize();
+			}
+
+			var that = this;
 			if(props.fromBattle){
 				this.go = props.gos;
 				this.game.money = props.money;
-
-				this.go.forEach(function(el,i){
-					el.position = new V2(el.size.x/2,(el.size.y/2)+i*50);
-					el.selected = false;
-					el.regClick();
-				});	
 			}
 			else if(props.fromUTSelect){
-				alert('must create new unit type of: ' + props.type);
+				this.go.push(SCG.GO.create("unit", {
+					position: new V2,
+					size:new V2(50,50),
+					health: 100,
+					unitType: props.type 
+				}));
 			}
 			
-			if(this.go.length<6){
-				this.ui.push(SCG.GO.create("button", {
-					position: new V2(25,100),
-					text: {value:'HIRE',autoSize:true,font:'Arial'},
-					handlers: {
-						click: function(){
-							SCG.scenes.selectScene(scene3.name);
-							return {
-								preventBubbling: true
-							};
-						}
-					}
-				}));
+			this.go.forEach(function(el,i){
+				el.position = new V2(el.size.x/2,(el.size.y/2)+i*50);
+				el.selected = false;
+				el.regClick();
+				that.ui.push(SCG.GO.create("label", { position: new V2(el.position.x + el.size.x/4, el.position.y-el.size.y/4),size: new V2(el.size.x/2,el.size.y/2), text: { size: 25, color:'green', value: el.unitType.substring(0,1) } }));
+			});	
 
-				SCG.UI.invalidate();
+			if(this.go.length<6){
+				for(var i = this.go.length;i<7;i++){
+					(function(index){
+						that.ui.push(SCG.GO.create("button", {
+							position: new V2(25,25+index*50),
+							text: {value:'HIRE',autoSize:true,font:'Arial'},
+							handlers: {
+								click: function(){
+									SCG.scenes.selectScene(scene3.name);
+									return {
+										preventBubbling: true
+									};
+								}
+							}
+						}));
+					})(i);
+				}
 			}
+			var labels = this.game.selectedUnit.statsControls.labels;
+			Object.keys(labels).forEach(function(el){
+				that.ui.push(labels[el]);
+			});
+
+			SCG.UI.invalidate();
 		},
 		backgroundRender: function(){
 			var ctx = SCG.contextBg;
@@ -674,8 +717,34 @@ document.addEventListener("DOMContentLoaded", function() {
 		},
 		game: {
 			money: 0,
+			selectedUnit: {
+				unit: undefined,
+				statsControls:
+				{
+					initialized: false,
+					initialize: function(){
+						this.labels['hp'] = SCG.GO.create("label", { position: new V2(110, 50),size: new V2(100,30), text: { size: 15, color:'Red', value: 0, format: 'Health: {0}' } });
+						this.labels['str'] = SCG.GO.create("label", { position: new V2(110, 70),size: new V2(100,30), text: { size: 15, value: 0, format: 'Strenght: {0}' } });
+						this.labels['agl'] = SCG.GO.create("label", { position: new V2(110, 90),size: new V2(100,30), text: { size: 15, value: 0, format: 'Agility: {0}' } });
+						this.labels['con'] = SCG.GO.create("label", { position: new V2(110, 110),size: new V2(100,30), text: { size: 15, value: 0, format: 'Constitution: {0}' } });
+
+						this.labels['atk'] = SCG.GO.create("label", { position: new V2(250, 50),size: new V2(200,30), text: { size: 15, value: "0-0", format: 'Attack: {0}' } });
+					},
+					labels: {
+
+					}
+				}
+			},
 			unitSelected: function(unit){
-				alert(unit.id);
+				this.selectedUnit.unit = unit;
+				this.selectedUnit.statsControls.labels.hp.text.value = unit.health;
+				this.selectedUnit.statsControls.labels.str.text.value = unit.stats.str;
+				this.selectedUnit.statsControls.labels.agl.text.value = unit.stats.agl;
+				this.selectedUnit.statsControls.labels.con.text.value = unit.stats.con;
+				var atk = unit.getStats('damage');
+				this.selectedUnit.statsControls.labels.atk.text.value = String.format("{0}-{1}({2}%)", atk.min, atk.max,atk.crit);
+
+				SCG.UI.invalidate();
 			}
 		}
 	}

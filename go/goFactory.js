@@ -15,7 +15,7 @@ SCG.GO.create = function(name, specificProperties){
 		throw "SCG.GO.create -> can't find base properties ba provided name " + name;	
 	}
 	
-	return new SCG.GO.GO(extend({}, baseProperties, specificProperties));
+	return new SCG.GO.GO(extend(true, {}, baseProperties, specificProperties));
 }
 
 SCG.GO.register = function(name, baseProperties){
