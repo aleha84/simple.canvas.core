@@ -112,21 +112,14 @@ SCG.UI = {
 		}
 	},
 	helpers: {
-		render: function (ui) {
-			var rp = ui.renderPosition;
-			var rs = ui.renderSize;
-			SCG.contextUI.drawImage(ui.innerCanvas, 
-				(rp.x - rs.x/2), 
-				(rp.y - rs.y/2), 
-				rs.x, 
-				rs.y);
-		},
 		createCanvas: function(ui){
 			ui.innerCanvas = document.createElement('canvas');
 			var canvas = ui.innerCanvas;
 			canvas.width = ui.size.x;
 			canvas.height = ui.size.y;
 			ui.innerCanvasContext = canvas.getContext('2d');
+
+			ui.img = ui.innerCanvas;
 		}
 	}
 };
@@ -134,48 +127,43 @@ SCG.UI = {
 SCG.UI.controls = [{
 	type: 'button',
 	size: new Vector2(50,50),
-	isCustomRender: true,
+	contextName: 'contextUI',
 	innerCanvas: undefined,
 	transparency: 1,
 	static : true,
 	text: undefined,
 	initializer: function(that){
-		if(that.isCustomRender){
-			SCG.UI.helpers.createCanvas(that);
-			var context = that.innerCanvasContext;
+		SCG.UI.helpers.createCanvas(that);
+		var context = that.innerCanvasContext;
 
-			if(this.text != undefined){
-				var textWidth = 0;
-				if(this.text.autoSize){
-					var fontsize=300;
+		if(this.text != undefined){
+			var textWidth = 0;
+			if(this.text.autoSize){
+				var fontsize=300;
 
-					// lower the font size until the text fits the canvas
-					do{
-						fontsize--;
-						context.font=fontsize+"px "+this.text.font;
-						textWidth = context.measureText(this.text.value).width;
-					}while(textWidth>this.size.x*0.8)
-				}
-				else{
-					context.font = this.text.font;
+				// lower the font size until the text fits the canvas
+				do{
+					fontsize--;
+					context.font=fontsize+"px "+this.text.font;
 					textWidth = context.measureText(this.text.value).width;
-				}
-
-				context.fillText(this.text.value, (this.size.x/2) - (textWidth / 2),(this.size.y/2)+fontsize/2);
-				context.rect(1,1,this.size.x-1,this.size.y-1);
-				context.stroke();
+				}while(textWidth>this.size.x*0.8)
 			}
+			else{
+				context.font = this.text.font;
+				textWidth = context.measureText(this.text.value).width;
+			}
+
+			context.fillText(this.text.value, (this.size.x/2) - (textWidth / 2),(this.size.y/2)+fontsize/2);
+			context.rect(1,1,this.size.x-1,this.size.y-1);
+			context.stroke();
 		}
-	},
-	customRender: function() {
-		SCG.UI.helpers.render(this);
-	},
+	}
 },
 {
 	type:'label',
 	size: new V2(50,10),
-	isCustomRender: true,
 	innerCanvas: undefined,
+	contextName: 'contextUI',
 	static : true,
 	text: {
 		value: 'sample',
@@ -187,9 +175,7 @@ SCG.UI.controls = [{
 		align: 'center'
 	},
 	initializer: function(that){
-		if(that.isCustomRender){
-			SCG.UI.helpers.createCanvas(that);
-		}
+		SCG.UI.helpers.createCanvas(that);
 	},
 	internalUpdate: function(now){
 		var icc = this.innerCanvasContext;
@@ -210,10 +196,13 @@ SCG.UI.controls = [{
 			icc.rect(1,1,this.size.x-1,this.size.y-1);
 			icc.stroke();	
 		}
-	},
-	customRender: function () {
-		SCG.UI.helpers.render(this);
 	}
+},
+{
+	type: 'image',
+	contextName: 'contextUI',
+	size: new V2(50,50),
+	static: true,
 }]
 
 SCG.UI.initialize();

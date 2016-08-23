@@ -29,13 +29,13 @@ document.addEventListener("DOMContentLoaded", function() {
 					attackRadius: 10,
 					damage: {min:1,max:5,crit:1},
 					attackRate: 1000,
-					renderSourcePosition : new V2(10,0),
+					destSourcePosition : new V2(10,0),
 					itemType: 'weapon'
 				});
 
 				var bow = SCG.GO.create("item", {
 					position: new V2(-17.5, 0),
-					renderSourcePosition : new V2(20,0),
+					destSourcePosition : new V2(20,0),
 					size:new V2(20,50),
 					ranged: true,
 					damage: {min:5,max:10,crit:10},
@@ -260,7 +260,7 @@ document.addEventListener("DOMContentLoaded", function() {
 						context: that
 					}
 
-					that.renderSourcePosition = new V2((that.side-1)*50,0);
+					that.destSourcePosition = new V2((that.side-1)*50,0);
 					var stats = that.stats;
 					switch(that.unitType){
 						case 'Fighter':
@@ -324,6 +324,8 @@ document.addEventListener("DOMContentLoaded", function() {
 							return this.health+(this.stats.con*20);
 						case 'ranged':
 							return (weapon && weapon.ranged ? weapon.ranged : false);
+						case 'expCap':
+							return Math.pow(this.level,2)*100;
 						default:
 							break;
 					}
@@ -379,7 +381,7 @@ document.addEventListener("DOMContentLoaded", function() {
 						SCG.GO.create("fadingObject", {
 							position: this.position.clone(),
 							imgPropertyName: 'actions',
-							renderSourcePosition : new V2(250,0),
+							destSourcePosition : new V2(250,0),
 							size: new V2(50,50),
 							lifeTime: 5000,
 						}));
@@ -410,7 +412,7 @@ document.addEventListener("DOMContentLoaded", function() {
 							SCG.GO.create("fadingObject", {
 								position: this.position.clone(),
 								imgPropertyName: 'actions',
-								renderSourcePosition : new V2(shift*50,0),
+								destSourcePosition : new V2(shift*50,0),
 								size: new V2(50,50)
 							}));	
 
@@ -515,7 +517,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				damage: 1,
 				path: [],
 				speed: 5,
-				renderSourcePosition : new V2(40,0),
+				destSourcePosition : new V2(40,0),
 				imgPropertyName: 'items',
 				size: new V2(10,25),
 				setDeadOnDestinationComplete: true,
@@ -701,6 +703,8 @@ document.addEventListener("DOMContentLoaded", function() {
 				that.ui.push(labels[el]);
 			});
 
+			that.ui.push(SCG.GO.create("image", { position: new V2(150, 200),size: new V2(150,150), destSourcePosition : new V2(0,0), destSourceSize: new V2(50,50), imgPropertyName: 'unit'}));
+
 			SCG.UI.invalidate();
 		},
 		backgroundRender: function(){
@@ -712,8 +716,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			ctx.fill()
 		},
 		preMainWork: function() {
-			var viewfield = SCG.viewfield;
-			SCG.context.clearRect(0, 0, viewfield.width, viewfield.height);
+			SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
 		},
 		game: {
 			money: 0,
@@ -728,7 +731,10 @@ document.addEventListener("DOMContentLoaded", function() {
 						this.labels['agl'] = SCG.GO.create("label", { position: new V2(110, 90),size: new V2(100,30), text: { size: 15, value: 0, format: 'Agility: {0}' } });
 						this.labels['con'] = SCG.GO.create("label", { position: new V2(110, 110),size: new V2(100,30), text: { size: 15, value: 0, format: 'Constitution: {0}' } });
 
-						this.labels['atk'] = SCG.GO.create("label", { position: new V2(250, 50),size: new V2(200,30), text: { size: 15, value: "0-0", format: 'Attack: {0}' } });
+						this.labels['lvl'] = SCG.GO.create("label", { position: new V2(250, 50),size: new V2(100,30), text: { size: 15, color: 'Blue', value: 0, format: 'Level: {0}' } });
+						this.labels['exp'] = SCG.GO.create("label", { position: new V2(250, 70),size: new V2(200,30), text: { size: 15, value: "0-0", format: 'Experience: {0}' } });
+						this.labels['atk'] = SCG.GO.create("label", { position: new V2(250, 90),size: new V2(200,30), text: { size: 15, value: "0-0", format: 'Attack: {0}' } });
+						this.labels['def'] = SCG.GO.create("label", { position: new V2(250, 110),size: new V2(100,30), text: { size: 15, value: 0, format: 'Defence: {0}' } });
 					},
 					labels: {
 
@@ -737,12 +743,17 @@ document.addEventListener("DOMContentLoaded", function() {
 			},
 			unitSelected: function(unit){
 				this.selectedUnit.unit = unit;
-				this.selectedUnit.statsControls.labels.hp.text.value = unit.health;
-				this.selectedUnit.statsControls.labels.str.text.value = unit.stats.str;
-				this.selectedUnit.statsControls.labels.agl.text.value = unit.stats.agl;
-				this.selectedUnit.statsControls.labels.con.text.value = unit.stats.con;
+				var labels = this.selectedUnit.statsControls.labels;
+				labels.hp.text.value = unit.health;
+				labels.str.text.value = unit.stats.str;
+				labels.agl.text.value = unit.stats.agl;
+				labels.con.text.value = unit.stats.con;
+
+				labels.lvl.text.value = unit.level;
+				labels.exp.text.value = String.format("{0}-{1}",unit.experience, unit.getStats('expCap'));
 				var atk = unit.getStats('damage');
-				this.selectedUnit.statsControls.labels.atk.text.value = String.format("{0}-{1}({2}%)", atk.min, atk.max,atk.crit);
+				labels.atk.text.value = String.format("{0}-{1}({2}%)", atk.min, atk.max,atk.crit);
+				labels.def.text.value = unit.getStats('defence');
 
 				SCG.UI.invalidate();
 			}
@@ -790,6 +801,9 @@ document.addEventListener("DOMContentLoaded", function() {
 			SCG.context.clearRect(0, 0, viewfield.width, viewfield.height);
 			SCG.UI.invalidate();
 			
+		},
+		preMainWork: function() {
+			SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
 		},
 		backgroundRender: function(){
 			var ctx = SCG.contextBg;

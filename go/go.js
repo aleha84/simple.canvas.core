@@ -14,6 +14,8 @@ SCG.GO.GO = function(prop){
 	this.direction = new V2;
 	this.speed = 0;
 	this.angle = 0;
+	this.context = undefined;
+	this.contextName = 'context';
 
 	this.img = undefined;
 	this.imgPropertyName = undefined;
@@ -175,21 +177,13 @@ SCG.GO.GO.prototype = {
 			this.customRender();
 		}
 		else{
-			if(this.img == undefined && this.imgPropertyName != undefined){ //first run workaround
-				this.img = SCG.images[this.imgPropertyName];
-				if(this.img == undefined){
-					throw 'Cant achieve image named: ' + this.imgPropertyName;
-				}
-			}
-
-
 			if(this.img != undefined)
 			{
 				var rp = this.renderPosition;
 				var rs = this.renderSize;
-				var rsp = this.renderSourcePosition;
+				var dsp = this.destSourcePosition;
 				var s = this.size;
-				var ctx = SCG.context;
+				var ctx = this.context;
 				if(this.isAnimated)
 				{
 					var ani = this.animation;
@@ -205,12 +199,13 @@ SCG.GO.GO.prototype = {
 					);
 				}
 				else{
-					if(rsp != undefined){
+					if(dsp != undefined){
+						var destSourceSize = this.destSourceSize ? this.destSourceSize : this.size;
 						ctx.drawImage(this.img, 
-							rsp.x,
-							rsp.y,
-							s.x,
-							s.y,
+							dsp.x,
+							dsp.y,
+							destSourceSize.x,
+							destSourceSize.y,
 							(rp.x - rs.x/2), 
 							(rp.y - rs.y/2), 
 							rs.x, 
@@ -256,6 +251,19 @@ SCG.GO.GO.prototype = {
 			this.renderBox = new Box(new V2(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2), this.renderSize);
 		}
 
+		if(this.img == undefined && this.imgPropertyName != undefined){ //first run workaround
+			this.img = SCG.images[this.imgPropertyName];
+			if(this.img == undefined){
+				throw 'Cant achieve image named: ' + this.imgPropertyName;
+			}
+		}
+
+		if(this.context == undefined && this.contextName != undefined){
+			this.context = SCG.contexts[this.contextName];
+			if(this.context == undefined){
+				throw 'Cant achieve context named: ' + this.contextName;
+			}
+		}
 
 		if(!this.static && (!this.alive || SCG.gameLogics.isPaused || SCG.gameLogics.gameOver || SCG.gameLogics.wrongDeviceOrientation)){
 			return false;

@@ -5,6 +5,9 @@ SCG.src = {
 SCG.images = {
 }
 
+SCG.contexts = {
+}
+
 SCG.globals = {
   addDefaultUIButtons: true
 }
