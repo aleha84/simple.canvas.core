@@ -132,7 +132,13 @@ SCG.UI.controls = [{
 	transparency: 1,
 	static : true,
 	text: undefined,
+	useInnerCanvas: true,
+	border: false,
 	initializer: function(that){
+		if(!this.useInnerCanvas){
+			return;
+		}
+
 		SCG.UI.helpers.createCanvas(that);
 		var context = that.innerCanvasContext;
 
@@ -156,6 +162,16 @@ SCG.UI.controls = [{
 			context.fillText(this.text.value, (this.size.x/2) - (textWidth / 2),(this.size.y/2)+fontsize/2);
 			context.rect(1,1,this.size.x-1,this.size.y-1);
 			context.stroke();
+		}
+
+		
+	},
+	internalRender: function(){
+		if(this.border){
+			var rp = this.renderPosition;
+			var rs = this.renderSize;
+			this.context.rect(rp.x - rs.x/2,rp.y-rs.y/2,rs.x,rs.y);
+			this.context.stroke();	
 		}
 	}
 },

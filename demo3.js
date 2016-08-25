@@ -698,12 +698,18 @@ document.addEventListener("DOMContentLoaded", function() {
 					})(i);
 				}
 			}
+			//register scene labels and buttons
 			var labels = this.game.selectedUnit.statsControls.labels;
 			Object.keys(labels).forEach(function(el){
 				that.ui.push(labels[el]);
 			});
 
-			that.ui.push(SCG.GO.create("image", { position: new V2(150, 200),size: new V2(150,150), destSourcePosition : new V2(0,0), destSourceSize: new V2(50,50), imgPropertyName: 'unit'}));
+			var buttons = this.game.selectedUnit.statsControls.buttons;
+			Object.keys(buttons).forEach(function(el){
+				that.ui.push(buttons[el]);
+			});
+
+			that.ui.push(SCG.GO.create("image", { position: new V2(170, 220),size: new V2(150,150), destSourcePosition : new V2(0,0), destSourceSize: new V2(50,50), imgPropertyName: 'unit'}));
 
 			SCG.UI.invalidate();
 		},
@@ -730,13 +736,29 @@ document.addEventListener("DOMContentLoaded", function() {
 						this.labels['str'] = SCG.GO.create("label", { position: new V2(110, 70),size: new V2(100,30), text: { size: 15, value: 0, format: 'Strenght: {0}' } });
 						this.labels['agl'] = SCG.GO.create("label", { position: new V2(110, 90),size: new V2(100,30), text: { size: 15, value: 0, format: 'Agility: {0}' } });
 						this.labels['con'] = SCG.GO.create("label", { position: new V2(110, 110),size: new V2(100,30), text: { size: 15, value: 0, format: 'Constitution: {0}' } });
+						this.labels['rte'] = SCG.GO.create("label", { position: new V2(110, 130),size: new V2(200,30), text: { size: 15, value: 0, format: 'Attack rate: {0}' } });
 
 						this.labels['lvl'] = SCG.GO.create("label", { position: new V2(250, 50),size: new V2(100,30), text: { size: 15, color: 'Blue', value: 0, format: 'Level: {0}' } });
 						this.labels['exp'] = SCG.GO.create("label", { position: new V2(250, 70),size: new V2(200,30), text: { size: 15, value: "0-0", format: 'Experience: {0}' } });
 						this.labels['atk'] = SCG.GO.create("label", { position: new V2(250, 90),size: new V2(200,30), text: { size: 15, value: "0-0", format: 'Attack: {0}' } });
 						this.labels['def'] = SCG.GO.create("label", { position: new V2(250, 110),size: new V2(100,30), text: { size: 15, value: 0, format: 'Defence: {0}' } });
+						this.labels['rng'] = SCG.GO.create("label", { position: new V2(250, 130),size: new V2(100,30), text: { size: 15, value: 0, format: 'Range: {0}' } });
+
+						this.buttons['wpn'] = SCG.GO.create("button", { position: new V2(120, 220),size: new V2(50,120), border:true, useInnerCanvas: false, 
+							handlers: { 
+								click: function(){ 
+									alert('show available weapons');
+									return {
+										preventBubbling: true
+									};
+								}
+							 } 
+						});
 					},
 					labels: {
+
+					},
+					buttons: {
 
 					}
 				}
@@ -754,6 +776,16 @@ document.addEventListener("DOMContentLoaded", function() {
 				var atk = unit.getStats('damage');
 				labels.atk.text.value = String.format("{0}-{1}({2}%)", atk.min, atk.max,atk.crit);
 				labels.def.text.value = unit.getStats('defence');
+				labels.rng.text.value = unit.getStats('attackRadius');
+				labels.rte.text.value = unit.getStats('attackRate');
+
+				var buttons = this.selectedUnit.statsControls.buttons;
+				if(unit.items.weapon){
+					buttons.wpn.img = unit.items.weapon.img;
+					buttons.wpn.destSourcePosition = unit.items.weapon.destSourcePosition;
+					buttons.wpn.destSourceSize = unit.items.weapon.size;
+				}
+				
 
 				SCG.UI.invalidate();
 			}
