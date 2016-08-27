@@ -4,6 +4,37 @@ document.addEventListener("DOMContentLoaded", function() {
 
 	}
 
+	SCG.globals.items = [
+		// { itemName: 'sword', position: new V2(-20, -7), attackRadius: 10, damage: {min:1,max:5,crit:1}, attackRate: 1000, destSourcePosition : new V2(10,0), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Fighter'] },
+		// { itemName: 'bow', position: new V2(-17.5, 0), attackRadius: 200, damage: {min:5,max:10,crit:10}, attackRate: 1000, destSourcePosition : new V2(20,0), size:new V2(20,50), ranged: true, itemType: 'weapon', unitTypes: ['Ranged']  },
+		// { itemName: 'shortBow', position: new V2(-20, 0), attackRadius: 100, damage: {min:2,max:5,crit:15}, attackRate: 750, destSourcePosition : new V2(50,0), size:new V2(20,50), ranged: true, itemType: 'weapon', unitTypes: ['Ranged']  }
+	];
+
+	SCG.globals.bgRender = function(){
+		var ctx = SCG.contextBg;
+		var viewfield = SCG.viewfield;
+		ctx.beginPath();
+		ctx.rect(0, 0, viewfield.width, viewfield.height);
+		ctx.fillStyle ='gray';
+		ctx.fill()
+	};
+
+	SCG.globals.modalClose = function(that, space, callback){
+		that.ui.push(SCG.GO.create("button", {
+			position: new V2(space.width*0.95, space.height*0.05),
+			size: new V2(50,30),
+			text: {value: "Close", color:'red', autoSize:true,font:'Arial'},
+			handlers: {
+				click: function(){
+					callback();
+					return {
+						preventBubbling: true
+					};
+				}
+			}
+		}));
+	};
+
 	var scene1 = {
 		name: "demo_s1",
 		space: {
@@ -24,25 +55,20 @@ document.addEventListener("DOMContentLoaded", function() {
 				, 200));
 
 			if(game.playerUnit == undefined){
-				var sword = SCG.GO.create("item", {
-					position: new V2(-20, 0),
-					attackRadius: 10,
-					damage: {min:1,max:5,crit:1},
-					attackRate: 1000,
-					destSourcePosition : new V2(10,0),
-					itemType: 'weapon'
-				});
+				// var sword = SCG.GO.create("item", {
+				// 	position: new V2(-20, 0),
+				// 	attackRadius: 10,
+				// 	damage: {min:1,max:5,crit:1},
+				// 	attackRate: 1000,
+				// 	destSourcePosition : new V2(10,0),
+				// 	itemType: 'weapon'
+				// });
 
-				var bow = SCG.GO.create("item", {
-					position: new V2(-17.5, 0),
-					destSourcePosition : new V2(20,0),
-					size:new V2(20,50),
-					ranged: true,
-					damage: {min:5,max:10,crit:10},
-					attackRate: 1000,
-					attackRadius: 200,
-					itemType: 'weapon'
-				});
+				// var bowDescr = SCG.globals.items.filter(function(el) { return el.itemName == 'shortBow' })[0];
+
+				// var bow = SCG.GO.create("item",
+				// 	bowDescr
+				// );
 
 
 				var unit = SCG.GO.create("unit", {
@@ -51,7 +77,7 @@ document.addEventListener("DOMContentLoaded", function() {
 					health: 1000,
 					unitType: 'Ranged'
 				});
-				unit.addItem(bow);
+				// unit.addItem(bow);
 				this.go.push(unit);
 
 				this.go.push(SCG.GO.create("unit", {
@@ -312,8 +338,8 @@ document.addEventListener("DOMContentLoaded", function() {
 						case 'damage':
 						var strenghtDamageModifier = 1+(0.2*this.stats.str);
 							return { 
-								min: (this.damage.min + (weapon ? weapon.damage.min : 0))*strenghtDamageModifier, 
-								max: (this.damage.max + (weapon ? weapon.damage.max : 0))*strenghtDamageModifier, 
+								min: parseFloat(((this.damage.min + (weapon ? weapon.damage.min : 0))*strenghtDamageModifier).toFixed(1)), 
+								max: parseFloat(((this.damage.max + (weapon ? weapon.damage.max : 0))*strenghtDamageModifier).toFixed(1)), 
 								crit: weapon ? weapon.damage.crit : this.damage.crit};
 						case 'defence': 
 							return (this.defence + (items.armor ? items.armor.defence : 0) 
@@ -517,7 +543,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				damage: 1,
 				path: [],
 				speed: 5,
-				destSourcePosition : new V2(40,0),
+				destSourcePosition : new V2(250,60),
 				imgPropertyName: 'items',
 				size: new V2(10,25),
 				setDeadOnDestinationComplete: true,
@@ -664,7 +690,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				this.go = props.gos;
 				this.game.money = props.money;
 			}
-			else if(props.fromUTSelect){
+			else if(props.fromUTSelect && props.type){
 				this.go.push(SCG.GO.create("unit", {
 					position: new V2,
 					size:new V2(50,50),
@@ -673,9 +699,13 @@ document.addEventListener("DOMContentLoaded", function() {
 				}));
 			}
 			
+			// render player units
+			var selectedUnit = undefined;
 			this.go.forEach(function(el,i){
 				el.position = new V2(el.size.x/2,(el.size.y/2)+i*50);
-				el.selected = false;
+				if(!props.fromItemSelect){
+					el.selected =  false;	
+				}
 				el.regClick();
 				that.ui.push(SCG.GO.create("label", { position: new V2(el.position.x + el.size.x/4, el.position.y-el.size.y/4),size: new V2(el.size.x/2,el.size.y/2), text: { size: 25, color:'green', value: el.unitType.substring(0,1) } }));
 			});	
@@ -698,6 +728,7 @@ document.addEventListener("DOMContentLoaded", function() {
 					})(i);
 				}
 			}
+
 			//register scene labels and buttons
 			var labels = this.game.selectedUnit.statsControls.labels;
 			Object.keys(labels).forEach(function(el){
@@ -711,15 +742,24 @@ document.addEventListener("DOMContentLoaded", function() {
 
 			that.ui.push(SCG.GO.create("image", { position: new V2(170, 220),size: new V2(150,150), destSourcePosition : new V2(0,0), destSourceSize: new V2(50,50), imgPropertyName: 'unit'}));
 
+			if(!props.fromItemSelect){
+				this.game.selectedUnit.unit = undefined;
+			}
+			else{
+				var unit = this.game.selectedUnit.unit;
+				if(props.item){
+					unit.addItem(SCG.GO.create("item",
+						props.item
+					));
+				}
+				
+				this.game.unitSelected(this.game.selectedUnit.unit);
+			}
+
 			SCG.UI.invalidate();
 		},
 		backgroundRender: function(){
-			var ctx = SCG.contextBg;
-			var viewfield = SCG.viewfield;
-			ctx.beginPath();
-			ctx.rect(0, 0, viewfield.width, viewfield.height);
-			ctx.fillStyle ='gray';
-			ctx.fill()
+			SCG.globals.bgRender();
 		},
 		preMainWork: function() {
 			SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
@@ -744,10 +784,16 @@ document.addEventListener("DOMContentLoaded", function() {
 						this.labels['def'] = SCG.GO.create("label", { position: new V2(250, 110),size: new V2(100,30), text: { size: 15, value: 0, format: 'Defence: {0}' } });
 						this.labels['rng'] = SCG.GO.create("label", { position: new V2(250, 130),size: new V2(100,30), text: { size: 15, value: 0, format: 'Range: {0}' } });
 
-						this.buttons['wpn'] = SCG.GO.create("button", { position: new V2(120, 220),size: new V2(50,120), border:true, useInnerCanvas: false, 
+						this.buttons['wpn'] = SCG.GO.create("button", { position: new V2(105, 220),size: new V2(40,120), border:true, useInnerCanvas: false, 
 							handlers: { 
 								click: function(){ 
-									alert('show available weapons');
+									var unit = SCG.scenes.activeScene.game.selectedUnit.unit;
+									if(!SCG.scenes.activeScene.game.selectedUnit.unit){
+										alert('No selected unit');	
+									}
+									else{
+										SCG.scenes.selectScene(scene4.name, {unitType: unit.unitType, itemType: 'weapon'});
+									}
 									return {
 										preventBubbling: true
 									};
@@ -785,6 +831,9 @@ document.addEventListener("DOMContentLoaded", function() {
 					buttons.wpn.destSourcePosition = unit.items.weapon.destSourcePosition;
 					buttons.wpn.destSourceSize = unit.items.weapon.size;
 				}
+				else{
+					buttons.wpn.img = undefined;
+				}
 				
 
 				SCG.UI.invalidate();
@@ -800,35 +849,29 @@ document.addEventListener("DOMContentLoaded", function() {
 		},
 		start: function(props){
 			var that = this;
-			for(var i =0;i<3;i++){
-				(function(index){
-					var type = 
-					(function(i){
-						switch(i){
-							case 0:
-								return 'Fighter';
-							case 1: 
-								return 'Defender';
-							case 2:
-								return 'Ranged';
-						}
-					})(index);
+			var space = this.space;
+			var shifts = new V2(space.width*0.1, space.height*0.15);
+			SCG.globals.modalClose(that, space, function(){ SCG.scenes.selectScene(scene2.name, {fromUTSelect: true, type: undefined}); });
 
-					that.ui.push(SCG.GO.create("button", {
-						position: new V2(95 + 150*index,150),
-						size: new V2(150,250),
-						text: {value: type, autoSize:true,font:'Arial'},
-						handlers: {
-							click: function(){
-								SCG.scenes.selectScene(scene2.name, {fromUTSelect: true, type: type});
-								return {
-									preventBubbling: true
-								};
-							}
+			var types = ['Fighter', 'Defender', 'Ranged'];
+			var itemSize = new V2((space.width*0.8)/types.length,space.height*0.7);
+
+			types.forEach(function(el,i){
+				that.ui.push(SCG.GO.create("button", {
+					position: new V2(shifts.x +  itemSize.x/2 + itemSize.x*i,shifts.y + itemSize.y/2),
+					size: itemSize,
+					text: {value: el, autoSize:true,font:'Arial'},
+					handlers: {
+						click: function(){
+							SCG.scenes.selectScene(scene2.name, {fromUTSelect: true, type: el});
+							return {
+								preventBubbling: true
+							};
 						}
-					}));
-				})(i);	
-			}
+					}
+				}));
+			})
+
 			var viewfield = SCG.viewfield;
 			SCG.context.clearRect(0, 0, viewfield.width, viewfield.height);
 			SCG.UI.invalidate();
@@ -838,12 +881,66 @@ document.addEventListener("DOMContentLoaded", function() {
 			SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
 		},
 		backgroundRender: function(){
-			var ctx = SCG.contextBg;
+			SCG.globals.bgRender();
+		},
+	}
+
+	var scene4 = {
+		name: "item_select",
+		space: {
+			width: SCG.viewfield.default.width,
+			height: SCG.viewfield.default.height
+		},
+		start: function(props){
+			var that = this;
+			var space = this.space;
+			var itemSize = new V2((space.width*0.8)/3,(space.height*0.7)/3);
+			var shifts = new V2(space.width*0.1, space.height*0.15);
+			var globals = SCG.globals;
+
+			globals.modalClose(that, space, function(){ SCG.scenes.selectScene(scene2.name, {fromItemSelect: true, item: undefined}); });
+
+			globals.items.filter(function(el){ return el.itemType == props.itemType && el.unitTypes.indexOf(props.unitType) != -1}).forEach(function(el,i){
+				var row = parseInt(i/3);
+				var column = i-row*3;
+				var btnPosition = new V2(shifts.x+ itemSize.x/2 + itemSize.x*column, shifts.y+ itemSize.y/2 + itemSize.y*row );
+
+				that.ui.push(SCG.GO.create("button", {
+					position: btnPosition,
+					size: itemSize,
+					text: {value: "", autoSize:true,font:'Arial'},
+					handlers: {
+						click: function(){
+							SCG.scenes.selectScene(scene2.name, {fromItemSelect: true, item: el});
+							return {
+								preventBubbling: true
+							};
+						}
+					}
+				}));
+
+				var scaled = el.size.mul(itemSize.y / el.size.y);
+				var imgShiftedPosition = btnPosition.substract(new V2(itemSize.x/2 - scaled.x/2 - itemSize.x*0.05),0);
+				var lablesTop = btnPosition.substract(new V2(-15, itemSize.y/2));
+				var labelSize = new V2(100,itemSize.y/4);
+				that.ui.push(SCG.GO.create("image", { position: imgShiftedPosition,size: scaled, destSourcePosition : el.destSourcePosition, destSourceSize: el.size, imgPropertyName: 'items'}));
+				that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, labelSize.y/2)),size: labelSize, text: { color:'Red', value: 0, format: 'Price: {0}' } }));
+				that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, 1.5*labelSize.y)),size: labelSize, text: { size: 10, value: String.format("Damage {0}-{1}({2}%)", el.damage.min, el.damage.max,el.damage.crit)} }));
+				that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, 2.5*labelSize.y)),size: labelSize, text: { size: 10, value: el.attackRate, format: 'Rate: {0}'} }));
+				that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, 3.5*labelSize.y)),size: labelSize, text: { size: 10, value: el.attackRadius, format: 'Range: {0}'} }));
+			});
+
+			
 			var viewfield = SCG.viewfield;
-			ctx.beginPath();
-			ctx.rect(0, 0, viewfield.width, viewfield.height);
-			ctx.fillStyle ='gray';
-			ctx.fill()
+			SCG.context.clearRect(0, 0, viewfield.width, viewfield.height);
+			SCG.UI.invalidate();
+			
+		},
+		preMainWork: function() {
+			SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
+		},
+		backgroundRender: function(){
+			SCG.globals.bgRender();
 		},
 	}
 
@@ -874,42 +971,86 @@ document.addEventListener("DOMContentLoaded", function() {
 		SCG.images['unit'] = unitCanvas;
 
 		var itemsCanvas = document.createElement('canvas');
-		itemsCanvas.width = 50;
-		itemsCanvas.height = 50;
+		itemsCanvas.width = 70;
+		itemsCanvas.height = 300;
 		var itemsCanvasContext = itemsCanvas.getContext('2d');
+		delta = 0;
+		var deltay= 0;
 
-		drawFigures(itemsCanvasContext, //dagger
-			[[new V2(2.5,20),new V2(2.5,15),new V2(5,12.5),new V2(7.5,15),new V2(7.5,20)]],
-			{alpha: 1, fill: '#cd7f32', stroke:'#b87333'})
-		itemsCanvasContext.fillStyle = "#ffd700";
-		itemsCanvasContext.fillRect(1.5,20,7,2);
-		itemsCanvasContext.fillStyle = "#5b3a29";
-		itemsCanvasContext.fillRect(3.5,22,3,3);
-		delta = 10;
-		drawFigures(itemsCanvasContext, //long sword
-			[[new V2(2.5+delta,20),new V2(2.5+delta,5),new V2(5+delta,2.5),new V2(7.5+delta,5),new V2(7.5+delta,20)]],
-			{alpha: 1, fill: '#cd7f32', stroke:'#b87333'})
-		itemsCanvasContext.fillStyle = "#ffd700";
-		itemsCanvasContext.fillRect(1.5+delta,20,7,2);
-		itemsCanvasContext.fillStyle = "#5b3a29";
-		itemsCanvasContext.fillRect(3.5+delta,22,3,3);
-		var delta = 20;
-		itemsCanvasContext.lineWidth=2;
-		drawFigures(itemsCanvasContext, //bow
-			[[new V2(15+delta,45),{type:'curve', control: new V2(0+delta,25), p: new V2(15+delta,5)}]],
-			{alpha: 1, stroke:'#5b3a29'})
-		itemsCanvasContext.lineWidth=1;
-		drawFigures(itemsCanvasContext, //bow
-			[[new V2(15+delta,45),new V2(15+delta,5)]],
-			{alpha: 1, stroke:'#black'})
-		delta = 40;
+		var fillColors = ["#cd7f32", "#f2f2f2", "#baacc7"];
+		var strokeColors = ["#b87333", "#c0c0c0", "#876f9e"];
+		var materialNames = ["bronze", "steel", "mithril"];
+
+		for(var i = 0;i<3;i++){
+			drawFigures(itemsCanvasContext, //sword
+				[[new V2(2.5+delta,30),new V2(2.5+delta,15),new V2(5+delta,12.5),new V2(7.5+delta,15),new V2(7.5+delta,30)]],
+				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]})
+			itemsCanvasContext.fillStyle = "#ffd700";
+			itemsCanvasContext.fillRect(1.5+delta,30,7,2);
+			itemsCanvasContext.fillStyle = "#5b3a29";
+			itemsCanvasContext.fillRect(3.5+delta,32,3,3);
+			SCG.globals.items.push({ itemName: materialNames[i] + ' sword', position: new V2(-20, -7), attackRadius: 10, damage: {min:1*(i+1),max:5*(i+1),crit:5}, attackRate: 1000, destSourcePosition : new V2(delta,0), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Fighter'] });
+			
+			deltay = 50;
+			drawFigures(itemsCanvasContext, //axe
+				[[new V2(7.5+delta,20+deltay),new V2(5+delta,22.5+deltay),{type:'curve', control: new V2(1.5+delta,17.5+deltay), p: new V2(5+delta,12.5+deltay)},new V2(7.5+delta,15+deltay)]],
+				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
+			itemsCanvasContext.fillStyle = "#5b3a29";
+			itemsCanvasContext.fillRect(7+delta,15+deltay,1.5,20);
+			SCG.globals.items.push({ itemName: materialNames[i] + ' axe', position: new V2(-20, -7), attackRadius: 5, damage: {min:5*(i+1),max:15*(i+1),crit:2}, attackRate: 1500, destSourcePosition : new V2(delta,deltay), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Fighter'] });
+
+			deltay = 100;
+			drawFigures(itemsCanvasContext, //spear
+				[[new V2(5+delta,0+deltay), new V2(7+delta,5+deltay),new V2(5+delta,10+deltay),new V2(3+delta,5+deltay)]],
+				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
+			itemsCanvasContext.fillStyle = "#5b3a29";
+			itemsCanvasContext.fillRect(4+delta,10+deltay,1.5,35);
+			SCG.globals.items.push({ itemName: materialNames[i] + ' spear', position: new V2(-20, -0), attackRadius: 25, damage: {min:1*(i+1),max:15*(i+1),crit:15}, attackRate: 1500, destSourcePosition : new V2(delta,deltay), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Defender'] });
+
+			deltay = 150;
+			drawFigures(itemsCanvasContext, //halbert
+				[[new V2(5+delta,0+deltay), new V2(7+delta,5+deltay),new V2(5+delta,10+deltay),new V2(3+delta,5+deltay)],
+				[new V2(9+delta, 12.5+deltay),new V2(2.5+delta, 10+deltay),{type:'curve', control: new V2(0+delta,15+deltay), p: new V2(3.5+delta,20+deltay)}]],
+				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
+			itemsCanvasContext.fillStyle = "#5b3a29";
+			itemsCanvasContext.fillRect(4+delta,17+deltay,1.5,30);
+			SCG.globals.items.push({ itemName: materialNames[i] + ' halbert', position: new V2(-20, -0), attackRadius: 25, damage: {min:5*(i+1),max:35*(i+1),crit:15}, attackRate: 2500, destSourcePosition : new V2(delta,deltay), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Defender'] });
+			delta+=10;
+		}
+		delta = 0;
+		for(var i = 0;i<3;i++){
+			deltay = 200;
+			itemsCanvasContext.lineWidth=2;
+			drawFigures(itemsCanvasContext, //shortbow
+				[[new V2(15+delta,35+deltay),{type:'curve', control: new V2(5+delta,25+deltay), p: new V2(15+delta,15+deltay)}]],
+				{alpha: 1, stroke:strokeColors[i]})
+			itemsCanvasContext.lineWidth=1;
+			drawFigures(itemsCanvasContext, //shortbow
+				[[new V2(15+delta,35+deltay),new V2(15+delta,15+deltay)]],
+				{alpha: 1, stroke:'#black'})
+			SCG.globals.items.push({ itemName: materialNames[i] + 'shortBow', position: new V2(-20, 0), attackRadius: 100, damage: {min:2*(i+1),max:5*(i+1),crit:15}, attackRate: 750, destSourcePosition : new V2(delta,deltay), size:new V2(20,50), ranged: true, itemType: 'weapon', unitTypes: ['Ranged']  });
+			
+			deltay = 250;
+			itemsCanvasContext.lineWidth=2;
+			drawFigures(itemsCanvasContext, //bow
+				[[new V2(15+delta,45+deltay),{type:'curve', control: new V2(0+delta,25+deltay), p: new V2(15+delta,5+deltay)}]],
+				{alpha: 1, stroke:strokeColors[i]})
+			itemsCanvasContext.lineWidth=1;
+			drawFigures(itemsCanvasContext, //bow
+				[[new V2(15+delta,45+deltay),new V2(15+delta,5+deltay)]],
+				{alpha: 1, stroke:'#black'})
+			SCG.globals.items.push({ itemName: materialNames[i] +' bow', position: new V2(-17.5, 0), attackRadius: 200, damage: {min:5*(i+1),max:10*(i+1),crit:10}, attackRate: 1000, destSourcePosition : new V2(delta,deltay), size:new V2(20,50), ranged: true, itemType: 'weapon', unitTypes: ['Ranged']  });
+
+			delta += 20;
+		}
+		
 		drawFigures(itemsCanvasContext, //arrow
-			[[new V2(3+delta,25),new V2(5+delta,22),new V2(7+delta,25)]],
+			[[new V2(3+delta,25+deltay),new V2(5+delta,22+deltay),new V2(7+delta,25+deltay)]],
 			{alpha: 1, stroke:'#dc143c'});
 		itemsCanvasContext.fillStyle = "#964b00";
-		itemsCanvasContext.fillRect(4.5+delta,5,1,17);
+		itemsCanvasContext.fillRect(4.5+delta,5+deltay,1,17);
 		drawFigures(itemsCanvasContext,
-			[[new V2(3+delta,7),new V2(5+delta,3),new V2(7+delta,7)]],
+			[[new V2(3+delta,7+deltay),new V2(5+delta,3+deltay),new V2(7+delta,7+deltay)]],
 			{alpha: 1, stroke:'#c0c0c0'});
 
 		SCG.images['items'] = itemsCanvas;
@@ -965,6 +1106,7 @@ document.addEventListener("DOMContentLoaded", function() {
 	SCG.scenes.registerScene(scene1);
 	SCG.scenes.registerScene(scene2);
 	SCG.scenes.registerScene(scene3);
+	SCG.scenes.registerScene(scene4);
 
 	SCG.scenes.selectScene(scene1.name);
 
