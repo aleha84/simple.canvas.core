@@ -54,7 +54,12 @@ document.addEventListener("DOMContentLoaded", function() {
 				function() {SCG.AI.sendEvent({type:'units', message: that.go.filter(function(el){return el.toPlain}).map(function(el) { return el.toPlain(); }) });}
 				, 200));
 
-			if(game.playerUnit == undefined){
+			if(props.fromManagement){
+				this.go = props.gos;
+				this.game.money = props.money;
+			}
+
+			//if(game.playerUnit == undefined){
 				// var sword = SCG.GO.create("item", {
 				// 	position: new V2(-20, 0),
 				// 	attackRadius: 10,
@@ -71,41 +76,41 @@ document.addEventListener("DOMContentLoaded", function() {
 				// );
 
 
-				var unit = SCG.GO.create("unit", {
-					position: new V2(250, 150),
-					size:new V2(50,50),
-					health: 1000,
-					unitType: 'Ranged'
-				});
-				// unit.addItem(bow);
-				this.go.push(unit);
+				// var unit = SCG.GO.create("unit", {
+				// 	position: new V2(250, 150),
+				// 	size:new V2(50,50),
+				// 	health: 1000,
+				// 	unitType: 'Ranged'
+				// });
+				// // unit.addItem(bow);
+				// this.go.push(unit);
 
-				this.go.push(SCG.GO.create("unit", {
-					position: new V2(150, 50),
-					size:new V2(50,50),
-					side: 2,
-					health:1000,
-					speed:0.5
-				}));
+				// this.go.push(SCG.GO.create("unit", {
+				// 	position: new V2(150, 50),
+				// 	size:new V2(50,50),
+				// 	side: 2,
+				// 	health:1000,
+				// 	speed:0.5
+				// }));
 
-				this.go.push(SCG.GO.create("unit", {
-					position: new V2(400, 50),
-					size:new V2(50,50),
-					side: 2,
-					health:1000,
-					speed:0.5
-				}));
+				// this.go.push(SCG.GO.create("unit", {
+				// 	position: new V2(400, 50),
+				// 	size:new V2(50,50),
+				// 	side: 2,
+				// 	health:1000,
+				// 	speed:0.5
+				// }));
 
-				unit.selected = true;
-				game.playerUnit = unit;
+				// unit.selected = true;
+				// game.playerUnit = unit;
 
-				SCG.gameControls.camera.mode = 'centered';
+				// SCG.gameControls.camera.mode = 'centered';
 
 				// testing
-				SCG.scenes.selectScene(scene2.name, {money: 1000, fromBattle: true, gos: this.go.filter(function(el){return el.side == 1})});
-			}
+				//SCG.scenes.selectScene(scene2.name, {money: 1000, fromBattle: true, gos: this.go.filter(function(el){return el.side == 1})});
+			//}
 
-			SCG.gameControls.camera.center(game.playerUnit);
+			//SCG.gameControls.camera.center(game.playerUnit);
 		},
 		backgroundRender: function(){
 			var ctx = SCG.contextBg;
@@ -254,9 +259,9 @@ document.addEventListener("DOMContentLoaded", function() {
 				},
 				items: {
 					weapon : undefined,
-					shield: undefined,
 					armor: undefined,
 					helmet: undefined,
+					shield: undefined
 				},
 				level: 1,
 				experience: 0,
@@ -342,8 +347,9 @@ document.addEventListener("DOMContentLoaded", function() {
 								max: parseFloat(((this.damage.max + (weapon ? weapon.damage.max : 0))*strenghtDamageModifier).toFixed(1)), 
 								crit: weapon ? weapon.damage.crit : this.damage.crit};
 						case 'defence': 
-							return (this.defence + (items.armor ? items.armor.defence : 0) 
-												+ (items.helmet ? items.helmet.defence : 0))*(1+(0.2*this.stats.agl)); 
+							return parseFloat(((this.defence + (items.armor ? items.armor.defence : 0) 
+												+ (items.helmet ? items.helmet.defence : 0)
+												+ (items.shield ? items.shield.defence : 0))*(1+(0.2*this.stats.agl))).toFixed(1)); 
 						case 'attackRate':
 							return weapon ? weapon.attackRate : this.attackRate;
 						case 'health':
@@ -508,7 +514,7 @@ document.addEventListener("DOMContentLoaded", function() {
 					SCG.context.translate(this.renderPosition.x,this.renderPosition.y);
 
 					var that = this;
-					Object.keys(this.items).forEach(function(key, index){
+					Object.keys(this.items).sort().forEach(function(key, index){
 						that.items[key].render();
 					});
 
@@ -784,7 +790,7 @@ document.addEventListener("DOMContentLoaded", function() {
 						this.labels['def'] = SCG.GO.create("label", { position: new V2(250, 110),size: new V2(100,30), text: { size: 15, value: 0, format: 'Defence: {0}' } });
 						this.labels['rng'] = SCG.GO.create("label", { position: new V2(250, 130),size: new V2(100,30), text: { size: 15, value: 0, format: 'Range: {0}' } });
 
-						this.buttons['wpn'] = SCG.GO.create("button", { position: new V2(105, 220),size: new V2(40,120), border:true, useInnerCanvas: false, 
+						this.buttons['wpn'] = SCG.GO.create("button", { position: new V2(110, 220),size: new V2(40,120), border:true, useInnerCanvas: false, 
 							handlers: { 
 								click: function(){ 
 									var unit = SCG.scenes.activeScene.game.selectedUnit.unit;
@@ -793,6 +799,57 @@ document.addEventListener("DOMContentLoaded", function() {
 									}
 									else{
 										SCG.scenes.selectScene(scene4.name, {unitType: unit.unitType, itemType: 'weapon'});
+									}
+									return {
+										preventBubbling: true
+									};
+								}
+							 } 
+						});
+
+						this.buttons['shd'] = SCG.GO.create("button", { position: new V2(235, 220),size: new V2(50,120), border:true, useInnerCanvas: false, 
+							handlers: { 
+								click: function(){ 
+									var unit = SCG.scenes.activeScene.game.selectedUnit.unit;
+									if(!SCG.scenes.activeScene.game.selectedUnit.unit){
+										alert('No selected unit');	
+									}
+									else{
+										SCG.scenes.selectScene(scene4.name, {unitType: unit.unitType, itemType: 'shield'});
+									}
+									return {
+										preventBubbling: true
+									};
+								}
+							 } 
+						});
+
+						this.buttons['hlm'] = SCG.GO.create("button", { position: new V2(170, 185),size: new V2(80,50), border:true, useInnerCanvas: false, 
+							handlers: { 
+								click: function(){ 
+									var unit = SCG.scenes.activeScene.game.selectedUnit.unit;
+									if(!SCG.scenes.activeScene.game.selectedUnit.unit){
+										alert('No selected unit');	
+									}
+									else{
+										SCG.scenes.selectScene(scene4.name, {unitType: unit.unitType, itemType: 'helmet'});
+									}
+									return {
+										preventBubbling: true
+									};
+								}
+							 } 
+						});
+
+						this.buttons['arm'] = SCG.GO.create("button", { position: new V2(170, 235),size: new V2(80,50), border:true, useInnerCanvas: false, 
+							handlers: { 
+								click: function(){ 
+									var unit = SCG.scenes.activeScene.game.selectedUnit.unit;
+									if(!SCG.scenes.activeScene.game.selectedUnit.unit){
+										alert('No selected unit');	
+									}
+									else{
+										SCG.scenes.selectScene(scene4.name, {unitType: unit.unitType, itemType: 'armor'});
 									}
 									return {
 										preventBubbling: true
@@ -833,6 +890,33 @@ document.addEventListener("DOMContentLoaded", function() {
 				}
 				else{
 					buttons.wpn.img = undefined;
+				}
+
+				if(unit.items.shield){
+					buttons.shd.img = unit.items.shield.img;
+					buttons.shd.destSourcePosition = unit.items.shield.destSourcePosition;
+					buttons.shd.destSourceSize = unit.items.shield.size;
+				}
+				else{
+					buttons.shd.img = undefined;
+				}
+
+				if(unit.items.helmet){
+					buttons.hlm.img = unit.items.helmet.img;
+					buttons.hlm.destSourcePosition = unit.items.helmet.destSourcePosition;
+					buttons.hlm.destSourceSize = unit.items.helmet.size;
+				}
+				else{
+					buttons.hlm.img = undefined;
+				}
+
+				if(unit.items.armor){
+					buttons.arm.img = unit.items.armor.img;
+					buttons.arm.destSourcePosition = unit.items.armor.destSourcePosition;
+					buttons.arm.destSourceSize = unit.items.armor.size;
+				}
+				else{
+					buttons.arm.img = undefined;
 				}
 				
 
@@ -925,9 +1009,19 @@ document.addEventListener("DOMContentLoaded", function() {
 				var labelSize = new V2(100,itemSize.y/4);
 				that.ui.push(SCG.GO.create("image", { position: imgShiftedPosition,size: scaled, destSourcePosition : el.destSourcePosition, destSourceSize: el.size, imgPropertyName: 'items'}));
 				that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, labelSize.y/2)),size: labelSize, text: { color:'Red', value: 0, format: 'Price: {0}' } }));
-				that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, 1.5*labelSize.y)),size: labelSize, text: { size: 10, value: String.format("Damage {0}-{1}({2}%)", el.damage.min, el.damage.max,el.damage.crit)} }));
-				that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, 2.5*labelSize.y)),size: labelSize, text: { size: 10, value: el.attackRate, format: 'Rate: {0}'} }));
-				that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, 3.5*labelSize.y)),size: labelSize, text: { size: 10, value: el.attackRadius, format: 'Range: {0}'} }));
+				switch(el.itemType){
+					case 'weapon':
+						that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, 1.5*labelSize.y)),size: labelSize, text: { size: 10, value: String.format("Damage {0}-{1}({2}%)", el.damage.min, el.damage.max,el.damage.crit)} }));
+						that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, 2.5*labelSize.y)),size: labelSize, text: { size: 10, value: el.attackRate, format: 'Rate: {0}'} }));
+						that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, 3.5*labelSize.y)),size: labelSize, text: { size: 10, value: el.attackRadius, format: 'Range: {0}'} }));
+						break
+					case 'shield':
+					case 'armor':
+					case 'helmet':
+						that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, 1.5*labelSize.y)),size: labelSize, text: { size: 10, value: el.defence, format: 'Defence: {0}'} } ));
+						break
+				}
+				
 			});
 
 			
@@ -971,8 +1065,8 @@ document.addEventListener("DOMContentLoaded", function() {
 		SCG.images['unit'] = unitCanvas;
 
 		var itemsCanvas = document.createElement('canvas');
-		itemsCanvas.width = 70;
-		itemsCanvas.height = 300;
+		itemsCanvas.width = 90;
+		itemsCanvas.height = 750;
 		var itemsCanvasContext = itemsCanvas.getContext('2d');
 		delta = 0;
 		var deltay= 0;
@@ -1053,6 +1147,89 @@ document.addEventListener("DOMContentLoaded", function() {
 			[[new V2(3+delta,7+deltay),new V2(5+delta,3+deltay),new V2(7+delta,7+deltay)]],
 			{alpha: 1, stroke:'#c0c0c0'});
 
+		delta = 0;
+		for(var i = 0;i<3;i++){
+			deltay = 300;
+			itemsCanvasContext.fillStyle = fillColors[i];
+			itemsCanvasContext.strokeStyle = strokeColors[i];
+			itemsCanvasContext.beginPath();
+			itemsCanvasContext.arc(15+delta, 25+deltay, 6, 0, 2 * Math.PI);
+			itemsCanvasContext.fill();
+			itemsCanvasContext.stroke();
+			itemsCanvasContext.fillStyle = strokeColors[i];
+			itemsCanvasContext.beginPath();
+			itemsCanvasContext.arc(15+delta, 25+deltay, 2, 0, 2 * Math.PI);
+			itemsCanvasContext.fill();
+			SCG.globals.items.push({ itemName: materialNames[i] +' small_shield', position: new V2(17, 0), defence: 5*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'shield', unitTypes: ['Fighter']  });
+
+			deltay = 350;
+			drawFigures(itemsCanvasContext, //middle shield
+				[[new V2(15+delta,15+deltay),new V2(22.5+delta,20+deltay), {type:'curve', control: new V2(23+delta,32+deltay), p: new V2(15+delta,35+deltay)},{type:'curve', control: new V2(7+delta,32+deltay), p: new V2(7.5+delta,20+deltay)}]],
+				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
+			drawFigures(itemsCanvasContext, //middle shield
+				[[new V2(11+delta,21+deltay),new V2(19+delta,21+deltay),new V2(15+delta,30+deltay) ]],
+				{alpha: 1, fill: strokeColors[i]});
+			SCG.globals.items.push({ itemName: materialNames[i] +' medium_shield', position: new V2(17, 0), defence: 10*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'shield', unitTypes: ['Fighter', 'Defender']  });
+
+			deltay = 400;
+			drawFigures(itemsCanvasContext, //large_shield
+				[[new V2(5+delta,5+deltay),new V2(25+delta,5+deltay),new V2(25+delta,45+deltay),new V2(5+delta,45+deltay),new V2(5+delta,5+deltay)]],
+				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
+			itemsCanvasContext.fillStyle = strokeColors[i];
+			itemsCanvasContext.fillRect(10+delta,10+deltay,10,30);
+			SCG.globals.items.push({ itemName: materialNames[i] +' large_shield', position: new V2(17, 0), defence: 15*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'shield', unitTypes: ['Defender']  });
+
+			deltay = 450;
+			drawFigures(itemsCanvasContext, //small helmet
+				[[new V2(2+delta,25+deltay),{type:'curve', control: new V2(15+delta,10+deltay), p: new V2(28+delta,25+deltay)},new V2(2+delta,25+deltay)]],
+				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
+			SCG.globals.items.push({ itemName: materialNames[i] +' small_helmet', position: new V2(0, -13), defence: 5*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'helmet', unitTypes: ['Ranged', 'Fighter']  });
+
+			deltay = 500;
+			drawFigures(itemsCanvasContext, //medium_helmet
+				[[new V2(2+delta,25+deltay),{type:'curve', control: new V2(15+delta,10+deltay), p: new V2(28+delta,25+deltay)},new V2(2+delta,25+deltay)],
+				[new V2(2+delta,25+deltay), new V2(2+delta,35+deltay),new V2(10+delta,25+deltay)],
+				[new V2(28+delta,25+deltay), new V2(28+delta,35+deltay),new V2(20+delta,25+deltay)]],
+				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
+			SCG.globals.items.push({ itemName: materialNames[i] +' medium_helmet', position: new V2(0, -13), defence: 10*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'helmet', unitTypes: ['Fighter', 'Defender']  });
+
+			deltay = 550;
+			drawFigures(itemsCanvasContext, //full_helmet
+				[[new V2(2+delta,25+deltay),{type:'curve', control: new V2(15+delta,10+deltay), p: new V2(28+delta,25+deltay)},new V2(2+delta,25+deltay)],
+				[new V2(2+delta,25+deltay), new V2(2+delta,35+deltay),new V2(7+delta,35+deltay),{type:'curve', control: new V2(15+delta,30+deltay), p: new V2(23+delta,35+deltay)},new V2(28+delta,35+deltay),new V2(28+delta,25+deltay)]],
+				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
+			SCG.globals.items.push({ itemName: materialNames[i] +' full_helmet', position: new V2(0, -13), defence: 15*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'helmet', unitTypes: ['Defender']  });
+
+			deltay = 600;
+			drawFigures(itemsCanvasContext, //armor
+				[[new V2(2+delta,20+deltay),new V2(28+delta,30+deltay)],
+				[new V2(2+delta,30+deltay),new V2(28+delta,20+deltay)]],
+				{alpha: 1, stroke:strokeColors[i]});
+			itemsCanvasContext.fillStyle = strokeColors[i];
+			itemsCanvasContext.fillRect(10+delta,22+deltay,10,6);
+			SCG.globals.items.push({ itemName: materialNames[i] +' light_armor', position: new V2(0, 8), defence: 5*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'armor', unitTypes: ['Ranged', 'Fighter']  });
+
+
+			deltay = 650;
+			drawFigures(itemsCanvasContext, //armor
+				[[new V2(2+delta,20+deltay),{type:'curve', control: new V2(15+delta,23+deltay), p: new V2(28+delta,20+deltay)},new V2(28+delta,28+deltay),{type:'curve', control: new V2(15+delta,25+deltay), p: new V2(2+delta,28+deltay)},new V2(2+delta,20+deltay)]],
+				{alpha: 1, fill: fillColors[i],stroke:strokeColors[i]});
+			itemsCanvasContext.fillStyle = strokeColors[i];
+			itemsCanvasContext.fillRect(4+delta,23+deltay,22,2);
+			SCG.globals.items.push({ itemName: materialNames[i] +' medium_armor', position: new V2(0, 8), defence: 10*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'armor', unitTypes:['Fighter', 'Defender']   });
+
+			deltay = 700;
+			drawFigures(itemsCanvasContext, //armor
+				[[new V2(2+delta,16+deltay),{type:'curve', control: new V2(15+delta,21+deltay), p: new V2(28+delta,16+deltay)},new V2(28+delta,30+deltay),{type:'curve', control: new V2(15+delta,32+deltay), p: new V2(2+delta,30+deltay)},new V2(2+delta,16+deltay)]],
+				{alpha: 1, fill: fillColors[i],stroke:strokeColors[i]});
+			itemsCanvasContext.fillStyle = strokeColors[i];
+			itemsCanvasContext.fillRect(4+delta,23+deltay,22,2);
+			SCG.globals.items.push({ itemName: materialNames[i] +' full_armor', position: new V2(0, 8), defence: 15*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'armor', unitTypes:['Defender']   });
+
+
+			delta += 30;
+		}
+
 		SCG.images['items'] = itemsCanvas;
 
 		var actionsCanvas = document.createElement('canvas');
@@ -1108,7 +1285,8 @@ document.addEventListener("DOMContentLoaded", function() {
 	SCG.scenes.registerScene(scene3);
 	SCG.scenes.registerScene(scene4);
 
-	SCG.scenes.selectScene(scene1.name);
+	//SCG.scenes.selectScene(scene1.name);
+	SCG.scenes.selectScene(scene2.name, {money: 1000, fromBattle: true, gos: []});
 
 	SCG.start();
 })
