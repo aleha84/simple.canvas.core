@@ -746,7 +746,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				that.ui.push(buttons[el]);
 			});
 
-			that.ui.push(SCG.GO.create("image", { position: new V2(170, 220),size: new V2(150,150), destSourcePosition : new V2(0,0), destSourceSize: new V2(50,50), imgPropertyName: 'unit'}));
+			that.ui.push(SCG.GO.create("image", { position: new V2(230, 220),size: new V2(150,150), destSourcePosition : new V2(0,0), destSourceSize: new V2(50,50), imgPropertyName: 'unit'}));
 
 			if(!props.fromItemSelect){
 				this.game.selectedUnit.unit = undefined;
@@ -778,84 +778,44 @@ document.addEventListener("DOMContentLoaded", function() {
 				{
 					initialized: false,
 					initialize: function(){
-						this.labels['hp'] = SCG.GO.create("label", { position: new V2(110, 50),size: new V2(100,30), text: { size: 15, color:'Red', value: 0, format: 'Health: {0}' } });
-						this.labels['str'] = SCG.GO.create("label", { position: new V2(110, 70),size: new V2(100,30), text: { size: 15, value: 0, format: 'Strenght: {0}' } });
-						this.labels['agl'] = SCG.GO.create("label", { position: new V2(110, 90),size: new V2(100,30), text: { size: 15, value: 0, format: 'Agility: {0}' } });
-						this.labels['con'] = SCG.GO.create("label", { position: new V2(110, 110),size: new V2(100,30), text: { size: 15, value: 0, format: 'Constitution: {0}' } });
-						this.labels['rte'] = SCG.GO.create("label", { position: new V2(110, 130),size: new V2(200,30), text: { size: 15, value: 0, format: 'Attack rate: {0}' } });
+						var that =this;
 
-						this.labels['lvl'] = SCG.GO.create("label", { position: new V2(250, 50),size: new V2(100,30), text: { size: 15, color: 'Blue', value: 0, format: 'Level: {0}' } });
-						this.labels['exp'] = SCG.GO.create("label", { position: new V2(250, 70),size: new V2(200,30), text: { size: 15, value: "0-0", format: 'Experience: {0}' } });
-						this.labels['atk'] = SCG.GO.create("label", { position: new V2(250, 90),size: new V2(200,30), text: { size: 15, value: "0-0", format: 'Attack: {0}' } });
-						this.labels['def'] = SCG.GO.create("label", { position: new V2(250, 110),size: new V2(100,30), text: { size: 15, value: 0, format: 'Defence: {0}' } });
-						this.labels['rng'] = SCG.GO.create("label", { position: new V2(250, 130),size: new V2(100,30), text: { size: 15, value: 0, format: 'Range: {0}' } });
+						[{n:'hp', p: new V2(110, 50), color: 'Red', f: 'Health: {0}' },
+							{n:'str', p: new V2(110, 70),  f: 'Strenght: {0}' },
+							{n:'agl', p: new V2(110, 90),  f: 'Agility: {0}' },
+							{n:'con', p: new V2(110, 110),  f: 'Constitution: {0}' },
+							{n:'rte', p: new V2(110, 130), s:200, f: 'Attack rate: {0}' },
+							
+							{n:'lvl', p: new V2(250, 50), color: 'Blue', f: 'Level: {0}'},
+							{n:'exp', p: new V2(250, 70), s:200, f: 'Experience: {0}' },
+							{n:'atk', p: new V2(250, 90),  s:200, f: 'Attack: {0}' },
+							{n:'def', p: new V2(250, 110), f: 'Defence: {0}' },
+							{n:'rng', p: new V2(250, 130), f: 'Range: {0}'}].forEach(function(el){
+								that.labels[el.n] = SCG.GO.create("label", 
+									{ position: el.p,size: new V2(el.s ? el.s : 100,30), text: { size: 15, color:el.color ? el.color : 'Black', value: 0, format:el.f } });
+							});
 
-						this.buttons['wpn'] = SCG.GO.create("button", { position: new V2(110, 220),size: new V2(40,120), border:true, useInnerCanvas: false, 
-							handlers: { 
-								click: function(){ 
-									var unit = SCG.scenes.activeScene.game.selectedUnit.unit;
-									if(!SCG.scenes.activeScene.game.selectedUnit.unit){
-										alert('No selected unit');	
+						
+						 [{n: 'wpn', p: new V2(170, 220), s: new V2(40,120), it: 'weapon'},
+							{n: 'shd', p: new V2(295, 220), s: new V2(50,120), it: 'shield'},
+							{n: 'hlm', p: new V2(230, 185), s: new V2(80,50), it: 'helmet'},
+							{n: 'arm', p: new V2(230, 235), s: new V2(80,50), it: 'armor'}].forEach(function(el){
+							that.buttons[el.n] = SCG.GO.create("button", { position: el.p,size: el.s, border:true, useInnerCanvas: false, 
+								handlers: { 
+									click: function(){ 
+										var unit = SCG.scenes.activeScene.game.selectedUnit.unit;
+										if(!SCG.scenes.activeScene.game.selectedUnit.unit){
+											alert('No selected unit');	
+										}
+										else{
+											SCG.scenes.selectScene(scene4.name, {unitType: unit.unitType, itemType: el.it});
+										}
+										return {
+											preventBubbling: true
+										};
 									}
-									else{
-										SCG.scenes.selectScene(scene4.name, {unitType: unit.unitType, itemType: 'weapon'});
-									}
-									return {
-										preventBubbling: true
-									};
-								}
-							 } 
-						});
-
-						this.buttons['shd'] = SCG.GO.create("button", { position: new V2(235, 220),size: new V2(50,120), border:true, useInnerCanvas: false, 
-							handlers: { 
-								click: function(){ 
-									var unit = SCG.scenes.activeScene.game.selectedUnit.unit;
-									if(!SCG.scenes.activeScene.game.selectedUnit.unit){
-										alert('No selected unit');	
-									}
-									else{
-										SCG.scenes.selectScene(scene4.name, {unitType: unit.unitType, itemType: 'shield'});
-									}
-									return {
-										preventBubbling: true
-									};
-								}
-							 } 
-						});
-
-						this.buttons['hlm'] = SCG.GO.create("button", { position: new V2(170, 185),size: new V2(80,50), border:true, useInnerCanvas: false, 
-							handlers: { 
-								click: function(){ 
-									var unit = SCG.scenes.activeScene.game.selectedUnit.unit;
-									if(!SCG.scenes.activeScene.game.selectedUnit.unit){
-										alert('No selected unit');	
-									}
-									else{
-										SCG.scenes.selectScene(scene4.name, {unitType: unit.unitType, itemType: 'helmet'});
-									}
-									return {
-										preventBubbling: true
-									};
-								}
-							 } 
-						});
-
-						this.buttons['arm'] = SCG.GO.create("button", { position: new V2(170, 235),size: new V2(80,50), border:true, useInnerCanvas: false, 
-							handlers: { 
-								click: function(){ 
-									var unit = SCG.scenes.activeScene.game.selectedUnit.unit;
-									if(!SCG.scenes.activeScene.game.selectedUnit.unit){
-										alert('No selected unit');	
-									}
-									else{
-										SCG.scenes.selectScene(scene4.name, {unitType: unit.unitType, itemType: 'armor'});
-									}
-									return {
-										preventBubbling: true
-									};
-								}
-							 } 
+								 } 
+							});
 						});
 					},
 					labels: {
