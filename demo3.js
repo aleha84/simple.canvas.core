@@ -38,17 +38,17 @@ document.addEventListener("DOMContentLoaded", function() {
 	var scene1 = {
 		name: "demo_s1",
 		space: {
-			width: 1000,
-			height: 1000
+			width: 500,
+			height: 300
 		},
 		dispose: function(){
 			for(var i=0;i<this.game.intervals.length;i++){
 				clearInterval(this.game.intervals[i]);
 			}
 		},
-		start: function(){ // called each time as scene selected
+		start: function(props){ // called each time as scene selected
 			var game = this.game;
-			game.AI.initialize();
+			game.AI.initialize(props.level);
 			var that = this;
 			game.intervals.push(setInterval(
 				function() {SCG.AI.sendEvent({type:'units', message: that.go.filter(function(el){return el.toPlain}).map(function(el) { return el.toPlain(); }) });}
@@ -58,6 +58,10 @@ document.addEventListener("DOMContentLoaded", function() {
 				this.go = props.gos;
 				this.game.money = props.money;
 			}
+
+			this.go.filter(function(el){ return el.side == 1; }).forEach(function(el,i){
+				el.regClick();
+			});	
 
 			//if(game.playerUnit == undefined){
 				// var sword = SCG.GO.create("item", {
@@ -128,14 +132,65 @@ document.addEventListener("DOMContentLoaded", function() {
 			money: 0,
 			playerUnit: undefined,
 			clickHandler: function(clickPosition){ // custom global click handler
-				if(this.playerUnit){
+				var pu = this.playerUnit;
+				if(pu){
 					var shiftedCP = clickPosition.add(SCG.viewfield.current.topLeft);
-					this.playerUnit.setDestination(shiftedCP);
+					pu.setDestination(shiftedCP);
+
+					var cSize = new V2(Math.abs(pu.position.x-  shiftedCP.x), Math.abs(pu.position.y-  shiftedCP.y));
+					// if(cSize.x < 50){cSize.x = 50;}
+					// if(cSize.y < 50){cSize.y = 50;}
+
+					var corner = pu.position.x <= shiftedCP.x ? 0 : 1;
+					if(shiftedCP.y < pu.position.y){ corner+=2; }
+
+					var canvas = document.createElement('canvas');
+					canvas.width = cSize.x;
+					canvas.height = cSize.y;
+					var p1, p2, p3;
+					switch(corner){
+						case 0: 
+							p1 = new V2(pu.size.x/2, 0);
+							p2 = new V2(0, pu.size.y/2);
+							p3 = new V2(cSize.x, cSize.y);
+							break;
+						case 1: 
+							p1 = new V2(cSize.x - pu.size.x/2, 0);
+							p2 = new V2(cSize.x, pu.size.y/2);
+							p3 = new V2(0, cSize.y);
+							break;
+						case 2: 
+							p1 = new V2(0, cSize.y - pu.size.y/2);
+							p2 = new V2(pu.size.x/2, cSize.y);
+							p3 = new V2(cSize.x, 0);
+							break;
+						case 3: 
+							p1 = new V2(cSize.x - pu.size.x/2, cSize.y);
+							p2 = new V2(cSize.x, cSize.y - pu.size.y/2);
+							p3 = new V2(0, 0);
+							break;
+						default:
+							break;
+					}
+					var ctx = canvas.getContext('2d');
+					drawFigures(ctx, 
+						[[p1,p2,p3]],
+						{alpha: 1, fill: 'blue'});
+
+					var position =pu.position.add(pu.position.direction(shiftedCP).normalize().mul(pu.position.distance(shiftedCP)/2));
+
+					SCG.scenes.activeScene.go.push(
+						SCG.GO.create("fadingObject", {
+							position: position,
+							lifeTime: 300,
+							img : canvas,
+							size: cSize,
+						}));
 				}
 			},
 			intervals: [],
 			AI: {
-				initialize: function(){ // just helper to init environment
+				initialize: function(level){ // just helper to init environment
 					SCG.AI.initializeEnvironment({
 						space: {
 							width: SCG.space.width,
@@ -145,7 +200,8 @@ document.addEventListener("DOMContentLoaded", function() {
 							ai: [],
 							player: [],
 							history: {}
-						}
+						},
+						level : level
 					});
 				},
 				messagesProcesser: function(wm){ // proccess messages from AI
@@ -181,6 +237,9 @@ document.addEventListener("DOMContentLoaded", function() {
 									},
 									move: function(id, position){
 										self.postMessage({command: 'move', message: { id: id, position: position } });				
+									},
+									create: function(level, type, items){
+										self.postMessage({command: 'create', message: { type: type, level: level, items: items } });		
 									}
 								}
 
@@ -630,51 +689,51 @@ document.addEventListener("DOMContentLoaded", function() {
 				static: true
 			}
 		],
-		gameObjectGenerator: function () {
-			var gos = [];
+		// gameObjectGenerator: function () {
+		// 	var gos = [];
 
-			gos.push(SCG.GO.create("line", {
-				position: new V2(0, 500),
-				size: new V2(1,1000)
-			}));
+		// 	gos.push(SCG.GO.create("line", {
+		// 		position: new V2(0, 500),
+		// 		size: new V2(1,1000)
+		// 	}));
 
-			gos.push(SCG.GO.create("line", {
-				position: new V2(100, 500),
-				size: new V2(1,1000)
-			}));
+		// 	gos.push(SCG.GO.create("line", {
+		// 		position: new V2(100, 500),
+		// 		size: new V2(1,1000)
+		// 	}));
 
-			gos.push(SCG.GO.create("line", {
-				position: new V2(200, 500),
-				size: new V2(1,1000)
-			}));
+		// 	gos.push(SCG.GO.create("line", {
+		// 		position: new V2(200, 500),
+		// 		size: new V2(1,1000)
+		// 	}));
 
-			gos.push(SCG.GO.create("line", {
-				position: new V2(300, 500),
-				size: new V2(1,1000)
-			}));
+		// 	gos.push(SCG.GO.create("line", {
+		// 		position: new V2(300, 500),
+		// 		size: new V2(1,1000)
+		// 	}));
 
-			gos.push(SCG.GO.create("line", {
-				position: new V2(500, 0),
-				size: new V2(1000,1)
-			}));			
+		// 	gos.push(SCG.GO.create("line", {
+		// 		position: new V2(500, 0),
+		// 		size: new V2(1000,1)
+		// 	}));			
 
-			gos.push(SCG.GO.create("line", {
-				position: new V2(500, 100),
-				size: new V2(1000,1)
-			}));			
+		// 	gos.push(SCG.GO.create("line", {
+		// 		position: new V2(500, 100),
+		// 		size: new V2(1000,1)
+		// 	}));			
 
-			gos.push(SCG.GO.create("line", {
-				position: new V2(500, 200),
-				size: new V2(1000,1)
-			}));			
+		// 	gos.push(SCG.GO.create("line", {
+		// 		position: new V2(500, 200),
+		// 		size: new V2(1000,1)
+		// 	}));			
 
-			gos.push(SCG.GO.create("line", {
-				position: new V2(500, 300),
-				size: new V2(1000,1)
-			}));			
+		// 	gos.push(SCG.GO.create("line", {
+		// 		position: new V2(500, 300),
+		// 		size: new V2(1000,1)
+		// 	}));			
 
-			return gos;
-		}
+		// 	return gos;
+		// }
 	}
 
 	var scene2 = {
@@ -747,6 +806,19 @@ document.addEventListener("DOMContentLoaded", function() {
 			});
 
 			that.ui.push(SCG.GO.create("image", { position: new V2(230, 220),size: new V2(150,150), destSourcePosition : new V2(0,0), destSourceSize: new V2(50,50), imgPropertyName: 'unit'}));
+
+			that.ui.push(SCG.GO.create("button", { position: new V2(this.space.width-150, 50), size: new V2(70,40), text: {value:'Play',autoSize:true,font:'Arial'},handlers: {
+				click: function(){
+					if(that.go.length == 0){
+						alert('You have no units to play!');
+						return;
+					}
+					SCG.scenes.selectScene(scene1.name, {fromManagement: true, gos: that.go, money: that.game.money});
+					return {
+						preventBubbling: true
+					};
+				}
+			}}));
 
 			if(!props.fromItemSelect){
 				this.game.selectedUnit.unit = undefined;

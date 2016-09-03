@@ -162,13 +162,13 @@ SCG.gameControls = {
 				{
 					bfTL.y = 0;
 				}
-				if(bfTL.x+SCG.viewfield.current.width > SCG.space.width)
+				if(bfTL.x+SCG.viewfield.current.size.x > SCG.space.width)
 				{
-					bfTL.x = SCG.space.width-SCG.viewfield.current.width;
+					bfTL.x = SCG.space.width-SCG.viewfield.current.size.x;
 				}
-				if(bfTL.y+SCG.viewfield.current.height > SCG.space.height)
+				if(bfTL.y+SCG.viewfield.current.size.y > SCG.space.height)
 				{
-					bfTL.y = SCG.space.height-SCG.viewfield.current.height;
+					bfTL.y = SCG.space.height-SCG.viewfield.current.size.y;
 				}
 				
 				SCG.viewfield.current.update(bfTL);
