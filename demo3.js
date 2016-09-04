@@ -35,6 +35,8 @@ document.addEventListener("DOMContentLoaded", function() {
 		}));
 	};
 
+	SCG.globals.unitTypes = ['Fighter', 'Defender', 'Ranged'];
+
 	var scene1 = {
 		name: "demo_s1",
 		space: {
@@ -49,6 +51,7 @@ document.addEventListener("DOMContentLoaded", function() {
 		start: function(props){ // called each time as scene selected
 			var game = this.game;
 			game.AI.initialize(props.level);
+			game.level = props.level;
 			var that = this;
 			game.intervals.push(setInterval(
 				function() {SCG.AI.sendEvent({type:'units', message: that.go.filter(function(el){return el.toPlain}).map(function(el) { return el.toPlain(); }) });}
@@ -130,6 +133,7 @@ document.addEventListener("DOMContentLoaded", function() {
 		},
 		game: {
 			money: 0,
+			level: 1,
 			playerUnit: undefined,
 			clickHandler: function(clickPosition){ // custom global click handler
 				var pu = this.playerUnit;
@@ -201,7 +205,12 @@ document.addEventListener("DOMContentLoaded", function() {
 							player: [],
 							history: {}
 						},
-						level : level
+						level : level,
+						waveProps : {
+							created: 0, 
+							max: level*5,
+							atOnce: level+1
+						}
 					});
 				},
 				messagesProcesser: function(wm){ // proccess messages from AI
@@ -209,16 +218,49 @@ document.addEventListener("DOMContentLoaded", function() {
 						return;
 					}
 					if(wm.command){
+						var as = SCG.scenes.activeScene;
+						var msg = wm.message;
 						switch(wm.command){
 							case 'move':
 								var as = SCG.scenes.activeScene;
 								var unit = undefined;
 								for(var i=0;i<as.go.length;i++){
-									if(as.go[i].id == wm.message.id){
-										as.go[i].setDestination(new V2(wm.message.position));
+									if(as.go[i].id == msg.id){
+										as.go[i].setDestination(new V2(msg.position));
 										break;
 									}
 								}
+								break;
+							case 'waveEnd': 
+								// todo show info - 'battle win!'
+								
+								SCG.scenes.selectScene(scene2.name, {money: as.game.money, fromBattle: true, gos: as.go.filter(function(el){return el.side == 1})});
+								break;
+							case 'create':
+								
+								var unit = SCG.GO.create("unit", {
+									position: new V2(as.space.width-25, getRandomInt(25,as.space.height-25)),
+									size:new V2(50,50),
+									side: 2,
+									health:100,
+									speed:0.3,
+									unitType: SCG.globals.unitTypes[msg.type],
+									level: 0
+								});
+
+								while(unit.level < msg.level){
+									unit.levelUp();
+								}
+
+								msg.items.forEach(function(el, i){
+									if(el){
+										switch(i){
+											
+										}
+									}
+								});
+
+								this.go.push(unit);
 								break;
 							default:
 								break;
@@ -240,18 +282,44 @@ document.addEventListener("DOMContentLoaded", function() {
 									},
 									create: function(level, type, items){
 										self.postMessage({command: 'create', message: { type: type, level: level, items: items } });		
+									},
+									end: function(){
+										self.postMessage({command: 'waveEnd', message: { } });					
 									}
 								}
 
 								break;
 							case 'units':
-								var eu = self.environment.units;
+								var env = self.environment;
+								var eu = env.units;
+
 								for(var i =1;i<3;i++){
 									eu[i==1?'player':'ai'] = task.message.filter(function(el){ return el.side == i}).map(function(el){  el.position = new V2(el.position); return el;});
 								}
 
 								var sh = self.helpers;
 								if(sh == undefined || eu.player.length == 0){return;}
+
+								//debugger;
+								if(env.waveProps.created < env.waveProps.max){
+									if(env.waveProps.atOnce > eu.ai.length){
+										var lvl = getRandomInt(env.level == 1 ? 0 : env.level,env.level*2);
+										var type = getRandomInt(0,2);
+										var items = [];
+										for(var i = 0;i<4;i++){
+											items[i] = Math.random() > (1 - (env.level/10));
+										}
+										sh.create(lvl, type,items);
+										env.waveProps.created++;
+									}	
+								}
+								else{
+									if(eu.ai.length == 0){
+										sh.end();
+									}
+								}
+								
+
 								var currentDestinations = [];
 								for(var i = 0;i< eu.ai.length;i++){
 									var aiUnit = eu.ai[i];
@@ -335,7 +403,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				stats: {
 					str: 0,
 					agl: 0,
-					dex: 0,
+					dex: 0, // not used
 					con: 0
 				},
 				initializer: function(that){
@@ -392,6 +460,10 @@ document.addEventListener("DOMContentLoaded", function() {
 							preventBubbling: true
 						};
 					}
+				},
+				levelUp: function(){
+					var stats = ['str', 'agl',  'con'];
+					this.stats[stats[getRandomInt(0,2)]]++;
 				},
 				getStats: function(type){
 					var items = this.items;
@@ -813,7 +885,7 @@ document.addEventListener("DOMContentLoaded", function() {
 						alert('You have no units to play!');
 						return;
 					}
-					SCG.scenes.selectScene(scene1.name, {fromManagement: true, gos: that.go, money: that.game.money});
+					SCG.scenes.selectScene(scene1.name, {fromManagement: true, level: 1, gos: that.go, money: that.game.money}); // todo: increment level by gameplay
 					return {
 						preventBubbling: true
 					};
@@ -969,7 +1041,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			var shifts = new V2(space.width*0.1, space.height*0.15);
 			SCG.globals.modalClose(that, space, function(){ SCG.scenes.selectScene(scene2.name, {fromUTSelect: true, type: undefined}); });
 
-			var types = ['Fighter', 'Defender', 'Ranged'];
+			var types = SCG.globals.unitTypes;
 			var itemSize = new V2((space.width*0.8)/types.length,space.height*0.7);
 
 			types.forEach(function(el,i){
