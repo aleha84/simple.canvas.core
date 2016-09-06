@@ -36,6 +36,8 @@ document.addEventListener("DOMContentLoaded", function() {
 	};
 
 	SCG.globals.unitTypes = ['Fighter', 'Defender', 'Ranged'];
+	SCG.globals.itemTypes = ['weapon', 'shield', 'helmet', 'armor'];
+	SCG.globals.materialTypes = ["bronze", "steel", "mithril"];
 
 	var scene1 = {
 		name: "demo_s1",
@@ -237,14 +239,15 @@ document.addEventListener("DOMContentLoaded", function() {
 								SCG.scenes.selectScene(scene2.name, {money: as.game.money, fromBattle: true, gos: as.go.filter(function(el){return el.side == 1})});
 								break;
 							case 'create':
-								
+								var globals = SCG.globals;
+								var unitType = globals.unitTypes[msg.type];
 								var unit = SCG.GO.create("unit", {
 									position: new V2(as.space.width-25, getRandomInt(25,as.space.height-25)),
 									size:new V2(50,50),
 									side: 2,
 									health:100,
 									speed:0.3,
-									unitType: SCG.globals.unitTypes[msg.type],
+									unitType: unitType,
 									level: 0
 								});
 
@@ -254,13 +257,15 @@ document.addEventListener("DOMContentLoaded", function() {
 
 								msg.items.forEach(function(el, i){
 									if(el){
-										switch(i){
-											
-										}
+										var matIndex = as.game.level < 4 ? 0 : as.game.level <8 ? 1 : 2; 
+										var availableItems = globals.items.filter(function(_el){ 
+											return _el.itemType == globals.itemTypes[i] && _el.unitTypes.indexOf(unitType) != -1 && _el.itemName.indexOf(globals.materialTypes[matIndex])!= -1; 
+										});
+										//todo additem from available items
 									}
 								});
 
-								this.go.push(unit);
+								as.go.push(unit);
 								break;
 							default:
 								break;
@@ -464,6 +469,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				levelUp: function(){
 					var stats = ['str', 'agl',  'con'];
 					this.stats[stats[getRandomInt(0,2)]]++;
+					this.level++;
 				},
 				getStats: function(type){
 					var items = this.items;
@@ -840,6 +846,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			var selectedUnit = undefined;
 			this.go.forEach(function(el,i){
 				el.position = new V2(el.size.x/2,(el.size.y/2)+i*50);
+				el.destination = undefined;
 				if(!props.fromItemSelect){
 					el.selected =  false;	
 				}
@@ -1177,7 +1184,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 		var fillColors = ["#cd7f32", "#f2f2f2", "#baacc7"];
 		var strokeColors = ["#b87333", "#c0c0c0", "#876f9e"];
-		var materialNames = ["bronze", "steel", "mithril"];
+		var materialNames = SCG.globals.materialTypes;
 
 		for(var i = 0;i<3;i++){
 			drawFigures(itemsCanvasContext, //sword
