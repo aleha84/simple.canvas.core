@@ -68,6 +68,10 @@ document.addEventListener("DOMContentLoaded", function() {
 				el.regClick();
 			});	
 
+			var moneyLabel = SCG.GO.create("label", { position: new V2(100,10),size: new V2(100,20), text: { size: 10, value: this.game.money, color: 'gold', format: 'Money: {0}'} });
+			game.labels.money = moneyLabel;
+			this.ui.push(moneyLabel);
+
 			//if(game.playerUnit == undefined){
 				// var sword = SCG.GO.create("item", {
 				// 	position: new V2(-20, 0),
@@ -120,6 +124,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			//}
 
 			//SCG.gameControls.camera.center(game.playerUnit);
+			SCG.UI.invalidate();
 		},
 		backgroundRender: function(){
 			var ctx = SCG.contextBg;
@@ -137,6 +142,9 @@ document.addEventListener("DOMContentLoaded", function() {
 			money: 0,
 			level: 1,
 			playerUnit: undefined,
+			labels: {
+				money: undefined
+			},
 			clickHandler: function(clickPosition){ // custom global click handler
 				var pu = this.playerUnit;
 				if(pu){
@@ -261,9 +269,17 @@ document.addEventListener("DOMContentLoaded", function() {
 										var availableItems = globals.items.filter(function(_el){ 
 											return _el.itemType == globals.itemTypes[i] && _el.unitTypes.indexOf(unitType) != -1 && _el.itemName.indexOf(globals.materialTypes[matIndex])!= -1; 
 										});
-										//todo additem from available items
+										
+										if(availableItems.length > 0){
+											unit.addItem(SCG.GO.create("item",
+												availableItems[getRandomInt(0, availableItems.length - 1)]
+											));	
+										}
 									}
 								});
+
+								unit.expCost = 30 + (10*unit.level);
+								unit.cost = 10 + (2*unit.level);
 
 								as.go.push(unit);
 								break;
@@ -342,8 +358,9 @@ document.addEventListener("DOMContentLoaded", function() {
 									
 									//check history
 									//if no history or this player unit moved, then reposition this ai unit
-									var hUnit = eu.history[closest.unit.id];
-									if(!hUnit || !hUnit.position.equal(closest.unit.position)){
+									//var hUnit = eu.history[closest.unit.id];
+									//if(!hUnit || !hUnit.position.equal(closest.unit.position)){
+									if(closest.distance > aiUnit.range) {
 										var playerPosition = closest.unit.position;
 										var initialInvertedDirection = aiUnit.position.direction(playerPosition).mul(-1);
 										var dir = initialInvertedDirection;
@@ -365,9 +382,9 @@ document.addEventListener("DOMContentLoaded", function() {
 								}
 
 								// update history
-								for(var puIndex = 0;puIndex<eu.player.length;puIndex++){
-									eu.history[eu.player[puIndex].id] = eu.player[puIndex];
-								}
+								// for(var puIndex = 0;puIndex<eu.player.length;puIndex++){
+								// 	eu.history[eu.player[puIndex].id] = eu.player[puIndex];
+								// }
 
 								break;
 							default:
@@ -515,7 +532,7 @@ document.addEventListener("DOMContentLoaded", function() {
 					this.attackDelayTimer.lastTimeWork = new Date;
 					this.attackDelayTimer.currentDelay = this.getStats('attackRate');
 				},
-				receiveAttack: function(damage){
+				receiveAttack: function(damage, sender){
 					var defence = this.getStats('defence');
 					damage-=defence;
 					if(damage<=0){
@@ -526,8 +543,8 @@ document.addEventListener("DOMContentLoaded", function() {
 					}
 
 					damage = parseFloat(damage.toFixed(1));
-
-					SCG.scenes.activeScene.unshift.push(
+					var as = SCG.scenes.activeScene;
+					as.unshift.push(
 						SCG.GO.create("fadingObject", {
 							position: this.position.clone(),
 							lifeTime: 1000,
@@ -542,6 +559,12 @@ document.addEventListener("DOMContentLoaded", function() {
 					this.health-=damage;
 
 					if(this.getStats('health') <= 0){
+						if(this.side == 2){
+							sender.experience += this.expCost; 
+							as.game.money+=this.cost;
+							as.game.labels.money.text.value = as.game.money;
+							SCG.UI.invalidate();
+						}
 						this.setDead();
 					}
 				},
@@ -588,7 +611,7 @@ document.addEventListener("DOMContentLoaded", function() {
 						SCG.audio.start({notes: [{value:200,duration:0.7}],loop:false});
 						SCG.audio.start({notes: [{value:1000,duration:0.3}],loop:false});
 
-						target.receiveAttack(damage);
+						target.receiveAttack(damage, this);
 					}
 					else{
 						var direction = this.position.direction(target.position);
@@ -604,7 +627,8 @@ document.addEventListener("DOMContentLoaded", function() {
 								position: path.shift(),
 								path: path,
 								side: this.side,
-								damage: damage
+								sender: this,
+								damage: damage,
 							}));
 					}
 					
@@ -648,7 +672,8 @@ document.addEventListener("DOMContentLoaded", function() {
 				},
 				internalRender: function()
 				{
-					SCG.context.translate(this.renderPosition.x,this.renderPosition.y);
+					var ctx = this.context;
+					ctx.translate(this.renderPosition.x,this.renderPosition.y);
 
 					var that = this;
 					Object.keys(this.items).sort().forEach(function(key, index){
@@ -656,7 +681,7 @@ document.addEventListener("DOMContentLoaded", function() {
 					});
 
 					if(this.selected){
-						SCG.context.drawImage(SCG.images['actions'], 
+						ctx.drawImage(SCG.images['actions'], 
 							200,
 							0,
 							50,
@@ -666,8 +691,14 @@ document.addEventListener("DOMContentLoaded", function() {
 							this.renderSize.x, 
 							this.renderSize.y);	
 					}
+					var renderSize = this.renderSize ;
+					var fontSize = renderSize.y/4;
 
-					SCG.context.translate(-this.renderPosition.x,-this.renderPosition.y);
+					ctx.font = fontSize + 'px Arial';
+					ctx.fillStyle = 'blue';
+					ctx.fillText(this.unitType.substring(0,1)+this.level, renderSize.x/3,-renderSize.y/4);
+
+					ctx.translate(-this.renderPosition.x,-this.renderPosition.y);
 				}
 			},
 			{ 
@@ -686,7 +717,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				damage: 1,
 				path: [],
 				speed: 5,
-				destSourcePosition : new V2(250,60),
+				destSourcePosition : new V2(60,250),
 				imgPropertyName: 'items',
 				size: new V2(10,25),
 				setDeadOnDestinationComplete: true,
@@ -696,7 +727,7 @@ document.addEventListener("DOMContentLoaded", function() {
 					var that = this;
 					var gos = as.go.filter(function(el){return el.type=='unit' && el.side && el.side != that.side && el.box.isPointInside(that.position)});
 					for(var ui = 0;ui < gos.length;ui++){
-						gos[ui].receiveAttack(this.damage);
+						gos[ui].receiveAttack(this.damage, this.sender);
 					}
 				},
 				internalPreRender: function(){
@@ -851,7 +882,7 @@ document.addEventListener("DOMContentLoaded", function() {
 					el.selected =  false;	
 				}
 				el.regClick();
-				that.ui.push(SCG.GO.create("label", { position: new V2(el.position.x + el.size.x/4, el.position.y-el.size.y/4),size: new V2(el.size.x/2,el.size.y/2), text: { size: 25, color:'green', value: el.unitType.substring(0,1) } }));
+				//that.ui.push(SCG.GO.create("label", { position: new V2(el.position.x + el.size.x/4, el.position.y-el.size.y/4),size: new V2(el.size.x/2,el.size.y/2), text: { size: 25, color:'green', value: el.unitType.substring(0,1) } }));
 			});	
 
 			if(this.go.length<6){
@@ -884,7 +915,11 @@ document.addEventListener("DOMContentLoaded", function() {
 				that.ui.push(buttons[el]);
 			});
 
+			that.ui.push(SCG.GO.create("label", { position: new V2(100,10),size: new V2(100,20), text: { size: 10, value: this.game.money, color: 'gold', format: 'Money: {0}'} }));
+
 			that.ui.push(SCG.GO.create("image", { position: new V2(230, 220),size: new V2(150,150), destSourcePosition : new V2(0,0), destSourceSize: new V2(50,50), imgPropertyName: 'unit'}));
+
+			// that.ui.push(SCG.GO.create("image", { position: new V2(300, 200),size: new V2(45,375), destSourcePosition : new V2(0,0), destSourceSize: new V2(90,750), imgPropertyName: 'items'}));
 
 			that.ui.push(SCG.GO.create("button", { position: new V2(this.space.width-150, 50), size: new V2(70,40), text: {value:'Play',autoSize:true,font:'Arial'},handlers: {
 				click: function(){
@@ -980,7 +1015,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			unitSelected: function(unit){
 				this.selectedUnit.unit = unit;
 				var labels = this.selectedUnit.statsControls.labels;
-				labels.hp.text.value = unit.health;
+				labels.hp.text.value = unit.getStats('health');
 				labels.str.text.value = unit.stats.str;
 				labels.agl.text.value = unit.stats.agl;
 				labels.con.text.value = unit.stats.con;
@@ -1119,7 +1154,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				var lablesTop = btnPosition.substract(new V2(-15, itemSize.y/2));
 				var labelSize = new V2(100,itemSize.y/4);
 				that.ui.push(SCG.GO.create("image", { position: imgShiftedPosition,size: scaled, destSourcePosition : el.destSourcePosition, destSourceSize: el.size, imgPropertyName: 'items'}));
-				that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, labelSize.y/2)),size: labelSize, text: { color:'Red', value: 0, format: 'Price: {0}' } }));
+				that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, labelSize.y/2)),size: labelSize, text: { color:'Red', value: el.price, format: 'Price: {0}' } }));
 				switch(el.itemType){
 					case 'weapon':
 						that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, 1.5*labelSize.y)),size: labelSize, text: { size: 10, value: String.format("Damage {0}-{1}({2}%)", el.damage.min, el.damage.max,el.damage.crit)} }));
@@ -1194,7 +1229,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			itemsCanvasContext.fillRect(1.5+delta,30,7,2);
 			itemsCanvasContext.fillStyle = "#5b3a29";
 			itemsCanvasContext.fillRect(3.5+delta,32,3,3);
-			SCG.globals.items.push({ itemName: materialNames[i] + ' sword', position: new V2(-20, -7), attackRadius: 10, damage: {min:1*(i+1),max:5*(i+1),crit:5}, attackRate: 1000, destSourcePosition : new V2(delta,0), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Fighter'] });
+			SCG.globals.items.push({ itemName: materialNames[i] + ' sword', price: 20*(i+1), position: new V2(-20, -7), attackRadius: 10, damage: {min:1*(i+1),max:5*(i+1),crit:5}, attackRate: 1000, destSourcePosition : new V2(delta,0), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Fighter'] });
 			
 			deltay = 50;
 			drawFigures(itemsCanvasContext, //axe
@@ -1202,7 +1237,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
 			itemsCanvasContext.fillStyle = "#5b3a29";
 			itemsCanvasContext.fillRect(7+delta,15+deltay,1.5,20);
-			SCG.globals.items.push({ itemName: materialNames[i] + ' axe', position: new V2(-20, -7), attackRadius: 5, damage: {min:5*(i+1),max:15*(i+1),crit:2}, attackRate: 1500, destSourcePosition : new V2(delta,deltay), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Fighter'] });
+			SCG.globals.items.push({ itemName: materialNames[i] + ' axe', price: 40*(i+1), position: new V2(-20, -7), attackRadius: 5, damage: {min:5*(i+1),max:15*(i+1),crit:2}, attackRate: 1500, destSourcePosition : new V2(delta,deltay), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Fighter'] });
 
 			deltay = 100;
 			drawFigures(itemsCanvasContext, //spear
@@ -1210,7 +1245,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
 			itemsCanvasContext.fillStyle = "#5b3a29";
 			itemsCanvasContext.fillRect(4+delta,10+deltay,1.5,35);
-			SCG.globals.items.push({ itemName: materialNames[i] + ' spear', position: new V2(-20, -0), attackRadius: 25, damage: {min:1*(i+1),max:15*(i+1),crit:15}, attackRate: 1500, destSourcePosition : new V2(delta,deltay), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Defender'] });
+			SCG.globals.items.push({ itemName: materialNames[i] + ' spear',price: 30*(i+1), position: new V2(-20, -0), attackRadius: 25, damage: {min:1*(i+1),max:15*(i+1),crit:15}, attackRate: 1500, destSourcePosition : new V2(delta,deltay), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Defender'] });
 
 			deltay = 150;
 			drawFigures(itemsCanvasContext, //halbert
@@ -1219,7 +1254,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
 			itemsCanvasContext.fillStyle = "#5b3a29";
 			itemsCanvasContext.fillRect(4+delta,17+deltay,1.5,30);
-			SCG.globals.items.push({ itemName: materialNames[i] + ' halbert', position: new V2(-20, -0), attackRadius: 25, damage: {min:5*(i+1),max:35*(i+1),crit:15}, attackRate: 2500, destSourcePosition : new V2(delta,deltay), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Defender'] });
+			SCG.globals.items.push({ itemName: materialNames[i] + ' halbert', price: 50*(i+1), position: new V2(-20, -0), attackRadius: 25, damage: {min:5*(i+1),max:35*(i+1),crit:15}, attackRate: 2500, destSourcePosition : new V2(delta,deltay), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Defender'] });
 			delta+=10;
 		}
 		delta = 0;
@@ -1233,7 +1268,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			drawFigures(itemsCanvasContext, //shortbow
 				[[new V2(15+delta,35+deltay),new V2(15+delta,15+deltay)]],
 				{alpha: 1, stroke:'#black'})
-			SCG.globals.items.push({ itemName: materialNames[i] + 'shortBow', position: new V2(-20, 0), attackRadius: 100, damage: {min:2*(i+1),max:5*(i+1),crit:15}, attackRate: 750, destSourcePosition : new V2(delta,deltay), size:new V2(20,50), ranged: true, itemType: 'weapon', unitTypes: ['Ranged']  });
+			SCG.globals.items.push({ itemName: materialNames[i] + 'shortBow', price: 20*(i+1), position: new V2(-20, 0), attackRadius: 100, damage: {min:2*(i+1),max:5*(i+1),crit:15}, attackRate: 750, destSourcePosition : new V2(delta,deltay), size:new V2(20,50), ranged: true, itemType: 'weapon', unitTypes: ['Ranged']  });
 			
 			deltay = 250;
 			itemsCanvasContext.lineWidth=2;
@@ -1244,11 +1279,12 @@ document.addEventListener("DOMContentLoaded", function() {
 			drawFigures(itemsCanvasContext, //bow
 				[[new V2(15+delta,45+deltay),new V2(15+delta,5+deltay)]],
 				{alpha: 1, stroke:'#black'})
-			SCG.globals.items.push({ itemName: materialNames[i] +' bow', position: new V2(-17.5, 0), attackRadius: 200, damage: {min:5*(i+1),max:10*(i+1),crit:10}, attackRate: 1000, destSourcePosition : new V2(delta,deltay), size:new V2(20,50), ranged: true, itemType: 'weapon', unitTypes: ['Ranged']  });
+			SCG.globals.items.push({ itemName: materialNames[i] +' bow', price: 50*(i+1), position: new V2(-17.5, 0), attackRadius: 200, damage: {min:5*(i+1),max:10*(i+1),crit:10}, attackRate: 1000, destSourcePosition : new V2(delta,deltay), size:new V2(20,50), ranged: true, itemType: 'weapon', unitTypes: ['Ranged']  });
 
 			delta += 20;
 		}
-		
+
+			
 		drawFigures(itemsCanvasContext, //arrow
 			[[new V2(3+delta,25+deltay),new V2(5+delta,22+deltay),new V2(7+delta,25+deltay)]],
 			{alpha: 1, stroke:'#dc143c'});
@@ -1271,7 +1307,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			itemsCanvasContext.beginPath();
 			itemsCanvasContext.arc(15+delta, 25+deltay, 2, 0, 2 * Math.PI);
 			itemsCanvasContext.fill();
-			SCG.globals.items.push({ itemName: materialNames[i] +' small_shield', position: new V2(17, 0), defence: 5*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'shield', unitTypes: ['Fighter']  });
+			SCG.globals.items.push({ itemName: materialNames[i] +' small_shield', price: 25*(i+1), position: new V2(17, 0), defence: 5*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'shield', unitTypes: ['Fighter']  });
 
 			deltay = 350;
 			drawFigures(itemsCanvasContext, //middle shield
@@ -1280,7 +1316,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			drawFigures(itemsCanvasContext, //middle shield
 				[[new V2(11+delta,21+deltay),new V2(19+delta,21+deltay),new V2(15+delta,30+deltay) ]],
 				{alpha: 1, fill: strokeColors[i]});
-			SCG.globals.items.push({ itemName: materialNames[i] +' medium_shield', position: new V2(17, 0), defence: 10*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'shield', unitTypes: ['Fighter', 'Defender']  });
+			SCG.globals.items.push({ itemName: materialNames[i] +' medium_shield', price: 50*(i+1), position: new V2(17, 0), defence: 10*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'shield', unitTypes: ['Fighter', 'Defender']  });
 
 			deltay = 400;
 			drawFigures(itemsCanvasContext, //large_shield
@@ -1288,13 +1324,13 @@ document.addEventListener("DOMContentLoaded", function() {
 				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
 			itemsCanvasContext.fillStyle = strokeColors[i];
 			itemsCanvasContext.fillRect(10+delta,10+deltay,10,30);
-			SCG.globals.items.push({ itemName: materialNames[i] +' large_shield', position: new V2(17, 0), defence: 15*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'shield', unitTypes: ['Defender']  });
+			SCG.globals.items.push({ itemName: materialNames[i] +' large_shield', price: 75*(i+1), position: new V2(17, 0), defence: 15*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'shield', unitTypes: ['Defender']  });
 
 			deltay = 450;
 			drawFigures(itemsCanvasContext, //small helmet
 				[[new V2(2+delta,25+deltay),{type:'curve', control: new V2(15+delta,10+deltay), p: new V2(28+delta,25+deltay)},new V2(2+delta,25+deltay)]],
 				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
-			SCG.globals.items.push({ itemName: materialNames[i] +' small_helmet', position: new V2(0, -13), defence: 5*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'helmet', unitTypes: ['Ranged', 'Fighter']  });
+			SCG.globals.items.push({ itemName: materialNames[i] +' small_helmet', price: 10*(i+1), position: new V2(0, -13), defence: 5*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'helmet', unitTypes: ['Ranged', 'Fighter']  });
 
 			deltay = 500;
 			drawFigures(itemsCanvasContext, //medium_helmet
@@ -1302,14 +1338,14 @@ document.addEventListener("DOMContentLoaded", function() {
 				[new V2(2+delta,25+deltay), new V2(2+delta,35+deltay),new V2(10+delta,25+deltay)],
 				[new V2(28+delta,25+deltay), new V2(28+delta,35+deltay),new V2(20+delta,25+deltay)]],
 				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
-			SCG.globals.items.push({ itemName: materialNames[i] +' medium_helmet', position: new V2(0, -13), defence: 10*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'helmet', unitTypes: ['Fighter', 'Defender']  });
+			SCG.globals.items.push({ itemName: materialNames[i] +' medium_helmet', price: 20*(i+1), position: new V2(0, -13), defence: 10*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'helmet', unitTypes: ['Fighter', 'Defender']  });
 
 			deltay = 550;
 			drawFigures(itemsCanvasContext, //full_helmet
 				[[new V2(2+delta,25+deltay),{type:'curve', control: new V2(15+delta,10+deltay), p: new V2(28+delta,25+deltay)},new V2(2+delta,25+deltay)],
 				[new V2(2+delta,25+deltay), new V2(2+delta,35+deltay),new V2(7+delta,35+deltay),{type:'curve', control: new V2(15+delta,30+deltay), p: new V2(23+delta,35+deltay)},new V2(28+delta,35+deltay),new V2(28+delta,25+deltay)]],
 				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
-			SCG.globals.items.push({ itemName: materialNames[i] +' full_helmet', position: new V2(0, -13), defence: 15*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'helmet', unitTypes: ['Defender']  });
+			SCG.globals.items.push({ itemName: materialNames[i] +' full_helmet', price: 30*(i+1), position: new V2(0, -13), defence: 15*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'helmet', unitTypes: ['Defender']  });
 
 			deltay = 600;
 			drawFigures(itemsCanvasContext, //armor
@@ -1318,7 +1354,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				{alpha: 1, stroke:strokeColors[i]});
 			itemsCanvasContext.fillStyle = strokeColors[i];
 			itemsCanvasContext.fillRect(10+delta,22+deltay,10,6);
-			SCG.globals.items.push({ itemName: materialNames[i] +' light_armor', position: new V2(0, 8), defence: 5*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'armor', unitTypes: ['Ranged', 'Fighter']  });
+			SCG.globals.items.push({ itemName: materialNames[i] +' light_armor', price: 50*(i+1), position: new V2(0, 8), defence: 5*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'armor', unitTypes: ['Ranged', 'Fighter']  });
 
 
 			deltay = 650;
@@ -1327,7 +1363,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				{alpha: 1, fill: fillColors[i],stroke:strokeColors[i]});
 			itemsCanvasContext.fillStyle = strokeColors[i];
 			itemsCanvasContext.fillRect(4+delta,23+deltay,22,2);
-			SCG.globals.items.push({ itemName: materialNames[i] +' medium_armor', position: new V2(0, 8), defence: 10*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'armor', unitTypes:['Fighter', 'Defender']   });
+			SCG.globals.items.push({ itemName: materialNames[i] +' medium_armor', price: 75*(i+1), position: new V2(0, 8), defence: 10*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'armor', unitTypes:['Fighter', 'Defender']   });
 
 			deltay = 700;
 			drawFigures(itemsCanvasContext, //armor
@@ -1335,7 +1371,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				{alpha: 1, fill: fillColors[i],stroke:strokeColors[i]});
 			itemsCanvasContext.fillStyle = strokeColors[i];
 			itemsCanvasContext.fillRect(4+delta,23+deltay,22,2);
-			SCG.globals.items.push({ itemName: materialNames[i] +' full_armor', position: new V2(0, 8), defence: 15*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'armor', unitTypes:['Defender']   });
+			SCG.globals.items.push({ itemName: materialNames[i] +' full_armor', price: 100*(i+1), position: new V2(0, 8), defence: 15*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'armor', unitTypes:['Defender']   });
 
 
 			delta += 30;
