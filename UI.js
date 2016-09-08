@@ -141,25 +141,30 @@ SCG.UI.controls = [{
 
 		SCG.UI.helpers.createCanvas(that);
 		var context = that.innerCanvasContext;
+		var text = this.text;
 
-		if(this.text != undefined){
+		if(text != undefined){
 			var textWidth = 0;
-			if(this.text.autoSize){
+			if(text.autoSize){
 				var fontsize=300;
 
 				// lower the font size until the text fits the canvas
 				do{
 					fontsize--;
-					context.font=fontsize+"px "+this.text.font;
-					textWidth = context.measureText(this.text.value).width;
+					context.font=fontsize+"px "+text.font;
+					textWidth = context.measureText(text.value).width;
 				}while(textWidth>this.size.x*0.8)
 			}
 			else{
-				context.font = this.text.font;
-				textWidth = context.measureText(this.text.value).width;
+				context.font = text.font;
+				textWidth = context.measureText(text.value).width;
 			}
 
-			context.fillText(this.text.value, (this.size.x/2) - (textWidth / 2),(this.size.y/2)+fontsize/2);
+			if(text.color){
+				context.fillStyle = text.color;
+			}
+
+			context.fillText(text.value, (this.size.x/2) - (textWidth / 2),(this.size.y/2)+fontsize/2);
 			context.rect(1,1,this.size.x-1,this.size.y-1);
 			context.stroke();
 		}

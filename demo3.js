@@ -232,7 +232,6 @@ document.addEventListener("DOMContentLoaded", function() {
 						var msg = wm.message;
 						switch(wm.command){
 							case 'move':
-								var as = SCG.scenes.activeScene;
 								var unit = undefined;
 								for(var i=0;i<as.go.length;i++){
 									if(as.go[i].id == msg.id){
@@ -242,9 +241,23 @@ document.addEventListener("DOMContentLoaded", function() {
 								}
 								break;
 							case 'waveEnd': 
-								// todo show info - 'battle win!'
+								as.unshift.push(
+									SCG.GO.create("fadingObject", {
+										position: new V2(as.space.width/2-150, as.space.height/2),
+										lifeTime: 5000,
+										text: {
+											size:50,
+											color: 'RED',
+											value: "BATTLE WIN",
+										},
+										size: new V2(as.space.width,as.space.height),
+										shift: new V2(0,-0.5)
+									}));
+
+								setTimeout(function(){
+									SCG.scenes.selectScene(scene2.name, {money: as.game.money, fromBattle: true, gos: as.go.filter(function(el){return el.side == 1 && el.type == 'unit'})});	
+								},5000)
 								
-								SCG.scenes.selectScene(scene2.name, {money: as.game.money, fromBattle: true, gos: as.go.filter(function(el){return el.side == 1})});
 								break;
 							case 'create':
 								var globals = SCG.globals;
@@ -527,6 +540,23 @@ document.addEventListener("DOMContentLoaded", function() {
 						size: this.size
 					}
 				},
+				toSave: function(){
+					return {
+						side: this.side,
+						size: this.size,
+						speed: this.speed,
+						level: this.level,
+						experience: this.experience,
+						unitType: this.unitType,
+						stats: this.stats,
+						items: {
+							weapon : this.items.weapon ? this.items.weapon.toSave() : undefined,
+							armor: this.items.armor ? this.items.armor.toSave() : undefined,
+							helmet: this.items.helmet ? this.items.helmet.toSave() : undefined,
+							shield: this.items.shield ? this.items.shield.toSave() : undefined
+						}
+					}
+				},
 				canAttackToggle: function(){
 					this.canAttack = !this.canAttack;
 					this.attackDelayTimer.lastTimeWork = new Date;
@@ -795,7 +825,10 @@ document.addEventListener("DOMContentLoaded", function() {
 				type: 'item',
 				size: new V2(10,50),
 				imgPropertyName: 'items',
-				static: true
+				static: true,
+				toSave: function(){
+					return this.itemName;
+				}
 			}
 		],
 		// gameObjectGenerator: function () {
@@ -860,17 +893,20 @@ document.addEventListener("DOMContentLoaded", function() {
 			}
 
 			var that = this;
+			var game = this.game;
 			if(props.fromBattle){
 				this.go = props.gos;
 				this.game.money = props.money;
 			}
 			else if(props.fromUTSelect && props.type){
-				this.go.push(SCG.GO.create("unit", {
-					position: new V2,
-					size:new V2(50,50),
-					health: 100,
-					unitType: props.type 
-				}));
+				if(game.updateMoney(50)){
+					this.go.push(SCG.GO.create("unit", {
+						position: new V2,
+						size:new V2(50,50),
+						health: 100,
+						unitType: props.type 
+					}));
+				}
 			}
 			
 			// render player units
@@ -882,7 +918,6 @@ document.addEventListener("DOMContentLoaded", function() {
 					el.selected =  false;	
 				}
 				el.regClick();
-				//that.ui.push(SCG.GO.create("label", { position: new V2(el.position.x + el.size.x/4, el.position.y-el.size.y/4),size: new V2(el.size.x/2,el.size.y/2), text: { size: 25, color:'green', value: el.unitType.substring(0,1) } }));
 			});	
 
 			if(this.go.length<6){
@@ -890,7 +925,7 @@ document.addEventListener("DOMContentLoaded", function() {
 					(function(index){
 						that.ui.push(SCG.GO.create("button", {
 							position: new V2(25,25+index*50),
-							text: {value:'HIRE',autoSize:true,font:'Arial'},
+							text: {value:'HIRE 50',autoSize:true,font:'Arial', color: 'gold'},
 							handlers: {
 								click: function(){
 									SCG.scenes.selectScene(scene3.name);
@@ -905,17 +940,20 @@ document.addEventListener("DOMContentLoaded", function() {
 			}
 
 			//register scene labels and buttons
-			var labels = this.game.selectedUnit.statsControls.labels;
+			var labels = game.selectedUnit.statsControls.labels;
 			Object.keys(labels).forEach(function(el){
 				that.ui.push(labels[el]);
 			});
 
-			var buttons = this.game.selectedUnit.statsControls.buttons;
+			var buttons = game.selectedUnit.statsControls.buttons;
 			Object.keys(buttons).forEach(function(el){
 				that.ui.push(buttons[el]);
 			});
 
-			that.ui.push(SCG.GO.create("label", { position: new V2(100,10),size: new V2(100,20), text: { size: 10, value: this.game.money, color: 'gold', format: 'Money: {0}'} }));
+			var moneyLabel = SCG.GO.create("label", { position: new V2(100,10),size: new V2(100,20), text: { size: 10, value: game.money, color: 'gold', format: 'Money: {0}'} });
+			game.labels.money = moneyLabel;
+			this.ui.push(moneyLabel);
+
 
 			that.ui.push(SCG.GO.create("image", { position: new V2(230, 220),size: new V2(150,150), destSourcePosition : new V2(0,0), destSourceSize: new V2(50,50), imgPropertyName: 'unit'}));
 
@@ -935,17 +973,19 @@ document.addEventListener("DOMContentLoaded", function() {
 			}}));
 
 			if(!props.fromItemSelect){
-				this.game.selectedUnit.unit = undefined;
+				game.selectedUnit.unit = undefined;
 			}
 			else{
-				var unit = this.game.selectedUnit.unit;
+				var unit = game.selectedUnit.unit;
 				if(props.item){
-					unit.addItem(SCG.GO.create("item",
-						props.item
-					));
+					if(game.updateMoney(props.item.price)){
+						unit.addItem(SCG.GO.create("item",
+							props.item
+						));	
+					}					
 				}
 				
-				this.game.unitSelected(this.game.selectedUnit.unit);
+				game.unitSelected(game.selectedUnit.unit);
 			}
 
 			SCG.UI.invalidate();
@@ -958,6 +998,21 @@ document.addEventListener("DOMContentLoaded", function() {
 		},
 		game: {
 			money: 0,
+			updateMoney: function(price){
+				var result = this.money > price;
+				if(result){
+					this.money-=price;
+					this.labels.money.text.value = this.money;
+				}
+				else{
+					alert('Not enought money!');
+				}
+
+				return result;
+			},
+			labels: {
+				money: undefined
+			},
 			selectedUnit: {
 				unit: undefined,
 				statsControls:
@@ -994,7 +1049,9 @@ document.addEventListener("DOMContentLoaded", function() {
 											alert('No selected unit');	
 										}
 										else{
-											SCG.scenes.selectScene(scene4.name, {unitType: unit.unitType, itemType: el.it});
+											var equippedItem = unit.items[el.it];
+											//equippedItem
+											SCG.scenes.selectScene(scene4.name, {unitType: unit.unitType, itemType: el.it, equippedItem: equippedItem ? equippedItem.itemName : ''});
 										}
 										return {
 											preventBubbling: true
@@ -1130,7 +1187,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 			globals.modalClose(that, space, function(){ SCG.scenes.selectScene(scene2.name, {fromItemSelect: true, item: undefined}); });
 
-			globals.items.filter(function(el){ return el.itemType == props.itemType && el.unitTypes.indexOf(props.unitType) != -1}).forEach(function(el,i){
+			globals.items.filter(function(el){ return el.itemType == props.itemType && el.unitTypes.indexOf(props.unitType) != -1 && el.itemName != props.equippedItem}).forEach(function(el,i){
 				var row = parseInt(i/3);
 				var column = i-row*3;
 				var btnPosition = new V2(shifts.x+ itemSize.x/2 + itemSize.x*column, shifts.y+ itemSize.y/2 + itemSize.y*row );
