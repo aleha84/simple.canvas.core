@@ -67,6 +67,27 @@ SCG.gameControls = {
 		times: 1
 	},
 	selectedGOs : [],
+	storage: {
+		savePrefix: 'SCG_rpg_save_',
+		save: function(position, data){
+			if(data == undefined){
+				return;
+			}
+
+			localStorage.setItem(this.savePrefix + position, JSON.stringify(data));
+		},
+		load: function(position){
+			var item = localStorage.getItem(this.savePrefix + position);
+			if(item == null){
+				return undefined;
+			}
+
+			return JSON.parse(item);
+		},
+		list: function(){
+
+		}
+	},
 	camera: {
 		mode: 'free',
 		shiftSpeed: 5,

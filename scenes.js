@@ -18,14 +18,6 @@ SCG.scenes = {
 		eh.click = [];
 
 		as.go.forEach(function(el){ el.regClick(); })
-		// for(var i = 0, len = as.go.length; i < len;i++){
-		// 	var sg = as.go[i];
-		// 	if(sg.handlers.click){
-		// 		if(eh.click.indexOf(sg) == -1){
-		// 			eh.click.push(sg);
-		// 		}
-		// 	}
-		// }
 
 		//clean background
 		if(SCG.contextBg){

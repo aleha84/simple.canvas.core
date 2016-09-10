@@ -10,12 +10,18 @@ document.addEventListener("DOMContentLoaded", function() {
 		// { itemName: 'shortBow', position: new V2(-20, 0), attackRadius: 100, damage: {min:2,max:5,crit:15}, attackRate: 750, destSourcePosition : new V2(50,0), size:new V2(20,50), ranged: true, itemType: 'weapon', unitTypes: ['Ranged']  }
 	];
 
-	SCG.globals.bgRender = function(){
+	SCG.globals.bgRender = function(props){
+		var color = 'gray';
+		if(props){
+			if(props.color){
+				color = props.color;
+			}
+		}
 		var ctx = SCG.contextBg;
 		var viewfield = SCG.viewfield;
 		ctx.beginPath();
 		ctx.rect(0, 0, viewfield.width, viewfield.height);
-		ctx.fillStyle ='gray';
+		ctx.fillStyle = color;
 		ctx.fill()
 	};
 
@@ -66,6 +72,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 			this.go.filter(function(el){ return el.side == 1; }).forEach(function(el,i){
 				el.regClick();
+				el.selected = false;
 			});	
 
 			var moneyLabel = SCG.GO.create("label", { position: new V2(100,10),size: new V2(100,20), text: { size: 10, value: this.game.money, color: 'gold', format: 'Money: {0}'} });
@@ -240,6 +247,9 @@ document.addEventListener("DOMContentLoaded", function() {
 									}
 								}
 								break;
+							case 'gameOver':
+								SCG.scenes.selectScene(gameOverScene.name);
+								break;
 							case 'waveEnd': 
 								as.unshift.push(
 									SCG.GO.create("fadingObject", {
@@ -255,7 +265,7 @@ document.addEventListener("DOMContentLoaded", function() {
 									}));
 
 								setTimeout(function(){
-									SCG.scenes.selectScene(scene2.name, {money: as.game.money, fromBattle: true, gos: as.go.filter(function(el){return el.side == 1 && el.type == 'unit'})});	
+									SCG.scenes.selectScene(scene2.name, {money: as.game.money, fromBattle: true, level: as.game.level+1, gos: as.go.filter(function(el){return el.side == 1 && el.type == 'unit'})});	
 								},5000)
 								
 								break;
@@ -319,6 +329,9 @@ document.addEventListener("DOMContentLoaded", function() {
 									},
 									end: function(){
 										self.postMessage({command: 'waveEnd', message: { } });					
+									},
+									gameOver: function(){
+										self.postMessage({command: 'gameOver', message: { } });	
 									}
 								}
 
@@ -327,14 +340,22 @@ document.addEventListener("DOMContentLoaded", function() {
 								var env = self.environment;
 								var eu = env.units;
 
+								if(env.waveProps.end){
+									return;
+								}
+
 								for(var i =1;i<3;i++){
 									eu[i==1?'player':'ai'] = task.message.filter(function(el){ return el.side == i}).map(function(el){  el.position = new V2(el.position); return el;});
 								}
 
 								var sh = self.helpers;
+
+								if(eu.player.length == 0){
+									sh.gameOver();
+								}
+
 								if(sh == undefined || eu.player.length == 0){return;}
 
-								//debugger;
 								if(env.waveProps.created < env.waveProps.max){
 									if(env.waveProps.atOnce > eu.ai.length){
 										var lvl = getRandomInt(env.level == 1 ? 0 : env.level,env.level*2);
@@ -349,6 +370,7 @@ document.addEventListener("DOMContentLoaded", function() {
 								}
 								else{
 									if(eu.ai.length == 0){
+										env.waveProps.end = true;
 										sh.end();
 									}
 								}
@@ -472,6 +494,14 @@ document.addEventListener("DOMContentLoaded", function() {
 						default:
 							throw 'Unknown unit type';
 					}
+
+					Object.keys(that.items).forEach(function(key, index){
+						if(that.items[key]){
+							that.items[key] = SCG.GO.create("item",
+								SCG.globals.items.filter(function(el) { return el.itemName == that.items[key] })[0] 	
+								 );
+						}
+					});
 				},
 				handlers: {
 					click: function(){
@@ -897,6 +927,9 @@ document.addEventListener("DOMContentLoaded", function() {
 			if(props.fromBattle){
 				this.go = props.gos;
 				this.game.money = props.money;
+				if(props.level){
+					this.game.level = props.level;
+				}
 			}
 			else if(props.fromUTSelect && props.type){
 				if(game.updateMoney(50)){
@@ -914,6 +947,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			this.go.forEach(function(el,i){
 				el.position = new V2(el.size.x/2,(el.size.y/2)+i*50);
 				el.destination = undefined;
+				el.health = 100;
 				if(!props.fromItemSelect){
 					el.selected =  false;	
 				}
@@ -972,6 +1006,41 @@ document.addEventListener("DOMContentLoaded", function() {
 				}
 			}}));
 
+			that.ui.push(SCG.GO.create("button", { position: new V2(this.space.width-80, 50), size: new V2(70,40), text: {value:'Save',autoSize:true,font:'Arial'},handlers: {
+				click: function(){
+					var data = {
+						money: game.money,
+						level: game.level,
+						gos: that.go.map(function(el) {return el.toSave()})
+					}
+
+					SCG.gameControls.storage.save(0, data);
+
+					alert('Saved!');
+
+					return {
+						preventBubbling: true
+					};
+				}
+			}}));
+
+			that.ui.push(SCG.GO.create("button", { position: new V2(this.space.width-80, 90), size: new V2(70,40), text: {value:'Load',autoSize:true,font:'Arial'},handlers: {
+				click: function(){
+					
+					var data = SCG.gameControls.storage.load(0);
+
+					if(data){
+						var gos = data.gos.map(function(el){ el.size = new V2(el.size); return SCG.GO.create("unit", el);  });
+						SCG.scenes.activeScene.go = [];
+						SCG.scenes.selectScene(scene2.name, {fromBattle: true, level: data.level, gos: gos, money: data.money});
+					}
+					
+					return {
+						preventBubbling: true
+					};
+				}
+			}}));
+
 			if(!props.fromItemSelect){
 				game.selectedUnit.unit = undefined;
 			}
@@ -998,11 +1067,15 @@ document.addEventListener("DOMContentLoaded", function() {
 		},
 		game: {
 			money: 0,
+			levle: 1,
+			setMoney: function(value){
+				this.money=value;
+				this.labels.money.text.value = this.money;
+			},
 			updateMoney: function(price){
 				var result = this.money > price;
 				if(result){
-					this.money-=price;
-					this.labels.money.text.value = this.money;
+					this.setMoney(this.money-price);
 				}
 				else{
 					alert('Not enought money!');
@@ -1238,6 +1311,124 @@ document.addEventListener("DOMContentLoaded", function() {
 		},
 		backgroundRender: function(){
 			SCG.globals.bgRender();
+		},
+	}
+
+	var newGameScene = {
+		name: "new_game",
+		space: {
+			width: SCG.viewfield.default.width,
+			height: SCG.viewfield.default.height
+		},
+		dispose: function(){
+			for(var i=0;i<this.game.intervals.length;i++){
+				clearInterval(this.game.intervals[i]);
+			}
+		},
+		start: function(props){
+			var that = this;
+			[
+				{name: 'New game', py : 100, click: function(){ SCG.scenes.selectScene(scene2.name, {money: 200, level: 1, fromBattle: true, gos: []}); } },
+				{name: 'Continue', py : 150, click: function(){ var data = SCG.gameControls.storage.load(0);
+
+					if(data){
+						var gos = data.gos.map(function(el){ el.size = new V2(el.size); return SCG.GO.create("unit", el);  });
+						SCG.scenes.activeScene.go = [];
+						SCG.scenes.selectScene(scene2.name, {fromBattle: true, level: data.level, gos: gos, money: data.money});
+					} } }
+			].forEach(function(el) {
+				that.ui.push(SCG.GO.create("button", { position: new V2(250, el.py), size: new V2(180,40), text: {value:el.name,autoSize:true, color: 'white',font:'Arial'},handlers: {
+					click: function(){
+						
+						el.click();
+
+						return {
+							preventBubbling: true
+						};
+					}
+				}}));	
+			});
+
+			this.game.showTitle(this);
+			this.game.intervals.push(setInterval(function(){
+				that.game.showTitle(that);
+			},2000));
+			this.ui.push(SCG.GO.create("label", { position: new V2(250,250),size: new V2(200,30), text: { size: 10, value: 'SCG production 2016',  color: 'white'} }));
+		},
+		game: {
+			intervals: [],
+			showTitle: function(that){
+				that.unshift.push(
+				SCG.GO.create("fadingObject", {
+					position: new V2(120,50),
+					lifeTime: 2000,
+					text: {
+						size:40,
+						color: 'gold',
+						value: "Inevitable glitch",
+					},
+					size: new V2(200,60),
+					shift: new V2(0,0.05)
+				}));
+			}
+		},
+		preMainWork: function() {
+			SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
+		},
+		backgroundRender: function(){
+			SCG.globals.bgRender({color: 'black'});
+		},
+	}
+
+	var gameOverScene = {
+		name: "game_over",
+		space: {
+			width: SCG.viewfield.default.width,
+			height: SCG.viewfield.default.height
+		},
+		start: function(props){
+			var that = this;
+			['A problem has been detected and system has been shut down to prevent damage',
+			'to your device',
+			'',
+			'The problem seems to be caused by the following file: VIRUS.SYS',
+			'',
+			'If this is the first time you\'ve seen this stop error screen,',
+			'it means you loose and game is over. If this screen appears again, follow',
+			'these steps:',
+			'',
+			'Try reload page and press continue to restore your progress, or press new game',
+			'to begin new game. Ask your hardware or software manufacturer for any system',
+			'updates you might need',
+			'',
+			'If problem continue, disable or remove any newly installed hardware',
+			'or software. Disable BIOS memory options such as caching or shadowing.',
+			'If you need to use safe mode ro remove or disable components, restart',
+			'your device, then do something to enter to safe mode.',
+			'',
+			'Technical information:',
+			'',
+			'*** STOP: 0x00000087 (0x20160913, 0x44312346, 0x05673245, 0x00000000)',
+			'',
+			'*** VIRUS.SYS - Have a nice day. Address: 0x2346123 base 0x633456'].forEach(function(el, i) {
+				that.ui.push(SCG.GO.create("label", { position: new V2(10,(i+1)*12),size: new V2(1000,12), text: { size: 12, value: el,  color: 'white', align: 'left'} }));	
+			});
+			
+			SCG.UI.invalidate();
+		},
+		preMainWork: function() {
+			SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
+		},
+		backgroundRender: function(){
+			SCG.globals.bgRender({color: '#000082'});
+		},
+	}
+
+	var introScene = {
+		name: "intro",
+		space: {
+			width: SCG.viewfield.default.width,
+			height: SCG.viewfield.default.height
 		},
 	}
 
@@ -1484,13 +1675,16 @@ document.addEventListener("DOMContentLoaded", function() {
 
 	SCG.gameControls.camera.resetAfterUpdate = true;
 
+	SCG.scenes.registerScene(newGameScene);
+	SCG.scenes.registerScene(gameOverScene);
+	SCG.scenes.registerScene(introScene);
 	SCG.scenes.registerScene(scene1);
 	SCG.scenes.registerScene(scene2);
 	SCG.scenes.registerScene(scene3);
 	SCG.scenes.registerScene(scene4);
 
-	//SCG.scenes.selectScene(scene1.name);
-	SCG.scenes.selectScene(scene2.name, {money: 1000, fromBattle: true, gos: []});
+	SCG.scenes.selectScene(newGameScene.name);
+	//SCG.scenes.selectScene(scene2.name, {money: 1000, fromBattle: true, gos: []});
 
 	SCG.start();
 })
