@@ -17,7 +17,7 @@ SCG.scenes = {
 		var eh = SCG.gameControls.mousestate.eventHandlers;
 		eh.click = [];
 
-		as.go.forEach(function(el){ el.regClick(); })
+		as.go.forEach(function(el){ el.regClick(); })	
 
 		//clean background
 		if(SCG.contextBg){

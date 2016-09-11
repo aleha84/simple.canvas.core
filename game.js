@@ -68,7 +68,7 @@ SCG.gameControls = {
 	},
 	selectedGOs : [],
 	storage: {
-		savePrefix: 'SCG_rpg_save_',
+		savePrefix: 'SCG_save_',
 		save: function(position, data){
 			if(data == undefined){
 				return;

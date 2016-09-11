@@ -4,13 +4,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
 	}
 
-	SCG.globals.items = [
-		// { itemName: 'sword', position: new V2(-20, -7), attackRadius: 10, damage: {min:1,max:5,crit:1}, attackRate: 1000, destSourcePosition : new V2(10,0), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Fighter'] },
-		// { itemName: 'bow', position: new V2(-17.5, 0), attackRadius: 200, damage: {min:5,max:10,crit:10}, attackRate: 1000, destSourcePosition : new V2(20,0), size:new V2(20,50), ranged: true, itemType: 'weapon', unitTypes: ['Ranged']  },
-		// { itemName: 'shortBow', position: new V2(-20, 0), attackRadius: 100, damage: {min:2,max:5,crit:15}, attackRate: 750, destSourcePosition : new V2(50,0), size:new V2(20,50), ranged: true, itemType: 'weapon', unitTypes: ['Ranged']  }
+	var globals = SCG.globals;
+
+	globals.items = [
+
 	];
 
-	SCG.globals.bgRender = function(props){
+	globals.bgRender = function(props){
 		var color = 'gray';
 		if(props){
 			if(props.color){
@@ -25,8 +25,12 @@ document.addEventListener("DOMContentLoaded", function() {
 		ctx.fill()
 	};
 
-	SCG.globals.modalClose = function(that, space, callback){
-		that.ui.push(SCG.GO.create("button", {
+	globals.clearBg = function(){
+		SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
+	}
+
+	globals.modalClose = function(that, space, callback){
+		that.ui.push(globals.cb( {
 			position: new V2(space.width*0.95, space.height*0.05),
 			size: new V2(50,30),
 			text: {value: "Close", color:'red', autoSize:true,font:'Arial'},
@@ -41,9 +45,26 @@ document.addEventListener("DOMContentLoaded", function() {
 		}));
 	};
 
-	SCG.globals.unitTypes = ['Fighter', 'Defender', 'Ranged'];
-	SCG.globals.itemTypes = ['weapon', 'shield', 'helmet', 'armor'];
-	SCG.globals.materialTypes = ["bronze", "steel", "mithril"];
+	globals.create = function(name, lProps){
+		return SCG.GO.create(name, lProps);
+	}
+	globals.cl = function(lProps){
+		return globals.create("label", lProps);
+	}
+	globals.cfo = function(lProps){
+		return globals.create("fadingObject", lProps);
+	}
+	globals.cb = function(lProps){
+		return globals.create("button", lProps);
+	}
+
+
+	globals.unitTypes = ['Fighter', 'Defender', 'Ranged'];
+	globals.itemTypes = ['weapon', 'shield', 'helmet', 'armor'];
+	globals.materialTypes = ["bronze", "steel", "mithril"];
+	globals.attributes = ['str', 'agl',  'con'];
+
+	
 
 	var scene1 = {
 		name: "demo_s1",
@@ -67,7 +88,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 			if(props.fromManagement){
 				this.go = props.gos;
-				this.game.money = props.money;
+				game.money = props.money;
 			}
 
 			this.go.filter(function(el){ return el.side == 1; }).forEach(function(el,i){
@@ -75,75 +96,21 @@ document.addEventListener("DOMContentLoaded", function() {
 				el.selected = false;
 			});	
 
-			var moneyLabel = SCG.GO.create("label", { position: new V2(100,10),size: new V2(100,20), text: { size: 10, value: this.game.money, color: 'gold', format: 'Money: {0}'} });
+			var labelSize = new V2(100,20);
+			var moneyLabel = globals.cl({ position: new V2(100,10),size: labelSize, text: { size: 10, value: game.money, color: 'gold', format: 'Money: {0}'} });
 			game.labels.money = moneyLabel;
 			this.ui.push(moneyLabel);
 
-			//if(game.playerUnit == undefined){
-				// var sword = SCG.GO.create("item", {
-				// 	position: new V2(-20, 0),
-				// 	attackRadius: 10,
-				// 	damage: {min:1,max:5,crit:1},
-				// 	attackRate: 1000,
-				// 	destSourcePosition : new V2(10,0),
-				// 	itemType: 'weapon'
-				// });
+			this.ui.push(globals.cl( { position: new V2(200,10),size: labelSize, text: { size: 10, value: game.level, color: 'orange', format: 'Wave level: {0}'} }));
 
-				// var bowDescr = SCG.globals.items.filter(function(el) { return el.itemName == 'shortBow' })[0];
-
-				// var bow = SCG.GO.create("item",
-				// 	bowDescr
-				// );
-
-
-				// var unit = SCG.GO.create("unit", {
-				// 	position: new V2(250, 150),
-				// 	size:new V2(50,50),
-				// 	health: 1000,
-				// 	unitType: 'Ranged'
-				// });
-				// // unit.addItem(bow);
-				// this.go.push(unit);
-
-				// this.go.push(SCG.GO.create("unit", {
-				// 	position: new V2(150, 50),
-				// 	size:new V2(50,50),
-				// 	side: 2,
-				// 	health:1000,
-				// 	speed:0.5
-				// }));
-
-				// this.go.push(SCG.GO.create("unit", {
-				// 	position: new V2(400, 50),
-				// 	size:new V2(50,50),
-				// 	side: 2,
-				// 	health:1000,
-				// 	speed:0.5
-				// }));
-
-				// unit.selected = true;
-				// game.playerUnit = unit;
-
-				// SCG.gameControls.camera.mode = 'centered';
-
-				// testing
-				//SCG.scenes.selectScene(scene2.name, {money: 1000, fromBattle: true, gos: this.go.filter(function(el){return el.side == 1})});
-			//}
-
-			//SCG.gameControls.camera.center(game.playerUnit);
+			
 			SCG.UI.invalidate();
 		},
 		backgroundRender: function(){
-			var ctx = SCG.contextBg;
-			var viewfield = SCG.viewfield;
-			ctx.beginPath();
-			ctx.rect(0, 0, viewfield.width, viewfield.height);
-			ctx.fillStyle ='gray';
-			ctx.fill()
+			globals.bgRender();
 		},
 		preMainWork: function() {
-			var viewfield = SCG.viewfield;
-			SCG.context.clearRect(0, 0, viewfield.width, viewfield.height);
+			globals.clearBg();
 		},
 		game: {
 			money: 0,
@@ -201,7 +168,7 @@ document.addEventListener("DOMContentLoaded", function() {
 					var position =pu.position.add(pu.position.direction(shiftedCP).normalize().mul(pu.position.distance(shiftedCP)/2));
 
 					SCG.scenes.activeScene.go.push(
-						SCG.GO.create("fadingObject", {
+						globals.cfo( {
 							position: position,
 							lifeTime: 300,
 							img : canvas,
@@ -252,7 +219,7 @@ document.addEventListener("DOMContentLoaded", function() {
 								break;
 							case 'waveEnd': 
 								as.unshift.push(
-									SCG.GO.create("fadingObject", {
+									globals.cfo( {
 										position: new V2(as.space.width/2-150, as.space.height/2),
 										lifeTime: 5000,
 										text: {
@@ -270,7 +237,6 @@ document.addEventListener("DOMContentLoaded", function() {
 								
 								break;
 							case 'create':
-								var globals = SCG.globals;
 								var unitType = globals.unitTypes[msg.type];
 								var unit = SCG.GO.create("unit", {
 									position: new V2(as.space.width-25, getRandomInt(25,as.space.height-25)),
@@ -302,7 +268,7 @@ document.addEventListener("DOMContentLoaded", function() {
 								});
 
 								unit.expCost = 30 + (10*unit.level);
-								unit.cost = 10 + (2*unit.level);
+								unit.cost = 20 + (5*unit.level);
 
 								as.go.push(unit);
 								break;
@@ -314,24 +280,18 @@ document.addEventListener("DOMContentLoaded", function() {
 				queueProcesser: function queueProcesser(){ // queue processer (on AI side)
 					while(queue.length){
 						var task = queue.pop();
-						//console.log(task.type);
+
 						switch(task.type){
 							case 'start':
 								self.helpers = {
-									log: function(){
-										console.log(self.environment)
-									},
 									move: function(id, position){
 										self.postMessage({command: 'move', message: { id: id, position: position } });				
 									},
 									create: function(level, type, items){
 										self.postMessage({command: 'create', message: { type: type, level: level, items: items } });		
 									},
-									end: function(){
-										self.postMessage({command: 'waveEnd', message: { } });					
-									},
-									gameOver: function(){
-										self.postMessage({command: 'gameOver', message: { } });	
+									end: function(gameOver){
+										self.postMessage({command: gameOver ? 'gameOver': 'waveEnd', message: { } });					
 									}
 								}
 
@@ -351,7 +311,7 @@ document.addEventListener("DOMContentLoaded", function() {
 								var sh = self.helpers;
 
 								if(eu.player.length == 0){
-									sh.gameOver();
+									sh.end(true);
 								}
 
 								if(sh == undefined || eu.player.length == 0){return;}
@@ -391,10 +351,6 @@ document.addEventListener("DOMContentLoaded", function() {
 										}
 									}
 									
-									//check history
-									//if no history or this player unit moved, then reposition this ai unit
-									//var hUnit = eu.history[closest.unit.id];
-									//if(!hUnit || !hUnit.position.equal(closest.unit.position)){
 									if(closest.distance > aiUnit.range) {
 										var playerPosition = closest.unit.position;
 										var initialInvertedDirection = aiUnit.position.direction(playerPosition).mul(-1);
@@ -415,11 +371,6 @@ document.addEventListener("DOMContentLoaded", function() {
 										sh.move(aiUnit.id, target);
 									}
 								}
-
-								// update history
-								// for(var puIndex = 0;puIndex<eu.player.length;puIndex++){
-								// 	eu.history[eu.player[puIndex].id] = eu.player[puIndex];
-								// }
 
 								break;
 							default:
@@ -526,9 +477,12 @@ document.addEventListener("DOMContentLoaded", function() {
 						};
 					}
 				},
-				levelUp: function(){
-					var stats = ['str', 'agl',  'con'];
-					this.stats[stats[getRandomInt(0,2)]]++;
+				levelUp: function(attr){
+					if(attr == undefined){
+						attr = SCG.globals.attributes[getRandomInt(0,2)]
+					}
+					
+					this.stats[attr]++;
 					this.level++;
 				},
 				getStats: function(type){
@@ -560,30 +514,32 @@ document.addEventListener("DOMContentLoaded", function() {
 					}
 				},
 				toPlain: function(){
+					var that= this;
 					return {
-						id: this.id,
-						position: this.position,
-						health: this.getStats('health'),
-						damage: this.getStats('damage'),
-						side: this.side,
-						range: this.getStats('attackRadius'),
-						size: this.size
+						id: that.id,
+						position: that.position,
+						health: that.getStats('health'),
+						damage: that.getStats('damage'),
+						side: that.side,
+						range: that.getStats('attackRadius'),
+						size: that.size
 					}
 				},
 				toSave: function(){
+					var that= this;
 					return {
-						side: this.side,
-						size: this.size,
-						speed: this.speed,
-						level: this.level,
-						experience: this.experience,
-						unitType: this.unitType,
-						stats: this.stats,
+						side: that.side,
+						size: that.size,
+						speed: that.speed,
+						level: that.level,
+						experience: that.experience,
+						unitType: that.unitType,
+						stats: that.stats,
 						items: {
-							weapon : this.items.weapon ? this.items.weapon.toSave() : undefined,
-							armor: this.items.armor ? this.items.armor.toSave() : undefined,
-							helmet: this.items.helmet ? this.items.helmet.toSave() : undefined,
-							shield: this.items.shield ? this.items.shield.toSave() : undefined
+							weapon : that.items.weapon ? that.items.weapon.toSave() : undefined,
+							armor: that.items.armor ? that.items.armor.toSave() : undefined,
+							helmet: that.items.helmet ? that.items.helmet.toSave() : undefined,
+							shield: that.items.shield ? that.items.shield.toSave() : undefined
 						}
 					}
 				},
@@ -605,7 +561,7 @@ document.addEventListener("DOMContentLoaded", function() {
 					damage = parseFloat(damage.toFixed(1));
 					var as = SCG.scenes.activeScene;
 					as.unshift.push(
-						SCG.GO.create("fadingObject", {
+						globals.cfo( {
 							position: this.position.clone(),
 							lifeTime: 1000,
 							text: {
@@ -630,7 +586,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				},
 				beforeDead: function(){
 					SCG.scenes.activeScene.go.push(
-						SCG.GO.create("fadingObject", {
+						globals.cfo( {
 							position: this.position.clone(),
 							imgPropertyName: 'actions',
 							destSourcePosition : new V2(250,0),
@@ -657,11 +613,12 @@ document.addEventListener("DOMContentLoaded", function() {
 					if(dir.y < 0){
 						shift++;
 					}
+					var as = SCG.scenes.activeScene;
 					var damageObj = this.getStats('damage');
 					var damage = getRandom(damageObj.min,damageObj.max)*(Math.random() < damageObj.crit/100 ? 3 : 1);
 					if(!this.getStats('ranged')){
-						SCG.scenes.activeScene.unshift.push(
-							SCG.GO.create("fadingObject", {
+						as.unshift.push(
+							globals.cfo({
 								position: this.position.clone(),
 								imgPropertyName: 'actions',
 								destSourcePosition : new V2(shift*50,0),
@@ -682,7 +639,7 @@ document.addEventListener("DOMContentLoaded", function() {
 							step.y-=  ((-0.04*Math.pow(pi-5,2)+1)* distance/5);
 							path.push(step);
 						}
-						SCG.scenes.activeScene.unshift.push(
+						as.unshift.push(
 							SCG.GO.create("projectile", {
 								position: path.shift(),
 								path: path,
@@ -732,33 +689,45 @@ document.addEventListener("DOMContentLoaded", function() {
 				},
 				internalRender: function()
 				{
-					var ctx = this.context;
-					ctx.translate(this.renderPosition.x,this.renderPosition.y);
-
 					var that = this;
-					Object.keys(this.items).sort().forEach(function(key, index){
+					var ctx = that.context;
+					var rp = that.renderPosition;
+					ctx.translate(rp.x,rp.y);
+
+					var that = that;
+					Object.keys(that.items).sort().forEach(function(key, index){
 						that.items[key].render();
 					});
 
-					if(this.selected){
+					var renderSize = that.renderSize;
+
+					if(that.selected){
 						ctx.drawImage(SCG.images['actions'], 
 							200,
 							0,
 							50,
 							50,
-							0-this.renderSize.x/2, 
-							0-this.renderSize.y/2, 
-							this.renderSize.x, 
-							this.renderSize.y);	
+							0-renderSize.x/2, 
+							0-renderSize.y/2, 
+							renderSize.x, 
+							renderSize.y);	
 					}
-					var renderSize = this.renderSize ;
+					
 					var fontSize = renderSize.y/4;
 
 					ctx.font = fontSize + 'px Arial';
 					ctx.fillStyle = 'blue';
-					ctx.fillText(this.unitType.substring(0,1)+this.level, renderSize.x/3,-renderSize.y/4);
+					ctx.fillText(that.unitType.substring(0,1)+that.level, renderSize.x/3,-renderSize.y/4);
 
-					ctx.translate(-this.renderPosition.x,-this.renderPosition.y);
+					var maxHealth = 100+(that.stats.con*20);
+					var currentHealth = that.getStats('health');
+					var healthPercenage = that.getStats('health')/(100+(that.stats.con*20));
+					ctx.fillStyle = 'red';
+					ctx.fillRect(-renderSize.x/2,-renderSize.y/2,renderSize.x*0.8, renderSize.y/10);
+					ctx.fillStyle = 'green';
+					ctx.fillRect(-renderSize.x/2,-renderSize.y/2,(renderSize.x*0.8)*healthPercenage, renderSize.y/10);
+
+					ctx.translate(-rp.x,-rp.y);
 				}
 			},
 			{ 
@@ -766,10 +735,12 @@ document.addEventListener("DOMContentLoaded", function() {
 				size: new V2(1,1),
 				isCustomRender: true,
 				customRender: function() {
-					SCG.context.beginPath();
-					SCG.context.rect(this.renderPosition.x - this.renderSize.x/2, this.renderPosition.y - this.renderSize.y/2, this.renderSize.x, this.renderSize.y);
-					SCG.context.fillStyle ='red';
-					SCG.context.fill()
+					var ctx = SCG.context;
+					var rs = this.renderSize;
+					ctx.beginPath();
+					ctx.rect(this.renderPosition.x - rs.x/2, this.renderPosition.y - rs.y/2, rs.x, rs.y);
+					ctx.fillStyle ='red';
+					ctx.fill()
 				},
 			},
 			{
@@ -793,9 +764,10 @@ document.addEventListener("DOMContentLoaded", function() {
 				internalPreRender: function(){
 					var ctx =SCG.context; 
 					var rp = this.renderPosition;
+					var dir = this.direction;
 					ctx.translate(rp.x,rp.y);
-					if(this.direction && !this.direction.equal(new V2)){
-						this.angle = V2.up().angleTo(this.direction,true);
+					if(dir && !dir.equal(new V2)){
+						this.angle = V2.up().angleTo(dir,true);
 						ctx.rotate(this.angle);	
 					}
 					ctx.translate(-rp.x,-rp.y);
@@ -861,51 +833,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				}
 			}
 		],
-		// gameObjectGenerator: function () {
-		// 	var gos = [];
 
-		// 	gos.push(SCG.GO.create("line", {
-		// 		position: new V2(0, 500),
-		// 		size: new V2(1,1000)
-		// 	}));
-
-		// 	gos.push(SCG.GO.create("line", {
-		// 		position: new V2(100, 500),
-		// 		size: new V2(1,1000)
-		// 	}));
-
-		// 	gos.push(SCG.GO.create("line", {
-		// 		position: new V2(200, 500),
-		// 		size: new V2(1,1000)
-		// 	}));
-
-		// 	gos.push(SCG.GO.create("line", {
-		// 		position: new V2(300, 500),
-		// 		size: new V2(1,1000)
-		// 	}));
-
-		// 	gos.push(SCG.GO.create("line", {
-		// 		position: new V2(500, 0),
-		// 		size: new V2(1000,1)
-		// 	}));			
-
-		// 	gos.push(SCG.GO.create("line", {
-		// 		position: new V2(500, 100),
-		// 		size: new V2(1000,1)
-		// 	}));			
-
-		// 	gos.push(SCG.GO.create("line", {
-		// 		position: new V2(500, 200),
-		// 		size: new V2(1000,1)
-		// 	}));			
-
-		// 	gos.push(SCG.GO.create("line", {
-		// 		position: new V2(500, 300),
-		// 		size: new V2(1000,1)
-		// 	}));			
-
-		// 	return gos;
-		// }
 	}
 
 	var scene2 = {
@@ -948,7 +876,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				el.position = new V2(el.size.x/2,(el.size.y/2)+i*50);
 				el.destination = undefined;
 				el.health = 100;
-				if(!props.fromItemSelect){
+				if(!props.fromItemSelect && !props.fromLevelUp){
 					el.selected =  false;	
 				}
 				el.regClick();
@@ -957,7 +885,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			if(this.go.length<6){
 				for(var i = this.go.length;i<7;i++){
 					(function(index){
-						that.ui.push(SCG.GO.create("button", {
+						that.ui.push(globals.cb( {
 							position: new V2(25,25+index*50),
 							text: {value:'HIRE 50',autoSize:true,font:'Arial', color: 'gold'},
 							handlers: {
@@ -984,57 +912,55 @@ document.addEventListener("DOMContentLoaded", function() {
 				that.ui.push(buttons[el]);
 			});
 
-			var moneyLabel = SCG.GO.create("label", { position: new V2(100,10),size: new V2(100,20), text: { size: 10, value: game.money, color: 'gold', format: 'Money: {0}'} });
+			var moneyLabel = globals.cl( { position: new V2(100,10),size: new V2(100,20), text: { size: 10, value: game.money, color: 'gold', format: 'Money: {0}'} });
 			game.labels.money = moneyLabel;
 			this.ui.push(moneyLabel);
+
+			this.ui.push(globals.cl( { position: new V2(200,10),size: new V2(100,20), text: { size: 10, value: game.level, color: 'orange', format: 'Wave level: {0}'} }));
 
 
 			that.ui.push(SCG.GO.create("image", { position: new V2(230, 220),size: new V2(150,150), destSourcePosition : new V2(0,0), destSourceSize: new V2(50,50), imgPropertyName: 'unit'}));
 
-			// that.ui.push(SCG.GO.create("image", { position: new V2(300, 200),size: new V2(45,375), destSourcePosition : new V2(0,0), destSourceSize: new V2(90,750), imgPropertyName: 'items'}));
-
-			that.ui.push(SCG.GO.create("button", { position: new V2(this.space.width-150, 50), size: new V2(70,40), text: {value:'Play',autoSize:true,font:'Arial'},handlers: {
+			that.ui.push(globals.cb( { position: new V2(this.space.width-130, 50), size: new V2(70,40), text: {value:'Play',autoSize:true,font:'Arial'},handlers: {
 				click: function(){
 					if(that.go.length == 0){
-						alert('You have no units to play!');
+						alert('You have no units to play!\nHire someone.');
 						return;
 					}
-					SCG.scenes.selectScene(scene1.name, {fromManagement: true, level: 1, gos: that.go, money: that.game.money}); // todo: increment level by gameplay
-					return {
-						preventBubbling: true
-					};
-				}
-			}}));
+					else if(that.go.filter(function(el) { return el.experience >= el.getStats('expCap');}).length > 0){
+						alert('One of your units need level up!');
+						return;	
+					}
 
-			that.ui.push(SCG.GO.create("button", { position: new V2(this.space.width-80, 50), size: new V2(70,40), text: {value:'Save',autoSize:true,font:'Arial'},handlers: {
-				click: function(){
 					var data = {
 						money: game.money,
 						level: game.level,
 						gos: that.go.map(function(el) {return el.toSave()})
 					}
 
-					SCG.gameControls.storage.save(0, data);
+					SCG.gameControls.storage.save('rpg_0', data);
 
-					alert('Saved!');
-
+					SCG.scenes.selectScene(scene1.name, {fromManagement: true, gos: that.go, level: game.level, money: game.money});
 					return {
 						preventBubbling: true
 					};
 				}
 			}}));
 
-			that.ui.push(SCG.GO.create("button", { position: new V2(this.space.width-80, 90), size: new V2(70,40), text: {value:'Load',autoSize:true,font:'Arial'},handlers: {
+			that.ui.push(globals.cb( { position: new V2(this.space.width-130, 90), size: new V2(70,40), text: {value:'Level up',autoSize:true,font:'Arial'},handlers: {
 				click: function(){
-					
-					var data = SCG.gameControls.storage.load(0);
-
-					if(data){
-						var gos = data.gos.map(function(el){ el.size = new V2(el.size); return SCG.GO.create("unit", el);  });
-						SCG.scenes.activeScene.go = [];
-						SCG.scenes.selectScene(scene2.name, {fromBattle: true, level: data.level, gos: gos, money: data.money});
+					var unit = SCG.scenes.activeScene.game.selectedUnit.unit;
+					if(!SCG.scenes.activeScene.game.selectedUnit.unit){
+						alert('No selected unit');	
+						return;
 					}
-					
+
+					if(unit.experience < unit.getStats('expCap')){
+						alert('Level up is unavailable');	
+						return;	
+					}
+
+					SCG.scenes.selectScene(scene5.name); 
 					return {
 						preventBubbling: true
 					};
@@ -1042,7 +968,19 @@ document.addEventListener("DOMContentLoaded", function() {
 			}}));
 
 			if(!props.fromItemSelect){
-				game.selectedUnit.unit = undefined;
+				if(props.fromLevelUp )
+				{
+					if(props.attr)
+					{
+						game.selectedUnit.unit.levelUp(props.attr);
+					}
+
+					game.unitSelected(game.selectedUnit.unit);
+				}
+				else{
+					game.selectedUnit.unit = undefined;
+				}
+				
 			}
 			else{
 				var unit = game.selectedUnit.unit;
@@ -1060,14 +998,14 @@ document.addEventListener("DOMContentLoaded", function() {
 			SCG.UI.invalidate();
 		},
 		backgroundRender: function(){
-			SCG.globals.bgRender();
+			globals.bgRender();
 		},
 		preMainWork: function() {
-			SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
+			globals.clearBg();
 		},
 		game: {
 			money: 0,
-			levle: 1,
+			level: 1,
 			setMoney: function(value){
 				this.money=value;
 				this.labels.money.text.value = this.money;
@@ -1105,7 +1043,7 @@ document.addEventListener("DOMContentLoaded", function() {
 							{n:'atk', p: new V2(250, 90),  s:200, f: 'Attack: {0}' },
 							{n:'def', p: new V2(250, 110), f: 'Defence: {0}' },
 							{n:'rng', p: new V2(250, 130), f: 'Range: {0}'}].forEach(function(el){
-								that.labels[el.n] = SCG.GO.create("label", 
+								that.labels[el.n] = globals.cl( 
 									{ position: el.p,size: new V2(el.s ? el.s : 100,30), text: { size: 15, color:el.color ? el.color : 'Black', value: 0, format:el.f } });
 							});
 
@@ -1114,11 +1052,11 @@ document.addEventListener("DOMContentLoaded", function() {
 							{n: 'shd', p: new V2(295, 220), s: new V2(50,120), it: 'shield'},
 							{n: 'hlm', p: new V2(230, 185), s: new V2(80,50), it: 'helmet'},
 							{n: 'arm', p: new V2(230, 235), s: new V2(80,50), it: 'armor'}].forEach(function(el){
-							that.buttons[el.n] = SCG.GO.create("button", { position: el.p,size: el.s, border:true, useInnerCanvas: false, 
+							that.buttons[el.n] = globals.cb( { position: el.p,size: el.s, border:true, useInnerCanvas: false, 
 								handlers: { 
 									click: function(){ 
 										var unit = SCG.scenes.activeScene.game.selectedUnit.unit;
-										if(!SCG.scenes.activeScene.game.selectedUnit.unit){
+										if(!unit){
 											alert('No selected unit');	
 										}
 										else{
@@ -1152,6 +1090,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 				labels.lvl.text.value = unit.level;
 				labels.exp.text.value = String.format("{0}-{1}",unit.experience, unit.getStats('expCap'));
+				labels.exp.text.color = unit.experience >= unit.getStats('expCap') ? 'green' : 'black';
 				var atk = unit.getStats('damage');
 				labels.atk.text.value = String.format("{0}-{1}({2}%)", atk.min, atk.max,atk.crit);
 				labels.def.text.value = unit.getStats('defence');
@@ -1217,7 +1156,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			var itemSize = new V2((space.width*0.8)/types.length,space.height*0.7);
 
 			types.forEach(function(el,i){
-				that.ui.push(SCG.GO.create("button", {
+				that.ui.push(globals.cb( {
 					position: new V2(shifts.x +  itemSize.x/2 + itemSize.x*i,shifts.y + itemSize.y/2),
 					size: itemSize,
 					text: {value: el, autoSize:true,font:'Arial'},
@@ -1238,10 +1177,10 @@ document.addEventListener("DOMContentLoaded", function() {
 			
 		},
 		preMainWork: function() {
-			SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
+			globals.clearBg();
 		},
 		backgroundRender: function(){
-			SCG.globals.bgRender();
+			globals.bgRender();
 		},
 	}
 
@@ -1265,7 +1204,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				var column = i-row*3;
 				var btnPosition = new V2(shifts.x+ itemSize.x/2 + itemSize.x*column, shifts.y+ itemSize.y/2 + itemSize.y*row );
 
-				that.ui.push(SCG.GO.create("button", {
+				that.ui.push(globals.cb( {
 					position: btnPosition,
 					size: itemSize,
 					text: {value: "", autoSize:true,font:'Arial'},
@@ -1284,17 +1223,17 @@ document.addEventListener("DOMContentLoaded", function() {
 				var lablesTop = btnPosition.substract(new V2(-15, itemSize.y/2));
 				var labelSize = new V2(100,itemSize.y/4);
 				that.ui.push(SCG.GO.create("image", { position: imgShiftedPosition,size: scaled, destSourcePosition : el.destSourcePosition, destSourceSize: el.size, imgPropertyName: 'items'}));
-				that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, labelSize.y/2)),size: labelSize, text: { color:'Red', value: el.price, format: 'Price: {0}' } }));
+				that.ui.push(globals.cl( { position: lablesTop.add(new V2(0, labelSize.y/2)),size: labelSize, text: { color:'Red', value: el.price, format: 'Price: {0}' } }));
 				switch(el.itemType){
 					case 'weapon':
-						that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, 1.5*labelSize.y)),size: labelSize, text: { size: 10, value: String.format("Damage {0}-{1}({2}%)", el.damage.min, el.damage.max,el.damage.crit)} }));
-						that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, 2.5*labelSize.y)),size: labelSize, text: { size: 10, value: el.attackRate, format: 'Rate: {0}'} }));
-						that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, 3.5*labelSize.y)),size: labelSize, text: { size: 10, value: el.attackRadius, format: 'Range: {0}'} }));
+						that.ui.push(globals.cl( { position: lablesTop.add(new V2(0, 1.5*labelSize.y)),size: labelSize, text: { size: 10, value: String.format("Damage {0}-{1}({2}%)", el.damage.min, el.damage.max,el.damage.crit)} }));
+						that.ui.push(globals.cl( { position: lablesTop.add(new V2(0, 2.5*labelSize.y)),size: labelSize, text: { size: 10, value: el.attackRate, format: 'Rate: {0}'} }));
+						that.ui.push(globals.cl( { position: lablesTop.add(new V2(0, 3.5*labelSize.y)),size: labelSize, text: { size: 10, value: el.attackRadius, format: 'Range: {0}'} }));
 						break
 					case 'shield':
 					case 'armor':
 					case 'helmet':
-						that.ui.push(SCG.GO.create("label", { position: lablesTop.add(new V2(0, 1.5*labelSize.y)),size: labelSize, text: { size: 10, value: el.defence, format: 'Defence: {0}'} } ));
+						that.ui.push(globals.cl( { position: lablesTop.add(new V2(0, 1.5*labelSize.y)),size: labelSize, text: { size: 10, value: el.defence, format: 'Defence: {0}'} } ));
 						break
 				}
 				
@@ -1307,10 +1246,60 @@ document.addEventListener("DOMContentLoaded", function() {
 			
 		},
 		preMainWork: function() {
-			SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
+			globals.clearBg();
 		},
 		backgroundRender: function(){
-			SCG.globals.bgRender();
+			globals.bgRender();
+		},
+	}
+
+	var scene5 = {
+		name: "level_up",
+		space: {
+			width: SCG.viewfield.default.width,
+			height: SCG.viewfield.default.height
+		},
+		start: function(props){
+			var that = this;
+			var space = this.space;
+			var shifts = new V2(space.width*0.1, space.height*0.15);
+			var globals = SCG.globals;
+			globals.modalClose(that, space, function(){ SCG.scenes.selectScene(scene2.name, {fromLevelUp: true, attr: undefined}); });
+			var itemSize = new V2((space.width*0.8)/3,space.height*0.7);
+
+			var itemFullName = '';
+			var itemDescription = '';
+			globals.attributes.forEach(function(el,i){
+				var position = new V2(shifts.x +  itemSize.x/2 + itemSize.x*i,shifts.y + itemSize.y/2);
+				itemFullName = i == 0? 'Strenght' : i == 1? 'Agility' : 'Constitution';
+				itemDescription = i == 0? 'Increase damage by 20%' : i == 1? 'Increase defence by 20%' : 'Increase health by 20';
+				that.ui.push(globals.cl( { position: position.substract(new V2(0,20)),size: itemSize, text: { size: 20, value: itemFullName} }));
+				that.ui.push(globals.cl( { position: position.substract(new V2(0,-20)),size: itemSize, text: { size: 10, value: itemDescription} }));
+				that.ui.push(globals.cb( {
+					position: position,
+					size: itemSize,
+					text: {value: '', autoSize:true,font:'Arial'},
+					handlers: {
+						click: function(){
+							SCG.scenes.selectScene(scene2.name, {fromLevelUp: true, attr: el});
+							return {
+								preventBubbling: true
+							};
+						}
+					}
+				}));
+			})
+
+			var viewfield = SCG.viewfield;
+			SCG.context.clearRect(0, 0, viewfield.width, viewfield.height);
+			SCG.UI.invalidate();
+			
+		},
+		preMainWork: function() {
+			globals.clearBg();
+		},
+		backgroundRender: function(){
+			globals.bgRender();
 		},
 	}
 
@@ -1328,8 +1317,8 @@ document.addEventListener("DOMContentLoaded", function() {
 		start: function(props){
 			var that = this;
 			[
-				{name: 'New game', py : 100, click: function(){ SCG.scenes.selectScene(scene2.name, {money: 200, level: 1, fromBattle: true, gos: []}); } },
-				{name: 'Continue', py : 150, click: function(){ var data = SCG.gameControls.storage.load(0);
+				{name: 'New game', py : 100, click: function(){ SCG.scenes.selectScene(introScene.name); } },
+				{name: 'Continue', py : 150, click: function(){ var data = SCG.gameControls.storage.load('rpg_0');
 
 					if(data){
 						var gos = data.gos.map(function(el){ el.size = new V2(el.size); return SCG.GO.create("unit", el);  });
@@ -1337,7 +1326,7 @@ document.addEventListener("DOMContentLoaded", function() {
 						SCG.scenes.selectScene(scene2.name, {fromBattle: true, level: data.level, gos: gos, money: data.money});
 					} } }
 			].forEach(function(el) {
-				that.ui.push(SCG.GO.create("button", { position: new V2(250, el.py), size: new V2(180,40), text: {value:el.name,autoSize:true, color: 'white',font:'Arial'},handlers: {
+				that.ui.push(globals.cb( { position: new V2(250, el.py), size: new V2(180,40), text: {value:el.name,autoSize:true, color: 'white',font:'Arial'},handlers: {
 					click: function(){
 						
 						el.click();
@@ -1353,13 +1342,13 @@ document.addEventListener("DOMContentLoaded", function() {
 			this.game.intervals.push(setInterval(function(){
 				that.game.showTitle(that);
 			},2000));
-			this.ui.push(SCG.GO.create("label", { position: new V2(250,250),size: new V2(200,30), text: { size: 10, value: 'SCG production 2016',  color: 'white'} }));
+			this.ui.push(globals.cl( { position: new V2(250,250),size: new V2(200,30), text: { size: 10, value: 'SCG production 2016',  color: 'white'} }));
 		},
 		game: {
 			intervals: [],
 			showTitle: function(that){
 				that.unshift.push(
-				SCG.GO.create("fadingObject", {
+				globals.cfo( {
 					position: new V2(120,50),
 					lifeTime: 2000,
 					text: {
@@ -1373,10 +1362,10 @@ document.addEventListener("DOMContentLoaded", function() {
 			}
 		},
 		preMainWork: function() {
-			SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
+			globals.clearBg();
 		},
 		backgroundRender: function(){
-			SCG.globals.bgRender({color: 'black'});
+			globals.bgRender({color: 'black'});
 		},
 	}
 
@@ -1411,16 +1400,16 @@ document.addEventListener("DOMContentLoaded", function() {
 			'*** STOP: 0x00000087 (0x20160913, 0x44312346, 0x05673245, 0x00000000)',
 			'',
 			'*** VIRUS.SYS - Have a nice day. Address: 0x2346123 base 0x633456'].forEach(function(el, i) {
-				that.ui.push(SCG.GO.create("label", { position: new V2(10,(i+1)*12),size: new V2(1000,12), text: { size: 12, value: el,  color: 'white', align: 'left'} }));	
+				that.ui.push(globals.cl( { position: new V2(10,(i+1)*12),size: new V2(1000,12), text: { size: 12, value: el,  color: 'white', align: 'left'} }));	
 			});
 			
 			SCG.UI.invalidate();
 		},
 		preMainWork: function() {
-			SCG.context.clearRect(0, 0, SCG.viewfield.width, SCG.viewfield.height);
+			globals.clearBg();
 		},
 		backgroundRender: function(){
-			SCG.globals.bgRender({color: '#000082'});
+			globals.bgRender({color: '#000082'});
 		},
 	}
 
@@ -1429,6 +1418,63 @@ document.addEventListener("DOMContentLoaded", function() {
 		space: {
 			width: SCG.viewfield.default.width,
 			height: SCG.viewfield.default.height
+		},
+		dispose: function(){
+			for(var i=0;i<this.game.timeouts.length;i++){
+				clearTimeout(this.game.timeouts[i]);
+			}
+		},
+		start: function(){
+			var that = this;
+			[ 'Usage of unlicensed software'
+			, 'not only violates the law'
+			, 'but it may harm your system'
+			, 'with the result that GLITCHES can come'
+			, 'or system will stop working completely'
+			, ''
+			, 'Take on the role of the anti-malvare team'
+			, 'and save the system from infection'
+			, 'during the 10 attack waves'
+			, 'in style of simple RPG'
+			, ''
+			, 'Have a nice play'
+			, '$$$'].forEach(function(el,i, arr){
+				that.game.show(that, el, (i+1)*2000);
+			});
+		},
+		game: {
+			timeouts: [],
+			show: function(that, text, delay){
+				var _this = this;
+				this.timeouts.push(setTimeout(function(){
+					if(text == '$$$'){
+						_this.clickHandler();
+					}
+					else{
+						that.unshift.push(
+							globals.cfo( {
+								position: new V2(120,150),
+								lifeTime: 5000,
+								text: {
+									size:20,
+									color: 'white',
+									value: text,
+								},
+								size: new V2(200,60),
+								shift: new V2(0,-0.25)
+							}));	
+					}
+				}, delay));
+			},
+			clickHandler: function(clickPosition){
+				SCG.scenes.selectScene(scene2.name, {money: 200, level: 1, fromBattle: true, gos: []}); 
+			}
+		},
+		preMainWork: function() {
+			globals.clearBg();
+		},
+		backgroundRender: function(){
+			globals.bgRender({color: 'Black'});
 		},
 	}
 
@@ -1477,7 +1523,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			itemsCanvasContext.fillRect(1.5+delta,30,7,2);
 			itemsCanvasContext.fillStyle = "#5b3a29";
 			itemsCanvasContext.fillRect(3.5+delta,32,3,3);
-			SCG.globals.items.push({ itemName: materialNames[i] + ' sword', price: 20*(i+1), position: new V2(-20, -7), attackRadius: 10, damage: {min:1*(i+1),max:5*(i+1),crit:5}, attackRate: 1000, destSourcePosition : new V2(delta,0), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Fighter'] });
+			SCG.globals.items.push({ itemName: materialNames[i] + ' sword', price: i==0?50:i==1?250:500, position: new V2(-20, -7), attackRadius: 10, damage: {min:1+(i*5),max:5*(Math.pow(2,i+1)),crit:(i+1)}, attackRate: 1000, destSourcePosition : new V2(delta,0), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Fighter'] });
 			
 			deltay = 50;
 			drawFigures(itemsCanvasContext, //axe
@@ -1485,7 +1531,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
 			itemsCanvasContext.fillStyle = "#5b3a29";
 			itemsCanvasContext.fillRect(7+delta,15+deltay,1.5,20);
-			SCG.globals.items.push({ itemName: materialNames[i] + ' axe', price: 40*(i+1), position: new V2(-20, -7), attackRadius: 5, damage: {min:5*(i+1),max:15*(i+1),crit:2}, attackRate: 1500, destSourcePosition : new V2(delta,deltay), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Fighter'] });
+			SCG.globals.items.push({ itemName: materialNames[i] + ' axe', price: i==0?100: i*350, position: new V2(-20, -7), attackRadius: 5, damage: {min:5*(i+1),max:15*(i+1),crit:4+(i*2)}, attackRate: 3000, destSourcePosition : new V2(delta,deltay), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Fighter'] });
 
 			deltay = 100;
 			drawFigures(itemsCanvasContext, //spear
@@ -1493,7 +1539,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
 			itemsCanvasContext.fillStyle = "#5b3a29";
 			itemsCanvasContext.fillRect(4+delta,10+deltay,1.5,35);
-			SCG.globals.items.push({ itemName: materialNames[i] + ' spear',price: 30*(i+1), position: new V2(-20, -0), attackRadius: 25, damage: {min:1*(i+1),max:15*(i+1),crit:15}, attackRate: 1500, destSourcePosition : new V2(delta,deltay), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Defender'] });
+			SCG.globals.items.push({ itemName: materialNames[i] + ' spear',price: i==0?75:i*300, position: new V2(-20, -0), attackRadius: 25, damage: {min:(i*5),max:15*(i+1),crit:13+i}, attackRate: 2000, destSourcePosition : new V2(delta,deltay), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Defender'] });
 
 			deltay = 150;
 			drawFigures(itemsCanvasContext, //halbert
@@ -1502,7 +1548,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
 			itemsCanvasContext.fillStyle = "#5b3a29";
 			itemsCanvasContext.fillRect(4+delta,17+deltay,1.5,30);
-			SCG.globals.items.push({ itemName: materialNames[i] + ' halbert', price: 50*(i+1), position: new V2(-20, -0), attackRadius: 25, damage: {min:5*(i+1),max:35*(i+1),crit:15}, attackRate: 2500, destSourcePosition : new V2(delta,deltay), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Defender'] });
+			SCG.globals.items.push({ itemName: materialNames[i] + ' halbert', price: i==0? 120 : i*400, position: new V2(-20, -0), attackRadius: 25, damage: {min:5*(i+1),max:25+(i*25),crit:5+i}, attackRate: 4000, destSourcePosition : new V2(delta,deltay), size: new V2(10,50), itemType: 'weapon', unitTypes: ['Defender'] });
 			delta+=10;
 		}
 		delta = 0;
@@ -1516,7 +1562,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			drawFigures(itemsCanvasContext, //shortbow
 				[[new V2(15+delta,35+deltay),new V2(15+delta,15+deltay)]],
 				{alpha: 1, stroke:'#black'})
-			SCG.globals.items.push({ itemName: materialNames[i] + 'shortBow', price: 20*(i+1), position: new V2(-20, 0), attackRadius: 100, damage: {min:2*(i+1),max:5*(i+1),crit:15}, attackRate: 750, destSourcePosition : new V2(delta,deltay), size:new V2(20,50), ranged: true, itemType: 'weapon', unitTypes: ['Ranged']  });
+			SCG.globals.items.push({ itemName: materialNames[i] + 'shortBow', price: i==0?60:i==1?350:550, position: new V2(-20, 0), attackRadius: 100, damage: {min:i*5,max:5*(i+2),crit:25+i*5}, attackRate: 1250, destSourcePosition : new V2(delta,deltay), size:new V2(20,50), ranged: true, itemType: 'weapon', unitTypes: ['Ranged']  });
 			
 			deltay = 250;
 			itemsCanvasContext.lineWidth=2;
@@ -1527,7 +1573,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			drawFigures(itemsCanvasContext, //bow
 				[[new V2(15+delta,45+deltay),new V2(15+delta,5+deltay)]],
 				{alpha: 1, stroke:'#black'})
-			SCG.globals.items.push({ itemName: materialNames[i] +' bow', price: 50*(i+1), position: new V2(-17.5, 0), attackRadius: 200, damage: {min:5*(i+1),max:10*(i+1),crit:10}, attackRate: 1000, destSourcePosition : new V2(delta,deltay), size:new V2(20,50), ranged: true, itemType: 'weapon', unitTypes: ['Ranged']  });
+			SCG.globals.items.push({ itemName: materialNames[i] +' bow', price: i==0?150:i==1?500:900, position: new V2(-17.5, 0), attackRadius: 200, damage: {min:i==0?5:15*i,max:i==0?25:i==1?40:70,crit:3+i*3}, attackRate: 2500, destSourcePosition : new V2(delta,deltay), size:new V2(20,50), ranged: true, itemType: 'weapon', unitTypes: ['Ranged']  });
 
 			delta += 20;
 		}
@@ -1555,7 +1601,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			itemsCanvasContext.beginPath();
 			itemsCanvasContext.arc(15+delta, 25+deltay, 2, 0, 2 * Math.PI);
 			itemsCanvasContext.fill();
-			SCG.globals.items.push({ itemName: materialNames[i] +' small_shield', price: 25*(i+1), position: new V2(17, 0), defence: 5*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'shield', unitTypes: ['Fighter']  });
+			SCG.globals.items.push({ itemName: materialNames[i] +' small_shield', price: i==0?30:125*i, position: new V2(17, 0), defence: 2+i*3, destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'shield', unitTypes: ['Fighter']  });
 
 			deltay = 350;
 			drawFigures(itemsCanvasContext, //middle shield
@@ -1564,7 +1610,7 @@ document.addEventListener("DOMContentLoaded", function() {
 			drawFigures(itemsCanvasContext, //middle shield
 				[[new V2(11+delta,21+deltay),new V2(19+delta,21+deltay),new V2(15+delta,30+deltay) ]],
 				{alpha: 1, fill: strokeColors[i]});
-			SCG.globals.items.push({ itemName: materialNames[i] +' medium_shield', price: 50*(i+1), position: new V2(17, 0), defence: 10*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'shield', unitTypes: ['Fighter', 'Defender']  });
+			SCG.globals.items.push({ itemName: materialNames[i] +' medium_shield', price: i==0?50:175*i, position: new V2(17, 0), defence: 5+i*5, destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'shield', unitTypes: ['Fighter', 'Defender']  });
 
 			deltay = 400;
 			drawFigures(itemsCanvasContext, //large_shield
@@ -1572,13 +1618,13 @@ document.addEventListener("DOMContentLoaded", function() {
 				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
 			itemsCanvasContext.fillStyle = strokeColors[i];
 			itemsCanvasContext.fillRect(10+delta,10+deltay,10,30);
-			SCG.globals.items.push({ itemName: materialNames[i] +' large_shield', price: 75*(i+1), position: new V2(17, 0), defence: 15*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'shield', unitTypes: ['Defender']  });
+			SCG.globals.items.push({ itemName: materialNames[i] +' large_shield', price: i==0?75:250*i, position: new V2(17, 0), defence: 10+i*5, destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'shield', unitTypes: ['Defender']  });
 
 			deltay = 450;
 			drawFigures(itemsCanvasContext, //small helmet
 				[[new V2(2+delta,25+deltay),{type:'curve', control: new V2(15+delta,10+deltay), p: new V2(28+delta,25+deltay)},new V2(2+delta,25+deltay)]],
 				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
-			SCG.globals.items.push({ itemName: materialNames[i] +' small_helmet', price: 10*(i+1), position: new V2(0, -13), defence: 5*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'helmet', unitTypes: ['Ranged', 'Fighter']  });
+			SCG.globals.items.push({ itemName: materialNames[i] +' small_helmet', price: i==0?20:100*i, position: new V2(0, -13), defence: 1+i*3, destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'helmet', unitTypes: ['Ranged', 'Fighter']  });
 
 			deltay = 500;
 			drawFigures(itemsCanvasContext, //medium_helmet
@@ -1586,14 +1632,14 @@ document.addEventListener("DOMContentLoaded", function() {
 				[new V2(2+delta,25+deltay), new V2(2+delta,35+deltay),new V2(10+delta,25+deltay)],
 				[new V2(28+delta,25+deltay), new V2(28+delta,35+deltay),new V2(20+delta,25+deltay)]],
 				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
-			SCG.globals.items.push({ itemName: materialNames[i] +' medium_helmet', price: 20*(i+1), position: new V2(0, -13), defence: 10*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'helmet', unitTypes: ['Fighter', 'Defender']  });
+			SCG.globals.items.push({ itemName: materialNames[i] +' medium_helmet', price: i==0?40:150*i, position: new V2(0, -13), defence: 3+i*3, destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'helmet', unitTypes: ['Fighter', 'Defender']  });
 
 			deltay = 550;
 			drawFigures(itemsCanvasContext, //full_helmet
 				[[new V2(2+delta,25+deltay),{type:'curve', control: new V2(15+delta,10+deltay), p: new V2(28+delta,25+deltay)},new V2(2+delta,25+deltay)],
 				[new V2(2+delta,25+deltay), new V2(2+delta,35+deltay),new V2(7+delta,35+deltay),{type:'curve', control: new V2(15+delta,30+deltay), p: new V2(23+delta,35+deltay)},new V2(28+delta,35+deltay),new V2(28+delta,25+deltay)]],
 				{alpha: 1, fill: fillColors[i], stroke:strokeColors[i]});
-			SCG.globals.items.push({ itemName: materialNames[i] +' full_helmet', price: 30*(i+1), position: new V2(0, -13), defence: 15*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'helmet', unitTypes: ['Defender']  });
+			SCG.globals.items.push({ itemName: materialNames[i] +' full_helmet', price: i==0?50:175*i, position: new V2(0, -13), defence: 5+i*5, destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'helmet', unitTypes: ['Defender']  });
 
 			deltay = 600;
 			drawFigures(itemsCanvasContext, //armor
@@ -1602,7 +1648,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				{alpha: 1, stroke:strokeColors[i]});
 			itemsCanvasContext.fillStyle = strokeColors[i];
 			itemsCanvasContext.fillRect(10+delta,22+deltay,10,6);
-			SCG.globals.items.push({ itemName: materialNames[i] +' light_armor', price: 50*(i+1), position: new V2(0, 8), defence: 5*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'armor', unitTypes: ['Ranged', 'Fighter']  });
+			SCG.globals.items.push({ itemName: materialNames[i] +' light_armor', price: i==0?50:200*i, position: new V2(0, 8), defence: 5*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'armor', unitTypes: ['Ranged', 'Fighter']  });
 
 
 			deltay = 650;
@@ -1611,7 +1657,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				{alpha: 1, fill: fillColors[i],stroke:strokeColors[i]});
 			itemsCanvasContext.fillStyle = strokeColors[i];
 			itemsCanvasContext.fillRect(4+delta,23+deltay,22,2);
-			SCG.globals.items.push({ itemName: materialNames[i] +' medium_armor', price: 75*(i+1), position: new V2(0, 8), defence: 10*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'armor', unitTypes:['Fighter', 'Defender']   });
+			SCG.globals.items.push({ itemName: materialNames[i] +' medium_armor', price: i==0?75:i==1?300:500, position: new V2(0, 8), defence: i==0?7:i==1?13:18, destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'armor', unitTypes:['Fighter', 'Defender']   });
 
 			deltay = 700;
 			drawFigures(itemsCanvasContext, //armor
@@ -1619,7 +1665,7 @@ document.addEventListener("DOMContentLoaded", function() {
 				{alpha: 1, fill: fillColors[i],stroke:strokeColors[i]});
 			itemsCanvasContext.fillStyle = strokeColors[i];
 			itemsCanvasContext.fillRect(4+delta,23+deltay,22,2);
-			SCG.globals.items.push({ itemName: materialNames[i] +' full_armor', price: 100*(i+1), position: new V2(0, 8), defence: 15*(i+1), destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'armor', unitTypes:['Defender']   });
+			SCG.globals.items.push({ itemName: materialNames[i] +' full_armor', price: 100+i*300, position: new V2(0, 8), defence: 10+i*6, destSourcePosition : new V2(delta,deltay), size:new V2(30,50),  itemType: 'armor', unitTypes:['Defender']   });
 
 
 			delta += 30;
@@ -1682,6 +1728,7 @@ document.addEventListener("DOMContentLoaded", function() {
 	SCG.scenes.registerScene(scene2);
 	SCG.scenes.registerScene(scene3);
 	SCG.scenes.registerScene(scene4);
+	SCG.scenes.registerScene(scene5);
 
 	SCG.scenes.selectScene(newGameScene.name);
 	//SCG.scenes.selectScene(scene2.name, {money: 1000, fromBattle: true, gos: []});
