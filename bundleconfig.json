@@ -3,8 +3,6 @@
     "outputFileName": "build/core.min.js",
     "inputFiles": [
       "lib/screenfull.js",
-      "utils/box.js",
-      "utils/extenders.js",
       "game.js",
       "debugger.js",
       "go/go.js",
@@ -15,15 +13,19 @@
       "AI.js",
       "UI.js",
       "audio.js",
-      "main.js",
-      "demo3.js"
+      "main.js"
     ]
   },
   {
     "outputFileName": "build/utils.min.js",
     "inputFiles": [
+      "utils/vector2.js",
       "utils/utils.js",
-      "utils/vector2.js"
+      "utils/box.js",
+      "utils/extenders.js",
+      "utils/circle.js",
+      "utils/line.js",
+      "utils/poligon.js"
     ]
   }
 ]

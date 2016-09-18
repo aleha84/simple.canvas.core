@@ -17,6 +17,7 @@ SCG.start = function(){
 		);
 
 		SCG.contextBg = SCG.canvasBg.getContext('2d');
+		SCG.contexts['contextBg'] = SCG.contextBg;
 	}
 
 	if(!SCG.canvas)
@@ -36,6 +37,7 @@ SCG.start = function(){
 		);
 
 		SCG.context = SCG.canvas.getContext('2d');
+		SCG.contexts['context'] = SCG.context;
 
 		// appendDomElement(
 		// 	document.body,
@@ -68,6 +70,7 @@ SCG.start = function(){
 		);
 
 		SCG.contextUI = SCG.canvasUI.getContext('2d');
+		SCG.contexts['contextUI'] = SCG.contextUI;
 	}
 
 	SCG.initializer(function(){
@@ -81,9 +84,9 @@ SCG.start = function(){
 
 		SCG.viewfield.current = new Box(new Vector2,new Vector2(SCG.viewfield.width,SCG.viewfield.height));		
 
-		SCG.gameControls.orientationChangeEventInit();
-
 		SCG.customInitialization();
+
+		SCG.gameControls.orientationChangeEventInit();
 
 		SCG.UI.invalidate();
 
