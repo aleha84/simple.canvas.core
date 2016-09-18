@@ -12,6 +12,175 @@ function boxIntersectsBox(a,b)
          (Math.abs(a.center.y - b.center.y) * 2 < (a.size.y + b.size.y));
 }
 
+function boxCircleIntersects(circle, rect)
+{ 
+	var circleDistance = new Vector2(Math.abs(circle.center.x - rect.center.x),Math.abs(circle.center.y - rect.center.y));
+	if(circleDistance.x > (rect.size.x/2 + circle.radius))
+	{
+		return false;
+	}
+	if(circleDistance.y > (rect.size.y/2 + circle.radius))
+	{
+		return false;
+	}
+
+	if(circleDistance.x <= (rect.size.x/2)) 
+	{
+		return true; 
+	}
+	if(circleDistance.y <= (rect.size.y/2))
+	{
+		return true;
+	}
+	var cornerDistance_sq = Math.pow(circleDistance.x - rect.size.x/2,2) + Math.pow(circleDistance.y - rect.size.y/2,2);
+	return (cornerDistance_sq <= Math.pow(circle.radius,2))
+}
+
+function segmentIntersectBox(segment,box)
+  {
+    var minX = segment.begin.x;
+    var maxX = segment.end.x;
+    if(segment.begin.x > segment.end.x)
+    {
+      minX = segment.end.x;
+      maxX = segment.begin.x;
+    }
+   if(maxX > box.bottomRight.x)
+    {
+      maxX = box.bottomRight.x;
+    }
+    if(minX < box.topLeft.x)
+    {
+      minX = box.topLeft.x;
+    }
+    if(minX > maxX) 
+    {
+      return false;
+    }
+    var minY = segment.begin.y;
+    var maxY = segment.end.y;
+    var dx = segment.end.x - segment.begin.x;
+    if(Math.abs(dx) > 0.0000001)
+    {
+      var a = (segment.end.y - segment.begin.y) / dx;
+      var b = segment.begin.y - a * segment.begin.x;
+      minY = a * minX + b;
+      maxY = a * maxX + b;
+    }
+    if(minY > maxY)
+    {
+      var tmp = maxY;
+      maxY = minY;
+      minY = tmp;
+    }
+    if(maxY > box.bottomRight.y)
+    {
+      maxY = box.bottomRight.y;
+    }
+    if(minY < box.topLeft.y)
+    {
+      minY = box.topLeft.y;
+    }
+    if(minY > maxY) // If Y-projections do not intersect return false
+    {
+      return false;
+    }
+    return true;
+  }
+
+function segmentIntersectCircle(segment,circle)
+{
+    // return ((circle.center.x - circle.radius <= segment.begin.x && segment.begin.x <= circle.center.x + circle.radius ) && (circle.center.y - circle.radius <= segment.begin.y && segment.begin.y <= circle.center.y + circle.radius )
+    //   || (circle.center.x - circle.radius <= segment.end.x && segment.end.x <= circle.center.x + circle.radius ) && (circle.center.y - circle.radius <= segment.end.y && segment.end.y <= circle.center.y + circle.radius ));
+    var d = segment.end.substract(segment.begin,true);
+    var f = segment.begin.substract(circle.center,true);
+
+    var a = d.dot(d);
+    var b = 2*f.dot(d);
+    var c = f.dot(f) - Math.pow(circle.radius,2);
+    var discriminant = b*b-4*a*c;
+    if(discriminant<0)
+    {
+      return false;
+    }
+
+    discriminant = Math.sqrt(discriminant);
+    var t1 = (-b - discriminant)/(2*a);
+    var t2 = (-b + discriminant)/(2*a);
+
+    if(t1 >= 0 && t1 <=1)
+    {
+      return true;
+    }
+    if(t2>=0 && t2 <=1)
+    {
+      return true;
+    }
+    return false;
+}
+
+function segmentIntersectCircle2(segment,circle)
+{
+  var d1 = circle.center.distance(segment.begin);
+  var d2 = circle.center.distance(segment.end);
+  return d1 <= circle.radius || d2 <= circle.radius;
+}
+
+function segmentsIntersectionVector2(line1, line2)
+{
+  var x1 = +line1.begin.x.toFixed(2);
+  var x2 = +line1.end.x.toFixed(2);
+  var y1 = +line1.begin.y.toFixed(2);
+  var y2 = +line1.end.y.toFixed(2);
+  var x3 = +line2.begin.x.toFixed(2);
+  var x4 = +line2.end.x.toFixed(2);
+  var y3 = +line2.begin.y.toFixed(2);
+  var y4 = +line2.end.y.toFixed(2);
+
+  var d = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4);
+  if(d == 0)
+  {
+    return undefined;
+  }
+
+  var xi = +(((x3-x4)*(x1*y2-y1*x2)-(x1-x2)*(x3*y4-y3*x4))/d).toFixed(2);
+  var yi = +(((y3-y4)*(x1*y2-y1*x2)-(y1-y2)*(x3*y4-y3*x4))/d).toFixed(2);
+
+  var p = new Vector2(xi,yi);
+  if (xi < Math.min(x1,x2) || xi > Math.max(x1,x2)) return undefined;
+  if (xi < Math.min(x3,x4) || xi > Math.max(x3,x4)) return undefined;
+  if (yi < Math.min(y1,y2) || yi > Math.max(y1,y2)) return undefined; 
+  if (yi < Math.min(y3,y4) || yi > Math.max(y3,y4)) return undefined;
+  return p;
+}
+
+function segmentsIntersection(line1, line2)
+{
+  var CmP = line1.begin.directionNonNormal(line2.begin);
+  var r = line1.begin.directionNonNormal(line1.end);
+  var s = line2.begin.directionNonNormal(line2.end);
+
+  var CmPxr = CmP.x * r.y - CmP.y*r.x;
+  var CmPxs = CmP.x * s.y - CmP.y * s.x;
+  var rxs = r.x * s.y - r.y*s.x;
+
+  if(CmPxr == 0)
+  {
+    return ((line2.begin.x - line1.begin.x < 0) != (line2.begin.x - line1.end.x < 0)) || ((line2.begin.y - line1.begin.y < 0) != (line2.begin.y - line1.end.y < 0));
+  }
+
+  if(rxs == 0)
+  {
+    return false;
+  }
+
+  var rxsr = 1.0/rxs;
+  var t = CmPxs * rxsr;
+  var u = CmPxr * rxsr;
+
+  return (t >= 0) && (t <= 1) && (u >= 0) && (u <= 1);
+}
+
 function radiansToDegree (radians) {
   if(radians === undefined)
   {
@@ -149,7 +318,7 @@ function getDegreeToVectorUp(p1, p2){
 
 function doWorkByTimer(timer, now){
   if(SCG.gameLogics.isPaused){
-    //timer.lastTimeWork = now;
+    timer.lastTimeWork = now;
     timer.delta = 0;
     return;
   }
@@ -307,45 +476,21 @@ function addListenerMulti(el, s, fn) {
   s.split(' ').forEach(function(e) {el.addEventListener(e, fn, false)});
 }
 
-function drawFigures(ctx, points, props){
-  ctx.save();
-
-  ctx.lineJoin = 'bevel';
-  if(props == undefined){
-    props.alpha = 1;
+function drawFigures(ctx, points, alpha){
+  if(alpha == undefined){
+    alpha = 1;
   }
-
-  ctx.globalAlpha  = props.alpha;
+  ctx.globalAlpha  = alpha;
   for(var i = 0;i<points.length;i++){
     var cp = points[i];
-    if(props.fill && cp.length < 3){
+    if(cp.length < 3){
       continue;
     }
     ctx.beginPath();
     ctx.moveTo(cp[0].x, cp[0].y);
     for(var j = 1;j<cp.length;j++){
-      var p = cp[j];
-      if(p instanceof Vector2){
-        p = {p: p, type: 'line'};
-      }
-
-      if(p.type == 'line'){
-        ctx.lineTo(p.p.x,p.p.y);
-      }
-      else if(p.type == 'curve'){
-        ctx.quadraticCurveTo(p.control.x,p.control.y,p.p.x, p.p.y);
-      }
+      ctx.lineTo(cp[j].x,cp[j].y);
     }
-    if(props.fill){
-      ctx.fillStyle = props.fill;
-      ctx.fill();
-    }
-    if(props.stroke){
-      ctx.strokeStyle = props.stroke;
-      ctx.stroke();
-    }
-    
+    ctx.fill();
   }
-
-  ctx.restore();
 }
