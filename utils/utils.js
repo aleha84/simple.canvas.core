@@ -318,7 +318,6 @@ function getDegreeToVectorUp(p1, p2){
 
 function doWorkByTimer(timer, now){
   if(SCG.gameLogics.isPaused){
-    timer.lastTimeWork = now;
     timer.delta = 0;
     return;
   }
