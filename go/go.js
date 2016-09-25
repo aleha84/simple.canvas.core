@@ -107,7 +107,17 @@ SCG.GO.GO = function(prop){
 	{
 		SCG.GO.GO.counter[this.type] = 0;	
 	}
-	this.id = this.type + (++SCG.GO.GO.counter[this.type]);
+	
+	if(prop.id == undefined){
+		this.id = this.type + (++SCG.GO.GO.counter[this.type]);	
+	}
+	
+
+	if(SCG.GO.GO.ids.indexOf(this.id) != -1){
+		throw "Possible Object Id duplicate! - " + this.id;
+	}
+
+	SCG.GO.GO.ids.push(this.id);
 
 	this.creationTime = new Date;
 
@@ -128,6 +138,7 @@ SCG.GO.GO = function(prop){
 }
 
 SCG.GO.GO.counter = {};
+SCG.GO.GO.ids = [];
 
 SCG.GO.GO.prototype = {
 	constructor: SCG.GO.GO,
